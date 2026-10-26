@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -18,10 +19,26 @@ class DashboardTest extends TestCase
 
     public function test_authenticated_users_can_visit_the_dashboard()
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $user = User::factory()->withTwoFactor()->create();
 
-        $response = $this->get(route('dashboard'));
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
         $response->assertOk();
+        $response->assertInertia(function (Assert $page) use ($user) {
+            $page->component('dashboard')
+                ->where('auth.user.id', $user->id)
+                ->where('auth.user.name', $user->name)
+                ->where('auth.user.email', $user->email)
+                ->missing('auth.user.password')
+                ->missing('auth.user.two_factor_secret')
+                ->missing('auth.user.two_factor_recovery_codes')
+                ->missing('auth.user.two_factor_confirmed_at')
+                ->missing('auth.user.remember_token');
+
+            $this->assertEqualsCanonicalizing(
+                ['id', 'name', 'email'],
+                array_keys($page->toArray()['props']['auth']['user']),
+            );
+        });
     }
 }

@@ -32,6 +32,74 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    public function test_users_are_returned_to_the_intended_url_after_login()
+    {
+        $user = User::factory()->create();
+
+        $this->get(route('profile.edit'))->assertRedirect(route('login'));
+        $sessionId = session()->getId();
+
+        $response = $this->withCookie(config('session.cookie'), $sessionId)
+            ->post(route('login.store'), [
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+        $response->assertRedirect(route('profile.edit'));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_login_ignores_external_redirect_payloads()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+            'redirect' => 'https://evil.example/steal',
+            'url' => 'https://evil.example/steal',
+        ]);
+
+        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_authenticated_users_are_redirected_away_from_the_login_screen()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('login'))
+            ->assertRedirect(route('dashboard'));
+    }
+
+    public function test_authenticated_users_are_redirected_away_from_the_registration_screen()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('register'))
+            ->assertRedirect(route('dashboard'));
+    }
+
+    public function test_login_regenerates_the_session_id()
+    {
+        $user = User::factory()->create();
+
+        $this->get(route('login'))->assertOk();
+        $sessionId = session()->getId();
+
+        $response = $this->withCookie(config('session.cookie'), $sessionId)
+            ->post(route('login.store'), [
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertNotSame($sessionId, session()->getId());
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()
     {
         $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
@@ -65,6 +133,25 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_unknown_email_and_invalid_password_return_the_same_generic_error()
+    {
+        $user = User::factory()->create();
+
+        $invalidPassword = $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ]);
+
+        $unknownEmail = $this->post(route('login.store'), [
+            'email' => 'missing@example.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $invalidPassword->assertSessionHasErrors(['email' => trans('auth.failed')]);
+        $unknownEmail->assertSessionHasErrors(['email' => trans('auth.failed')]);
+        $this->assertGuest();
+    }
+
     public function test_users_can_logout()
     {
         $user = User::factory()->create();
@@ -74,6 +161,16 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('home'));
 
         $this->assertGuest();
+    }
+
+    public function test_protected_routes_require_authentication_after_logout()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('logout'))->assertRedirect(route('home'));
+        $this->assertGuest();
+
+        $this->get(route('dashboard'))->assertRedirect(route('login'));
     }
 
     public function test_users_are_rate_limited()

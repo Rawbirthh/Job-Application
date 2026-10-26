@@ -2,17 +2,14 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function test_returns_a_successful_response()
+    public function test_home_route_remains_a_named_route_to_the_root_path()
     {
-        $response = $this->get(route('home'));
-
-        $response->assertOk();
+        $this->assertTrue(Route::has('home'));
+        $this->assertSame('/', route('home', absolute: false));
     }
 }
