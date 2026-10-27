@@ -8,6 +8,7 @@ Load the `feature-architecture` skill and the relevant `laravel-backend`, `inert
 First inspect `git status`, the relevant spec in `docs/specs/` if present, and the surrounding code. Never overwrite unrelated user changes. If the request refers to an architect spec, confirm it was approved in the conversation; if no approval is present, stop and ask for approval instead of coding.
 
 Follow `AGENTS.md`. Plan briefly, then implement the feature end-to-end in dependency order without inventing missing product requirements. MANDATORY SPECIALIST ROUTING (do not merely mention the specialists; invoke them through OpenCode's subagent/task mechanism when the matching work exists):
+
 - Laravel/PHP, routes, controllers, Form Requests, Policies, Eloquent, migrations, schema, or backend security changes: delegate the backend slice to `backend-engineer`.
 - React, Inertia, TypeScript, Tailwind, shadcn/ui, browser states, or frontend accessibility changes: delegate the frontend slice to `frontend-engineer`.
 - Meaningful feature behavior, persistence, authorization, validation, or any bug fix: after the initial implementation draft, delegate test design/creation to `test-engineer`, including a regression test for a bug fix.

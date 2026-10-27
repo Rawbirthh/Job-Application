@@ -152,6 +152,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Dependencies:** None.
 
 **In scope:**
+
 - Inspect the existing repository and record the installed PHP/Laravel, Node, React, TypeScript, Inertia, Tailwind, shadcn/ui, database, and testing setup.
 - Identify which starter kit and application structure are already present; do not replace or regenerate the existing application.
 - Verify existing setup, environment-example safety, frontend build, relevant tests, and development commands where the environment allows.
@@ -161,6 +162,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Out of scope:** Implementing authentication changes, roles/permissions, company/job tables, dashboards, or any business feature. Those are separate features in this roadmap.
 
 **Acceptance criteria:**
+
 - The actual installed stack, starter kit, key versions, and test framework are documented.
 - The application starts with the existing documented environment and renders its current Inertia/React page when environment access permits.
 - The frontend build and relevant existing tests are verified, or failures/blockers are accurately recorded.
@@ -179,6 +181,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Dependencies:** Feature 1.
 
 **In scope:**
+
 - Registration for the initial job-seeker account path.
 - Login and logout.
 - Password reset, email verification, and appropriate session handling using the compatible Laravel setup.
@@ -190,6 +193,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Out of scope:** Full role/permission management (Feature 3), employer onboarding (Feature 11), social login, MFA, and SSO unless explicitly requested.
 
 **Acceptance criteria:**
+
 - A user can register with valid data, log in, log out, and reset a password through the supported flow.
 - Invalid input returns server-side validation errors.
 - Guests cannot directly access protected routes.
@@ -206,6 +210,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Dependencies:** Feature 2.
 
 **In scope:**
+
 - Inspect existing auth and authorization code before designing schema.
 - Define roles, permissions, and their assignments using explicit foreign keys and uniqueness constraints. Add the pivots or assignment model required by the chosen design.
 - Seed only necessary initial roles and permission definitions, such as platform administrator, employer, and job seeker. Seed data must be repeatable and must not overwrite administrator changes unintentionally.
@@ -217,6 +222,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Out of scope:** Admin UI for editing the role catalogue (later feature if needed), company hiring-team roles (Feature 28), and all business-resource CRUD features.
 
 **Acceptance criteria:**
+
 - Authorization is enforced on the server and works for direct requests, not just the UI.
 - A permission can be added/assigned without scattering role-name checks throughout controllers and React components.
 - Public registration cannot grant itself privileged roles or permissions.
@@ -235,6 +241,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Dependencies:** Feature 2, Feature 3.
 
 **In scope:**
+
 - Shared responsive app layout, navigation, breadcrumbs/page headings where consistent with the starter kit, flash messages, and user menu.
 - A role/permission-aware navigation menu that hides links the user cannot use but never replaces server authorization.
 - Role-specific landing destinations for administrator, employer, and job seeker using server-confirmed permissions.
@@ -243,6 +250,7 @@ Implement the features in dependency order. The phases group related capabilitie
 **Out of scope:** Full analytics, applicant statistics, or feature-specific management tables.
 
 **Acceptance criteria:**
+
 - Signed-in users reach the correct permitted landing page.
 - Unsupported or missing roles fail safely and do not grant elevated access.
 - Navigation is responsive, keyboard accessible, and uses existing shadcn/ui primitives if installed.

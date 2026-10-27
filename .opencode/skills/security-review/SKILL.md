@@ -24,6 +24,7 @@ Also review CSRF/session-auth assumptions, role-granting controls, transaction/e
 ## Output
 
 Prioritize evidence-based findings:
+
 - 🔴 Critical: exploitable authorization/data exposure, destructive corruption/loss, or severe correctness failure.
 - 🟡 Warning: likely vulnerability, data integrity risk, missing significant test, or serious performance issue.
 - 🔵 Suggestion: lower-risk hardening/maintainability.

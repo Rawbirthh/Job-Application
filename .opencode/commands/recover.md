@@ -6,6 +6,7 @@ agent: build
 Load the `feature-architecture` and `feature-testing` skills. Recovery target: $ARGUMENTS
 
 Use the JSM `/recover` approach. First inspect the failure, actual error/output, recent diff, relevant files, and test evidence. Categorize the situation before making changes:
+
 - TARGETED FIX: a localized defect with a clear root cause; fix it precisely and add a regression test.
 - RESET THE APPROACH: the current patching path is polluted or repeatedly failing; summarize what has been tried and propose a clean, bounded approach. Do not discard user changes or reset Git history without explicit approval.
 - RETHINK THE DESIGN: the original architecture/spec is wrong or a prerequisite is missing; explain the incorrect assumption and propose a revised design, using `/architect` for a new approval-gated spec if needed.
