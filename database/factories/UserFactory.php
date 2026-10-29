@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\RoleSlug;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -56,5 +58,46 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Attach an existing role to the created user.
+     */
+    public function withRole(Role|RoleSlug|string $role): static
+    {
+        return $this->afterCreating(function (User $user) use ($role): void {
+            $roleModel = $role instanceof Role
+                ? $role
+                : Role::query()
+                    ->where('slug', $role instanceof RoleSlug ? $role->value : $role)
+                    ->firstOrFail();
+
+            $user->roles()->syncWithoutDetaching([$roleModel->id]);
+            $user->clearPermissionCache();
+        });
+    }
+
+    /**
+     * Indicate that the created user is a platform administrator.
+     */
+    public function platformAdmin(): static
+    {
+        return $this->withRole(RoleSlug::PlatformAdmin);
+    }
+
+    /**
+     * Indicate that the created user is an employer.
+     */
+    public function employer(): static
+    {
+        return $this->withRole(RoleSlug::Employer);
+    }
+
+    /**
+     * Indicate that the created user is a job seeker.
+     */
+    public function jobSeeker(): static
+    {
+        return $this->withRole(RoleSlug::JobSeeker);
     }
 }

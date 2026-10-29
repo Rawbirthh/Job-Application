@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Fortify\Features;
@@ -17,6 +18,7 @@ class RegistrationTest extends TestCase
         parent::setUp();
 
         $this->skipUnlessFortifyHas(Features::registration());
+        $this->seed(AuthorizationSeeder::class);
     }
 
     public function test_registration_screen_can_be_rendered()
@@ -153,6 +155,7 @@ class RegistrationTest extends TestCase
 
         $user = User::sole();
 
+        $this->assertSame(['job_seeker'], $user->roles()->pluck('slug')->all());
         $this->assertNull($user->email_verified_at);
 
         foreach (['role', 'role_id', 'is_admin', 'permissions', 'account_status'] as $field) {

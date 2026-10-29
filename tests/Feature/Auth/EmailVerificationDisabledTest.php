@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Database\Seeders\AuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,7 @@ class EmailVerificationDisabledTest extends TestCase
 
     public function test_registration_succeeds_without_sending_a_verification_email()
     {
+        $this->seed(AuthorizationSeeder::class);
         Notification::fake();
 
         $response = $this->post(route('register.store'), [

@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Exceptions\LastAdministratorException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\User;
+use App\Services\Authorization\RoleAssignmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,13 +46,31 @@ class ProfileController extends Controller
     /**
      * Delete the user's profile.
      */
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
-    {
+    public function destroy(
+        ProfileDeleteRequest $request,
+        RoleAssignmentService $roleAssignmentService,
+    ): RedirectResponse {
         $user = $request->user();
 
-        Auth::logout();
+        if (! $user instanceof User) {
+            abort(403);
+        }
 
-        $user->delete();
+        $this->authorize('delete', $user);
+
+        try {
+            DB::transaction(function () use ($user, $roleAssignmentService): void {
+                $roleAssignmentService->assertUserCanBeDeleted($user);
+                $user->delete();
+            });
+        } catch (LastAdministratorException) {
+            throw ValidationException::withMessages([
+                'account' => __('The last platform administrator account cannot be deleted.'),
+            ]);
+        }
+
+        // The deleted model must not cycle its remember token, which would re-insert it.
+        Auth::logoutCurrentDevice();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

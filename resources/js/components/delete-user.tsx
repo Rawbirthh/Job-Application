@@ -65,6 +65,8 @@ export default function DeleteUser() {
                         >
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>
+                                    <InputError message={errors.account} />
+
                                     <div className="grid gap-2">
                                         <Label
                                             htmlFor="password"
