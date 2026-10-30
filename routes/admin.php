@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\JobCategoryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
@@ -48,6 +49,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             Route::get('{permission}/edit', [PermissionController::class, 'edit'])->name('edit');
             Route::put('{permission}', [PermissionController::class, 'update'])->name('update');
             Route::delete('{permission}', [PermissionController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Job Categories management
+    Route::prefix('categories')->name('categories.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [JobCategoryController::class, 'index'])
+            ->middleware(['permission:categories.view'])
+            ->name('index');
+
+        Route::middleware(['permission:categories.manage'])->group(function (): void {
+            Route::post('/', [JobCategoryController::class, 'store'])->name('store');
+            Route::put('{category}', [JobCategoryController::class, 'update'])->name('update');
+            Route::delete('{category}', [JobCategoryController::class, 'destroy'])->name('destroy');
         });
     });
 });

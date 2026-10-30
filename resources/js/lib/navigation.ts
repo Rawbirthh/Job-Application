@@ -1,5 +1,5 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
-import { LayoutGrid, Users, type LucideIcon } from 'lucide-react';
+import { LayoutGrid, Users, Layers, type LucideIcon } from 'lucide-react';
 import admin from '@/routes/admin';
 import { dashboard } from '@/routes';
 
@@ -34,6 +34,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.permissions.index(),
         icon: Users,
         requiredPermissions: ['admin.access', 'permissions.view'],
+    },
+    {
+        title: 'Job Categories',
+        href: admin.categories.index(),
+        icon: Layers,
+        requiredPermissions: ['admin.access', 'categories.view'],
     },
 ];
 

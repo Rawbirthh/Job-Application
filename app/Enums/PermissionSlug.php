@@ -11,4 +11,6 @@ enum PermissionSlug: string
     case RolesManage = 'roles.manage';
     case PermissionsView = 'permissions.view';
     case PermissionsManage = 'permissions.manage';
+    case CategoriesView = 'categories.view';
+    case CategoriesManage = 'categories.manage';
 }
