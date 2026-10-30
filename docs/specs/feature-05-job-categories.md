@@ -29,10 +29,12 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ## Actors and flows
 
 **Primary actors:**
+
 - Platform administrator (`platform_admin` role with permissions `admin.access`, `categories.view`, `categories.manage`).
 - Job seekers and employers (read-only consumers of active categories in subsequent features).
 
 **Key flows:**
+
 1. Admin navigates to `/admin/categories` → views paginated list of categories with search and active/inactive status.
 2. Admin creates a new category (Name, Slug, Description, Active status) → validation ensures name and slug are unique and well-formed.
 3. Admin edits an existing category → updates details or toggles active status.
@@ -44,6 +46,7 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ## Scope and acceptance criteria
 
 **In scope:**
+
 - Database migration creating `job_categories` table.
 - `JobCategory` Eloquent model with mass-assignment protection, casts, and scopes.
 - New permission definitions: `categories.view` and `categories.manage` seeded via `AuthorizationSeeder` and assigned to `platform_admin`.
@@ -54,6 +57,7 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 - Feature tests verifying CRUD operations, uniqueness constraints, pagination, search, permission denial, and deactivation safeguards.
 
 **Acceptance criteria (checkable statements):**
+
 - Authorized admin with `categories.manage` permission can create, update, and toggle active status of job categories.
 - Authorized admin with `categories.view` permission can view the paginated and searchable category list.
 - Category name and slug are required, unique, and max 100 characters; slug is validated as kebab-case.
@@ -79,6 +83,7 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ### 2. Permissions
 
 Added to `App\Enums\PermissionSlug`:
+
 - `CategoriesView` = `categories.view` ("View job categories")
 - `CategoriesManage` = `categories.manage` ("Manage job categories")
 
@@ -103,16 +108,16 @@ Route::prefix('categories')->name('categories.')->middleware(['permission:admin.
 ### 4. Form Requests
 
 - `StoreJobCategoryRequest`:
-  - `name`: `['required', 'string', 'max:100', 'unique:job_categories,name']`
-  - `slug`: `['required', 'string', 'max:100', 'alpha_dash', 'unique:job_categories,slug']`
-  - `description`: `['nullable', 'string', 'max:500']`
-  - `is_active`: `['boolean']`
+    - `name`: `['required', 'string', 'max:100', 'unique:job_categories,name']`
+    - `slug`: `['required', 'string', 'max:100', 'alpha_dash', 'unique:job_categories,slug']`
+    - `description`: `['nullable', 'string', 'max:500']`
+    - `is_active`: `['boolean']`
 
 - `UpdateJobCategoryRequest`:
-  - `name`: `['required', 'string', 'max:100', Rule::unique('job_categories', 'name')->ignore($this->route('category'))]`
-  - `slug`: `['required', 'string', 'max:100', 'alpha_dash', Rule::unique('job_categories', 'slug')->ignore($this->route('category'))]`
-  - `description`: `['nullable', 'string', 'max:500']`
-  - `is_active`: `['boolean']`
+    - `name`: `['required', 'string', 'max:100', Rule::unique('job_categories', 'name')->ignore($this->route('category'))]`
+    - `slug`: `['required', 'string', 'max:100', 'alpha_dash', Rule::unique('job_categories', 'slug')->ignore($this->route('category'))]`
+    - `description`: `['nullable', 'string', 'max:500']`
+    - `is_active`: `['boolean']`
 
 ### 5. Frontend UI
 
@@ -125,9 +130,9 @@ Route::prefix('categories')->name('categories.')->middleware(['permission:admin.
 
 1. Run backend migrations and seeders.
 2. Execute Pest feature tests covering:
-   - Admin CRUD for job categories.
-   - Unique name and slug validation.
-   - Search and pagination.
-   - Permission enforcement (denying users without `categories.view` or `categories.manage`).
-   - Active/inactive toggling.
+    - Admin CRUD for job categories.
+    - Unique name and slug validation.
+    - Search and pagination.
+    - Permission enforcement (denying users without `categories.view` or `categories.manage`).
+    - Active/inactive toggling.
 3. Run `php artisan test` and `npm run build`.

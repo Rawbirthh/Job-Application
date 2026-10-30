@@ -38,7 +38,9 @@ export default function AdminJobCategoriesIndex({
 }: AdminJobCategoriesIndexProps) {
     const [search, setSearch] = useState(filters.search);
     const [isSearching, setIsSearching] = useState(false);
-    const [editingCategory, setEditingCategory] = useState<JobCategory | null>(null);
+    const [editingCategory, setEditingCategory] = useState<JobCategory | null>(
+        null,
+    );
 
     const form = useForm<{
         name: string;
@@ -176,7 +178,7 @@ export default function AdminJobCategoriesIndex({
                 />
                 <Label
                     htmlFor="category-is-active"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                     Active (available for new job postings)
                 </Label>
@@ -190,9 +192,7 @@ export default function AdminJobCategoriesIndex({
                     className="flex-1"
                 >
                     {form.processing && <Spinner className="mr-2" />}
-                    {editingCategory
-                        ? 'Update Category'
-                        : 'Create Category'}
+                    {editingCategory ? 'Update Category' : 'Create Category'}
                 </Button>
                 {editingCategory && (
                     <Button
@@ -290,7 +290,7 @@ export default function AdminJobCategoriesIndex({
                                         {category.is_active ? (
                                             <Badge
                                                 variant="outline"
-                                                className="gap-1 text-emerald-600 border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+                                                className="gap-1 border-emerald-300 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400"
                                             >
                                                 <CheckCircle2 className="size-3" />
                                                 Active
@@ -298,7 +298,7 @@ export default function AdminJobCategoriesIndex({
                                         ) : (
                                             <Badge
                                                 variant="outline"
-                                                className="gap-1 text-muted-foreground border-border"
+                                                className="gap-1 border-border text-muted-foreground"
                                             >
                                                 <XCircle className="size-3" />
                                                 Inactive
