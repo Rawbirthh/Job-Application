@@ -28,6 +28,9 @@ class JobCategory extends Model
 
     /**
      * Scope a query to only include active categories.
+     *
+     * @param  Builder<JobCategory>  $query
+     * @return Builder<JobCategory>
      */
     public function scopeActive(Builder $query): Builder
     {
