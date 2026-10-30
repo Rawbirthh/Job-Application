@@ -23,9 +23,13 @@ export default function SplitLayout({
     return (
         <div className={cn('space-y-6 p-4 md:p-6', className)}>
             <div className="space-y-1">
-                <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+                <h1 className="text-xl font-semibold tracking-tight">
+                    {title}
+                </h1>
                 {description && (
-                    <p className="text-sm text-muted-foreground">{description}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {description}
+                    </p>
                 )}
             </div>
 

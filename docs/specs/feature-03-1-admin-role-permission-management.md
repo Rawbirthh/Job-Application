@@ -1,6 +1,7 @@
 # Feature 3.1 — Admin Role and Permission Management
 
 **Metadata:**
+
 - Feature ID: 3.1
 - Title: Admin Role and Permission Management
 - Spec Type: Feature specification
@@ -30,9 +31,11 @@ Provide authorized administrators with a UI to dynamically manage the role and p
 ## Actors and flows
 
 **Primary actors:**
+
 - Platform administrator (role `platform_admin` with permission `admin.access` + new permissions for role/permission management).
 
 **Key flows:**
+
 1. Admin navigates to `/admin/roles` → views paginated list of roles with permissions count → can create/edit/delete roles.
 2. Admin navigates to `/admin/permissions` → views paginated list of permissions → can create/edit/delete permissions.
 3. Admin edits a role → sees available permissions → can assign/remove permissions to/from the role.
@@ -44,6 +47,7 @@ Provide authorized administrators with a UI to dynamically manage the role and p
 ## Scope and acceptance criteria
 
 **In scope:**
+
 - Admin CRUD for roles (name, slug, description, is_system flag).
 - Admin CRUD for permissions (name, slug, description, is_system flag).
 - Admin UI to assign/remove permissions to/from roles.
@@ -53,6 +57,7 @@ Provide authorized administrators with a UI to dynamically manage the role and p
 - Server-side pagination, search, and authorization for all endpoints.
 
 **Acceptance criteria (checkable statements):**
+
 - Admin with `roles.manage` permission can create, view, edit, and delete non-system roles.
 - Admin with `permissions.manage` permission can create, view, edit, and delete non-system permissions.
 - Admin with `roles.manage` permission can assign/remove permissions to/from roles.
@@ -73,6 +78,7 @@ Provide authorized administrators with a UI to dynamically manage the role and p
 ### 1. System definition protection
 
 Existing `ProtectsSystemDefinition` trait in `Role` and `Permission` models must be enforced:
+
 - `is_system = true` records cannot be deleted.
 - `is_system` flag cannot be changed from `true` to `false`.
 - `slug` field on system records cannot be changed.
@@ -80,6 +86,7 @@ Existing `ProtectsSystemDefinition` trait in `Role` and `Permission` models must
 ### 2. Last-administrator protection
 
 When modifying role-permission assignments, ensure at least one user retains `admin.access` permission:
+
 - Cannot remove `admin.access` from `platform_admin` role if no other role has it.
 - Cannot delete the last role that has `admin.access` permission.
 - Use existing `RoleAssignmentService` patterns or extend with new methods.
@@ -87,6 +94,7 @@ When modifying role-permission assignments, ensure at least one user retains `ad
 ### 3. Authorization requirements
 
 New permissions to seed:
+
 - `roles.view` — View list of roles.
 - `roles.manage` — Create, update, delete roles; assign permissions to roles.
 - `permissions.view` — View list of permissions.
@@ -107,6 +115,7 @@ These permissions are granted to `platform_admin` role only.
 ### 5. Route protection
 
 All routes under `/admin/roles` and `/admin/permissions` require:
+
 - `auth` middleware.
 - `permission:admin.access` middleware.
 - Specific permission middleware for each action (e.g., `permission:roles.view` for index).
@@ -124,7 +133,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
     // Roles
     Route::prefix('roles')->name('roles.')->middleware(['permission:roles.view'])->group(function (): void {
         Route::get('/', [RoleController::class, 'index'])->name('index');
-        
+
         Route::middleware(['permission:roles.manage'])->group(function (): void {
             Route::post('/', [RoleController::class, 'store'])->name('store');
             Route::get('{role}/edit', [RoleController::class, 'edit'])->name('edit');
@@ -136,7 +145,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
     // Permissions
     Route::prefix('permissions')->name('permissions.')->middleware(['permission:permissions.view'])->group(function (): void {
         Route::get('/', [PermissionController::class, 'index'])->name('index');
-        
+
         Route::middleware(['permission:permissions.manage'])->group(function (): void {
             Route::post('/', [PermissionController::class, 'store'])->name('store');
             Route::get('{permission}/edit', [PermissionController::class, 'edit'])->name('edit');
@@ -150,6 +159,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 ### Controllers
 
 **New: `app/Http/Controllers/Admin/RoleController.php`**
+
 - `index()` — paginated list with search, eager load permissions count.
 - `store()` — validate, create role, sync permissions if provided.
 - `edit()` — return role with assigned permission IDs for form.
@@ -157,6 +167,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 - `destroy()` — check system flag, delete role.
 
 **New: `app/Http/Controllers/Admin/PermissionController.php`**
+
 - `index()` — paginated list with search.
 - `store()` — validate, create permission.
 - `edit()` — return permission for form.
@@ -166,36 +177,44 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 ### Form Requests
 
 **New: `app/Http/Requests/Admin/StoreRoleRequest.php`**
+
 - Validation rules for role creation.
 
 **New: `app/Http/Requests/Admin/UpdateRoleRequest.php`**
+
 - Validation rules for role update, including permission sync.
 
 **New: `app/Http/Requests/Admin/StorePermissionRequest.php`**
+
 - Validation rules for permission creation.
 
 **New: `app/Http/Requests/Admin/UpdatePermissionRequest.php`**
+
 - Validation rules for permission update.
 
 ### Models
 
 **Existing: `app/Models/Role.php`**
+
 - Already has `permissions()` relationship.
 - Already uses `ProtectsSystemDefinition` trait.
 
 **Existing: `app/Models/Permission.php`**
+
 - Already has `roles()` relationship.
 - Already uses `ProtectsSystemDefinition` trait.
 
 ### Service layer
 
 **Extend: `app/Services/Authorization/RoleAssignmentService.php`**
+
 - Add method to sync permissions to a role with last-admin check.
 - Add method to validate permission removal doesn't break admin access.
 
 ### Seeder update
 
 **File: `database/seeders/AuthorizationSeeder.php`**
+
 - Add new permissions: `roles.view`, `roles.manage`, `permissions.view`, `permissions.manage`.
 - Assign new permissions to `platform_admin` role.
 
@@ -206,6 +225,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 ### Inertia pages
 
 **New: `resources/js/pages/admin/roles/index.tsx`**
+
 - Split layout: left = create/edit form, right = paginated roles table.
 - Table columns: Name, Slug, Permissions Count, System, Actions.
 - Search input for filtering by name/slug.
@@ -214,6 +234,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 - System role indicator badge.
 
 **New: `resources/js/pages/admin/permissions/index.tsx`**
+
 - Split layout: left = create/edit form, right = paginated permissions table.
 - Table columns: Name, Slug, Roles Count, System, Actions.
 - Search input for filtering by name/slug.
@@ -224,15 +245,18 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 ### Components
 
 **New: `resources/js/components/admin/split-layout-form.tsx`**
+
 - Reusable split layout component with form on left and data table on right.
 - Responsive: stacks on mobile, side-by-side on desktop.
 
 **Update: `resources/js/lib/navigation.ts`**
+
 - Add navigation items for `/admin/roles` and `/admin/permissions` with required permissions.
 
 ### Types
 
 **Update: `resources/js/types/authorization.ts`**
+
 - Add `RoleWithPermissions` type for role list items.
 - Add `PermissionWithRoles` type for permission list items.
 
@@ -245,6 +269,7 @@ Route::middleware(['auth', 'permission:admin.access'])->group(function (): void 
 **New: `tests/Feature/Authorization/AdminRoleManagementTest.php`**
 
 Test cases:
+
 1. Admin can view roles list.
 2. Admin can create a new role.
 3. Admin cannot create role with duplicate slug.
@@ -259,6 +284,7 @@ Test cases:
 **New: `tests/Feature/Authorization/AdminPermissionManagementTest.php`**
 
 Test cases:
+
 1. Admin can view permissions list.
 2. Admin can create a new permission.
 3. Admin cannot create permission with duplicate slug.
@@ -271,6 +297,7 @@ Test cases:
 ### Frontend tests
 
 **Manual verification:**
+
 - Type checks pass: `npm run types:check`.
 - Build passes: `npm run build`.
 - Split layout renders correctly on desktop and mobile.
@@ -292,15 +319,18 @@ npm run build
 ## Risks, dependencies, and assumptions
 
 **Risks:**
+
 - Misconfiguration could allow privilege escalation if permissions are incorrectly assigned.
 - Deleting a permission that's referenced in code (hardcoded checks) could break functionality.
-  - Mitigation: Only allow deletion of custom permissions; system permissions are protected.
+    - Mitigation: Only allow deletion of custom permissions; system permissions are protected.
 
 **Dependencies:**
+
 - Feature 3 (Custom roles, permissions, middleware, Policies) must be complete.
 - Feature 4 (Shared application shell) must be complete for navigation integration.
 
 **Assumptions:**
+
 - Permission slugs in code (`PermissionSlug::AdminAccess`) remain hardcoded; new permissions are added via database only.
 - System permissions are a finite set controlled by developers; custom permissions are for dynamic business rules.
 - Admins understand the impact of permission changes on role capabilities.
@@ -310,16 +340,16 @@ npm run build
 ## Unresolved questions and decisions pending user input
 
 1. **Slug immutability for non-system records:** Should admins be allowed to change the slug of a non-system role/permission after creation?
-   - **Recommendation:** No, slugs should be immutable to prevent broken references. Admin can create a new record and delete the old one.
+    - **Recommendation:** No, slugs should be immutable to prevent broken references. Admin can create a new record and delete the old one.
 
 2. **Permission assignment to system roles:** Should admins be allowed to add/remove permissions from system roles like `platform_admin`?
-   - **Recommendation:** Yes, but with last-admin protection for `admin.access` permission.
+    - **Recommendation:** Yes, but with last-admin protection for `admin.access` permission.
 
 3. **Cascade behavior when deleting a permission:** When a permission is deleted, should it be automatically detached from all roles?
-   - **Recommendation:** Yes, use `detach()` before deletion.
+    - **Recommendation:** Yes, use `detach()` before deletion.
 
 4. **Permission naming convention:** Should permission slugs follow a specific pattern (e.g., `resource.action`)?
-   - **Recommendation:** Yes, recommend `resource.action` pattern in UI help text, but don't enforce it in validation to allow flexibility.
+    - **Recommendation:** Yes, recommend `resource.action` pattern in UI help text, but don't enforce it in validation to allow flexibility.
 
 ---
 
@@ -346,5 +376,6 @@ npm run build
 Feature 3.1 extends the authorization foundation by enabling administrators to dynamically manage roles and permissions through a secure UI. It enforces system definition protection, last-administrator safeguards, and follows the established patterns from Feature 3. The split-layout UI (form left, table right) provides a clean, responsive experience for managing the authorization catalogue.
 
 **Key files to create/update:**
+
 - Backend: `RoleController.php`, `PermissionController.php`, Form Requests, `routes/admin.php`, `AuthorizationSeeder.php`, `RoleAssignmentService.php`, tests.
 - Frontend: `pages/admin/roles/index.tsx`, `pages/admin/permissions/index.tsx`, `SplitLayoutForm` component, `navigation.ts` update, types update.

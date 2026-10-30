@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Pencil, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
@@ -27,10 +27,10 @@ export default function AdminPermissionsIndex({
     filters,
     canManagePermissions,
 }: AdminPermissionsIndexProps) {
-    const { errors } = usePage<{ errors: Record<string, string> }>().props;
     const [search, setSearch] = useState(filters.search);
     const [isSearching, setIsSearching] = useState(false);
-    const [editingPermission, setEditingPermission] = useState<PermissionWithRoles | null>(null);
+    const [editingPermission, setEditingPermission] =
+        useState<PermissionWithRoles | null>(null);
 
     const form = useForm<{
         name: string;
@@ -95,7 +95,11 @@ export default function AdminPermissionsIndex({
     };
 
     const handleDelete = (permission: PermissionWithRoles) => {
-        if (confirm(`Are you sure you want to delete permission "${permission.name}"?`)) {
+        if (
+            confirm(
+                `Are you sure you want to delete permission "${permission.name}"?`,
+            )
+        ) {
             router.delete(PermissionController.destroy.url(permission.id), {
                 preserveScroll: true,
             });
@@ -140,7 +144,9 @@ export default function AdminPermissionsIndex({
                 <Textarea
                     id="permission-description"
                     value={form.data.description}
-                    onChange={(e) => form.setData('description', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('description', e.target.value)
+                    }
                     placeholder="Optional description of this permission"
                     maxLength={500}
                     rows={3}
@@ -150,9 +156,15 @@ export default function AdminPermissionsIndex({
             </div>
 
             <div className="flex items-center gap-2 pt-2">
-                <Button type="submit" disabled={form.processing} className="flex-1">
+                <Button
+                    type="submit"
+                    disabled={form.processing}
+                    className="flex-1"
+                >
                     {form.processing && <Spinner className="mr-2" />}
-                    {editingPermission ? 'Update Permission' : 'Create Permission'}
+                    {editingPermission
+                        ? 'Update Permission'
+                        : 'Create Permission'}
                 </Button>
                 {editingPermission && (
                     <Button
@@ -175,7 +187,9 @@ export default function AdminPermissionsIndex({
                 className="flex flex-col gap-2 sm:flex-row sm:items-end"
             >
                 <div className="grid flex-1 gap-2">
-                    <Label htmlFor="permission-search">Search permissions</Label>
+                    <Label htmlFor="permission-search">
+                        Search permissions
+                    </Label>
                     <Input
                         id="permission-search"
                         value={search}
@@ -185,8 +199,16 @@ export default function AdminPermissionsIndex({
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button type="submit" disabled={isSearching} variant="secondary">
-                        {isSearching ? <Spinner /> : <Search className="size-4" />}
+                    <Button
+                        type="submit"
+                        disabled={isSearching}
+                        variant="secondary"
+                    >
+                        {isSearching ? (
+                            <Spinner />
+                        ) : (
+                            <Search className="size-4" />
+                        )}
                         Search
                     </Button>
                     {filters.search && (
@@ -207,29 +229,37 @@ export default function AdminPermissionsIndex({
             <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-border bg-muted/50 text-xs font-medium uppercase text-muted-foreground">
+                        <thead className="border-b border-border bg-muted/50 text-xs font-medium text-muted-foreground uppercase">
                             <tr>
                                 <th className="px-4 py-3">Permission</th>
                                 <th className="px-4 py-3">Slug</th>
                                 <th className="px-4 py-3">Assigned Roles</th>
-                                <th className="px-4 py-3 text-right">Actions</th>
+                                <th className="px-4 py-3 text-right">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {permissions.data.map((permission) => (
-                                <tr key={permission.id} className="hover:bg-muted/40">
+                                <tr
+                                    key={permission.id}
+                                    className="hover:bg-muted/40"
+                                >
                                     <td className="px-4 py-3 font-medium">
                                         <div className="flex items-center gap-2">
                                             {permission.name}
                                             {permission.is_system && (
-                                                <Badge variant="outline" className="gap-1">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="gap-1"
+                                                >
                                                     <ShieldCheck className="size-3" />
                                                     System
                                                 </Badge>
                                             )}
                                         </div>
                                         {permission.description && (
-                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
                                                 {permission.description}
                                             </p>
                                         )}
@@ -240,40 +270,56 @@ export default function AdminPermissionsIndex({
                                     <td className="px-4 py-3">
                                         <Badge variant="secondary">
                                             {permission.roles_count}{' '}
-                                            {permission.roles_count === 1 ? 'role' : 'roles'}
+                                            {permission.roles_count === 1
+                                                ? 'role'
+                                                : 'roles'}
                                         </Badge>
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        {canManagePermissions && !permission.is_system && (
-                                            <div className="flex items-center justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => startEdit(permission)}
-                                                    title="Edit permission"
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-red-600 hover:text-red-700 dark:text-red-400"
-                                                    onClick={() => handleDelete(permission)}
-                                                    title="Delete permission"
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </Button>
-                                            </div>
-                                        )}
+                                        {canManagePermissions &&
+                                            !permission.is_system && (
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            startEdit(
+                                                                permission,
+                                                            )
+                                                        }
+                                                        title="Edit permission"
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-red-600 hover:text-red-700 dark:text-red-400"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                permission,
+                                                            )
+                                                        }
+                                                        title="Delete permission"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
                                         {permission.is_system && (
-                                            <span className="text-xs text-muted-foreground">Locked</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                Locked
+                                            </span>
                                         )}
                                     </td>
                                 </tr>
                             ))}
                             {permissions.data.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={4}
+                                        className="px-4 py-12 text-center text-muted-foreground"
+                                    >
                                         No permissions found.
                                     </td>
                                 </tr>
@@ -302,7 +348,11 @@ export default function AdminPermissionsIndex({
             <SplitLayout
                 title="Permission Management"
                 description="Create and manage permissions in the system."
-                formTitle={editingPermission ? `Edit Permission: ${editingPermission.name}` : 'Create New Permission'}
+                formTitle={
+                    editingPermission
+                        ? `Edit Permission: ${editingPermission.name}`
+                        : 'Create New Permission'
+                }
                 formDescription="Configure permission details."
                 form={formContent}
                 table={tableContent}

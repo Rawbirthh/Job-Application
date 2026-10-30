@@ -44,7 +44,9 @@ export function getFilteredNavItems(
 ): NavItemConfig[] {
     return items.filter((item) => {
         if (item.requiredRoles && item.requiredRoles.length > 0) {
-            const hasRole = item.requiredRoles.some((role) => roles.includes(role));
+            const hasRole = item.requiredRoles.some((role) =>
+                roles.includes(role),
+            );
             if (!hasRole) {
                 return false;
             }

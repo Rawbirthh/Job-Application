@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Pencil, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
@@ -13,7 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
-import type { PaginatedData, RoleWithPermissions, PermissionSummary } from '@/types/authorization';
+import type {
+    PaginatedData,
+    RoleWithPermissions,
+    PermissionSummary,
+} from '@/types/authorization';
 
 type AdminRolesIndexProps = {
     roles: PaginatedData<RoleWithPermissions>;
@@ -26,14 +30,15 @@ type AdminRolesIndexProps = {
 
 export default function AdminRolesIndex({
     roles,
-    permissions = [],
+    permissions,
     filters,
     canManageRoles,
 }: AdminRolesIndexProps) {
-    const { errors } = usePage<{ errors: Record<string, string> }>().props;
     const [search, setSearch] = useState(filters.search);
     const [isSearching, setIsSearching] = useState(false);
-    const [editingRole, setEditingRole] = useState<RoleWithPermissions | null>(null);
+    const [editingRole, setEditingRole] = useState<RoleWithPermissions | null>(
+        null,
+    );
 
     const form = useForm<{
         name: string;
@@ -155,7 +160,9 @@ export default function AdminRolesIndex({
                 <Textarea
                     id="role-description"
                     value={form.data.description}
-                    onChange={(e) => form.setData('description', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('description', e.target.value)
+                    }
                     placeholder="Optional description of this role"
                     maxLength={500}
                     rows={3}
@@ -166,12 +173,14 @@ export default function AdminRolesIndex({
 
             <div className="space-y-2">
                 <Label>Assigned Permissions</Label>
-                <div className="max-h-60 overflow-y-auto rounded-md border border-border p-3 space-y-2">
+                <div className="max-h-60 space-y-2 overflow-y-auto rounded-md border border-border p-3">
                     {permissions.map((perm) => (
                         <div key={perm.id} className="flex items-start gap-2">
                             <Checkbox
                                 id={`perm-${perm.id}`}
-                                checked={form.data.permissions.includes(perm.id)}
+                                checked={form.data.permissions.includes(
+                                    perm.id,
+                                )}
                                 onCheckedChange={(checked) =>
                                     togglePermission(perm.id, checked === true)
                                 }
@@ -179,7 +188,7 @@ export default function AdminRolesIndex({
                             />
                             <Label
                                 htmlFor={`perm-${perm.id}`}
-                                className="text-sm font-normal cursor-pointer leading-tight"
+                                className="cursor-pointer text-sm leading-tight font-normal"
                             >
                                 <span className="font-medium">{perm.name}</span>
                                 <span className="block text-xs text-muted-foreground">
@@ -189,14 +198,20 @@ export default function AdminRolesIndex({
                         </div>
                     ))}
                     {permissions.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No permissions available.</p>
+                        <p className="text-sm text-muted-foreground">
+                            No permissions available.
+                        </p>
                     )}
                 </div>
                 <InputError message={form.errors.permissions} />
             </div>
 
             <div className="flex items-center gap-2 pt-2">
-                <Button type="submit" disabled={form.processing} className="flex-1">
+                <Button
+                    type="submit"
+                    disabled={form.processing}
+                    className="flex-1"
+                >
                     {form.processing && <Spinner className="mr-2" />}
                     {editingRole ? 'Update Role' : 'Create Role'}
                 </Button>
@@ -231,8 +246,16 @@ export default function AdminRolesIndex({
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button type="submit" disabled={isSearching} variant="secondary">
-                        {isSearching ? <Spinner /> : <Search className="size-4" />}
+                    <Button
+                        type="submit"
+                        disabled={isSearching}
+                        variant="secondary"
+                    >
+                        {isSearching ? (
+                            <Spinner />
+                        ) : (
+                            <Search className="size-4" />
+                        )}
                         Search
                     </Button>
                     {filters.search && (
@@ -253,12 +276,14 @@ export default function AdminRolesIndex({
             <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-border bg-muted/50 text-xs font-medium uppercase text-muted-foreground">
+                        <thead className="border-b border-border bg-muted/50 text-xs font-medium text-muted-foreground uppercase">
                             <tr>
                                 <th className="px-4 py-3">Role</th>
                                 <th className="px-4 py-3">Slug</th>
                                 <th className="px-4 py-3">Permissions</th>
-                                <th className="px-4 py-3 text-right">Actions</th>
+                                <th className="px-4 py-3 text-right">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -268,14 +293,17 @@ export default function AdminRolesIndex({
                                         <div className="flex items-center gap-2">
                                             {role.name}
                                             {role.is_system && (
-                                                <Badge variant="outline" className="gap-1">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="gap-1"
+                                                >
                                                     <ShieldCheck className="size-3" />
                                                     System
                                                 </Badge>
                                             )}
                                         </div>
                                         {role.description && (
-                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
                                                 {role.description}
                                             </p>
                                         )}
@@ -286,7 +314,9 @@ export default function AdminRolesIndex({
                                     <td className="px-4 py-3">
                                         <Badge variant="secondary">
                                             {role.permissions_count}{' '}
-                                            {role.permissions_count === 1 ? 'permission' : 'permissions'}
+                                            {role.permissions_count === 1
+                                                ? 'permission'
+                                                : 'permissions'}
                                         </Badge>
                                     </td>
                                     <td className="px-4 py-3 text-right">
@@ -295,7 +325,9 @@ export default function AdminRolesIndex({
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    onClick={() => startEdit(role)}
+                                                    onClick={() =>
+                                                        startEdit(role)
+                                                    }
                                                     title="Edit role"
                                                 >
                                                     <Pencil className="size-4" />
@@ -304,7 +336,9 @@ export default function AdminRolesIndex({
                                                     variant="ghost"
                                                     size="icon"
                                                     className="text-red-600 hover:text-red-700 dark:text-red-400"
-                                                    onClick={() => handleDelete(role)}
+                                                    onClick={() =>
+                                                        handleDelete(role)
+                                                    }
                                                     title="Delete role"
                                                 >
                                                     <Trash2 className="size-4" />
@@ -312,14 +346,19 @@ export default function AdminRolesIndex({
                                             </div>
                                         )}
                                         {role.is_system && (
-                                            <span className="text-xs text-muted-foreground">Locked</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                Locked
+                                            </span>
                                         )}
                                     </td>
                                 </tr>
                             ))}
                             {roles.data.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={4}
+                                        className="px-4 py-12 text-center text-muted-foreground"
+                                    >
                                         No roles found.
                                     </td>
                                 </tr>
@@ -348,7 +387,11 @@ export default function AdminRolesIndex({
             <SplitLayout
                 title="Role Management"
                 description="Create and manage roles and assign permissions."
-                formTitle={editingRole ? `Edit Role: ${editingRole.name}` : 'Create New Role'}
+                formTitle={
+                    editingRole
+                        ? `Edit Role: ${editingRole.name}`
+                        : 'Create New Role'
+                }
                 formDescription="Configure role details and associated permissions."
                 form={formContent}
                 table={tableContent}
