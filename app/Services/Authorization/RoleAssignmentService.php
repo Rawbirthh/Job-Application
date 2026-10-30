@@ -2,8 +2,10 @@
 
 namespace App\Services\Authorization;
 
+use App\Enums\PermissionSlug;
 use App\Enums\RoleSlug;
 use App\Exceptions\LastAdministratorException;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -140,5 +142,62 @@ class RoleAssignmentService
                 $query->where('roles.id', $administratorRole->id);
             })
             ->exists();
+    }
+
+    /**
+     * Sync permissions to a role with last-admin protection.
+     *
+     * Cannot remove admin.access from platform_admin role if no other role has it.
+     *
+     * @param  array<int, int>  $permissionIds
+     */
+    public function syncPermissionsToRole(Role $role, array $permissionIds): void
+    {
+        $permissionIds = array_values(array_unique($permissionIds));
+
+        // Check last-admin protection: if removing admin.access from platform_admin,
+        // ensure another role retains it
+        if ($role->slug === RoleSlug::PlatformAdmin->value) {
+            $adminAccessPermission = Permission::query()
+                ->where('slug', PermissionSlug::AdminAccess->value)
+                ->first(['id']);
+
+            if ($adminAccessPermission !== null) {
+                $this->assertAdminAccessRetained($role, $adminAccessPermission->id, $permissionIds);
+            }
+        }
+
+        $role->permissions()->sync($permissionIds);
+    }
+
+    /**
+     * Assert that admin.access permission is retained by at least one role when modifying role permissions.
+     *
+     * @param  array<int, int>  $newPermissionIds
+     */
+    public function assertAdminAccessRetained(
+        Role $role,
+        int $adminAccessPermissionId,
+        array $newPermissionIds
+    ): void {
+        $hasNotRemoved = in_array($adminAccessPermissionId, $newPermissionIds, true);
+
+        if ($hasNotRemoved) {
+            return;
+        }
+
+        // Check if any other role still has admin.access
+        $otherRoleHasAdminAccess = Role::query()
+            ->where('id', '!=', $role->id)
+            ->whereHas('permissions', function (Builder $query) use ($adminAccessPermissionId): void {
+                $query->where('permissions.id', $adminAccessPermissionId);
+            })
+            ->exists();
+
+        if (! $otherRoleHasAdminAccess) {
+            throw new LastAdministratorException(
+                'At least one platform administrator role must retain admin.access permission.',
+            );
+        }
     }
 }

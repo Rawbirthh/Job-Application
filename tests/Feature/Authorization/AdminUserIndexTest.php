@@ -55,7 +55,7 @@ class AdminUserIndexTest extends TestCase
 
     public function test_admin_can_search_users_by_name_prefix(): void
     {
-        $administrator = User::factory()->platformAdmin()->create();
+        $administrator = User::factory()->platformAdmin()->create(['name' => 'Admin User']);
         $alice = User::factory()->jobSeeker()->create([
             'name' => 'Alice Anderson',
             'email' => 'alice.anderson@example.com',
@@ -78,7 +78,7 @@ class AdminUserIndexTest extends TestCase
 
     public function test_admin_can_search_users_by_email_prefix(): void
     {
-        $administrator = User::factory()->platformAdmin()->create();
+        $administrator = User::factory()->platformAdmin()->create(['name' => 'Admin User']);
         $alice = User::factory()->jobSeeker()->create([
             'name' => 'Zoe Zhang',
             'email' => 'alice.prefix@example.com',

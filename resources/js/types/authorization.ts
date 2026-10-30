@@ -9,11 +9,23 @@ export type RoleOption = RoleSummary & {
     is_system: boolean;
 };
 
-export type AdminUserRow = {
+export type RoleWithPermissions = RoleSummary & {
+    description: string | null;
+    is_system: boolean;
+    permissions_count: number;
+    permission_ids?: number[];
+};
+
+export type PermissionSummary = {
     id: number;
+    slug: string;
     name: string;
-    email: string;
-    roles: RoleSummary[];
+};
+
+export type PermissionWithRoles = PermissionSummary & {
+    description: string | null;
+    is_system: boolean;
+    roles_count: number;
 };
 
 export type PaginatedData<T> = {
@@ -24,6 +36,13 @@ export type PaginatedData<T> = {
     total: number;
     prev_page_url: string | null;
     next_page_url: string | null;
+};
+
+export type AdminUserRow = {
+    id: number;
+    name: string;
+    email: string;
+    roles: RoleSummary[];
 };
 
 export type AdminUserIndexProps = {
@@ -38,4 +57,21 @@ export type AdminUserRolesProps = {
     user: AdminUserRow;
     roles: RoleOption[];
     canViewUsers: boolean;
+};
+
+export type AdminRolesIndexProps = {
+    roles: PaginatedData<RoleWithPermissions>;
+    permissions: PermissionSummary[];
+    filters: {
+        search: string;
+    };
+    canManageRoles: boolean;
+};
+
+export type AdminPermissionsIndexProps = {
+    permissions: PaginatedData<PermissionWithRoles>;
+    filters: {
+        search: string;
+    };
+    canManagePermissions: boolean;
 };

@@ -30,7 +30,23 @@ trait HasRolesAndPermissions
     {
         $slug = $slug instanceof RoleSlug ? $slug->value : $slug;
 
+        if ($this->relationLoaded('roles')) {
+            return $this->roles->contains('slug', $slug);
+        }
+
         return $this->roles()->where('roles.slug', $slug)->exists();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function roleSlugs(): array
+    {
+        $this->loadMissing([
+            'roles' => fn (BelongsToMany $query) => $query->select(['roles.id', 'roles.slug']),
+        ]);
+
+        return $this->roles->pluck('slug')->values()->all();
     }
 
     public function hasPermission(PermissionSlug|string $slug): bool
@@ -52,7 +68,7 @@ trait HasRolesAndPermissions
     /**
      * @return array<int, string>
      */
-    private function permissionSlugs(): array
+    public function permissionSlugs(): array
     {
         if ($this->cachedPermissionSlugs !== null) {
             return $this->cachedPermissionSlugs;

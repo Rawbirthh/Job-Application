@@ -1,9 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('dashboard', AdminDashboardController::class)
+        ->middleware(['permission:admin.access'])
+        ->name('dashboard');
+
     Route::get('users', [UserRoleController::class, 'index'])
         ->middleware(['permission:admin.access', 'permission:users.view'])
         ->name('users.index');
@@ -15,4 +22,32 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
     Route::put('users/{user}/roles', [UserRoleController::class, 'update'])
         ->middleware(['permission:admin.access', 'permission:users.roles.manage'])
         ->name('users.roles.update');
+
+    // Roles management
+    Route::prefix('roles')->name('roles.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [RoleController::class, 'index'])
+            ->middleware(['permission:roles.view'])
+            ->name('index');
+
+        Route::middleware(['permission:roles.manage'])->group(function (): void {
+            Route::post('/', [RoleController::class, 'store'])->name('store');
+            Route::get('{role}/edit', [RoleController::class, 'edit'])->name('edit');
+            Route::put('{role}', [RoleController::class, 'update'])->name('update');
+            Route::delete('{role}', [RoleController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Permissions management
+    Route::prefix('permissions')->name('permissions.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [PermissionController::class, 'index'])
+            ->middleware(['permission:permissions.view'])
+            ->name('index');
+
+        Route::middleware(['permission:permissions.manage'])->group(function (): void {
+            Route::post('/', [PermissionController::class, 'store'])->name('store');
+            Route::get('{permission}/edit', [PermissionController::class, 'edit'])->name('edit');
+            Route::put('{permission}', [PermissionController::class, 'update'])->name('update');
+            Route::delete('{permission}', [PermissionController::class, 'destroy'])->name('destroy');
+        });
+    });
 });
