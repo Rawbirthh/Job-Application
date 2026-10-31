@@ -4,8 +4,10 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmploymentTypeController;
 use App\Http\Controllers\Admin\ExperienceLevelController;
 use App\Http\Controllers\Admin\JobCategoryController;
+use App\Http\Controllers\Admin\PayPeriodController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SalaryBandController;
 use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\WorkplaceArrangementController;
 use Illuminate\Support\Facades\Route;
@@ -104,6 +106,32 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             Route::post('/', [ExperienceLevelController::class, 'store'])->name('store');
             Route::put('{experience_level}', [ExperienceLevelController::class, 'update'])->name('update');
             Route::delete('{experience_level}', [ExperienceLevelController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Pay Periods management
+    Route::prefix('pay-periods')->name('pay-periods.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [PayPeriodController::class, 'index'])
+            ->middleware(['permission:pay_periods.view'])
+            ->name('index');
+
+        Route::middleware(['permission:pay_periods.manage'])->group(function (): void {
+            Route::post('/', [PayPeriodController::class, 'store'])->name('store');
+            Route::put('{pay_period}', [PayPeriodController::class, 'update'])->name('update');
+            Route::delete('{pay_period}', [PayPeriodController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Salary Bands management
+    Route::prefix('salary-bands')->name('salary-bands.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [SalaryBandController::class, 'index'])
+            ->middleware(['permission:salary_bands.view'])
+            ->name('index');
+
+        Route::middleware(['permission:salary_bands.manage'])->group(function (): void {
+            Route::post('/', [SalaryBandController::class, 'store'])->name('store');
+            Route::put('{salary_band}', [SalaryBandController::class, 'update'])->name('update');
+            Route::delete('{salary_band}', [SalaryBandController::class, 'destroy'])->name('destroy');
         });
     });
 });

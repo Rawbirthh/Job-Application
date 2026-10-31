@@ -19,4 +19,8 @@ enum PermissionSlug: string
     case WorkplaceArrangementsManage = 'workplace_arrangements.manage';
     case ExperienceLevelsView = 'experience_levels.view';
     case ExperienceLevelsManage = 'experience_levels.manage';
+    case PayPeriodsView = 'pay_periods.view';
+    case PayPeriodsManage = 'pay_periods.manage';
+    case SalaryBandsView = 'salary_bands.view';
+    case SalaryBandsManage = 'salary_bands.manage';
 }

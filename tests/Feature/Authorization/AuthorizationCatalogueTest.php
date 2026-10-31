@@ -41,10 +41,10 @@ class AuthorizationCatalogueTest extends TestCase
         sort($actualPermissionSlugs);
 
         $this->assertSame($expectedPermissionSlugs, $actualPermissionSlugs);
-        $this->assertDatabaseCount('permissions', 15);
+        $this->assertDatabaseCount('permissions', 19);
 
         $this->assertSame(3, Role::query()->where('is_system', true)->count());
-        $this->assertSame(15, Permission::query()->where('is_system', true)->count());
+        $this->assertSame(19, Permission::query()->where('is_system', true)->count());
 
         $administratorRole = Role::query()
             ->where('slug', RoleSlug::PlatformAdmin->value)
@@ -95,7 +95,7 @@ class AuthorizationCatalogueTest extends TestCase
         $this->seed(AuthorizationSeeder::class);
 
         $this->assertDatabaseCount('roles', 4);
-        $this->assertDatabaseCount('permissions', 16);
+        $this->assertDatabaseCount('permissions', 20);
 
         $this->assertDatabaseHas('roles', [
             'id' => $customRole->id,

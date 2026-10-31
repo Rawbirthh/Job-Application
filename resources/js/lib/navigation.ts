@@ -6,6 +6,8 @@ import {
     Briefcase,
     MapPin,
     GraduationCap,
+    Clock,
+    Banknote,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -66,6 +68,18 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.experienceLevels.index(),
         icon: GraduationCap,
         requiredPermissions: ['admin.access', 'experience_levels.view'],
+    },
+    {
+        title: 'Pay Periods',
+        href: admin.payPeriods.index(),
+        icon: Clock,
+        requiredPermissions: ['admin.access', 'pay_periods.view'],
+    },
+    {
+        title: 'Salary Bands',
+        href: admin.salaryBands.index(),
+        icon: Banknote,
+        requiredPermissions: ['admin.access', 'salary_bands.view'],
     },
 ];
 
