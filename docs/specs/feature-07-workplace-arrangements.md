@@ -98,12 +98,12 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 
 ## Routes, middleware, authorization
 
-| Method | URI                                          | Name                                | Middleware                                                              |
-| ------ | -------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------- |
-| GET    | `/admin/workplace-arrangements`              | `admin.workplace-arrangements.index` | `auth`, `permission:admin.access`, `permission:workplace_arrangements.view` |
-| POST   | `/admin/workplace-arrangements`              | `admin.workplace-arrangements.store` | `auth`, `permission:admin.access`, `permission:workplace_arrangements.manage` |
-| PUT    | `/admin/workplace-arrangements/{workplace_arrangement}` | `admin.workplace-arrangements.update` | same as store |
-| DELETE | `/admin/workplace-arrangements/{workplace_arrangement}` | `admin.workplace-arrangements.destroy` | same as store |
+| Method | URI                                                     | Name                                   | Middleware                                                                    |
+| ------ | ------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
+| GET    | `/admin/workplace-arrangements`                         | `admin.workplace-arrangements.index`   | `auth`, `permission:admin.access`, `permission:workplace_arrangements.view`   |
+| POST   | `/admin/workplace-arrangements`                         | `admin.workplace-arrangements.store`   | `auth`, `permission:admin.access`, `permission:workplace_arrangements.manage` |
+| PUT    | `/admin/workplace-arrangements/{workplace_arrangement}` | `admin.workplace-arrangements.update`  | same as store                                                                 |
+| DELETE | `/admin/workplace-arrangements/{workplace_arrangement}` | `admin.workplace-arrangements.destroy` | same as store                                                                 |
 
 - New `WorkplaceArrangementPolicy`: `viewAny`/`view` → `workplace_arrangements.view`; `create`/`update`/`delete` → `workplace_arrangements.manage`. Controllers still call `$this->authorize(...)` per action (defense in depth, matching Feature 5/6).
 - No company/owner scoping applies — platform configuration resource with a single admin audience.
@@ -115,11 +115,11 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ## Form Requests and validation
 
 - `StoreWorkplaceArrangementRequest` / `UpdateWorkplaceArrangementRequest` in `app/Http/Requests/Admin/`, mirroring the employment-type requests:
-  - `name`: `required, string, max:100, unique:workplace_arrangements,name` (update adds `ignore` on the route model).
-  - `slug`: `required, string, max:100, alpha_dash, unique:workplace_arrangements,slug` (update adds `ignore`).
-  - `description`: `nullable, string, max:500`.
-  - `sort_order`: `nullable, integer, min:0, max:9999` (defaults to 0 server-side when absent).
-  - `is_active`: `boolean` (defaults `true` server-side when absent).
+    - `name`: `required, string, max:100, unique:workplace_arrangements,name` (update adds `ignore` on the route model).
+    - `slug`: `required, string, max:100, alpha_dash, unique:workplace_arrangements,slug` (update adds `ignore`).
+    - `description`: `nullable, string, max:500`.
+    - `sort_order`: `nullable, integer, min:0, max:9999` (defaults to 0 server-side when absent).
+    - `is_active`: `boolean` (defaults `true` server-side when absent).
 - Typed `workplaceArrangementData()` accessor using `$this->safe()->all()` — no raw `$request->all()` writes.
 
 ---
@@ -128,9 +128,9 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 
 - `WorkplaceArrangement` model (`app/Models/WorkplaceArrangement.php`): `$fillable = ['name','slug','description','sort_order','is_active']`, boolean cast, integer cast for `sort_order`, `scopeActive`, typed factory. SoftDeletes **not** used.
 - Migration `create_workplace_arrangements_table`:
-  - `id`, `name` string(100) **unique**, `slug` string(100) **unique + index**, `description` nullable text, `sort_order` unsignedSmallInteger (or integer) default 0, `is_active` boolean default true, `timestamps`.
-  - Uniqueness constraints prevent duplicate identifiers at the database level, not just via validation (guards against races between validation and insert).
-  - Index on `slug` (unique already implies index); composite index on `(sort_order, name)` is **not** added — the result set is small and the default ordering is satisfied by a filesort on paginated pages; revisit if profiling shows otherwise. (Avoid index speculation per `AGENTS.md`.)
+    - `id`, `name` string(100) **unique**, `slug` string(100) **unique + index**, `description` nullable text, `sort_order` unsignedSmallInteger (or integer) default 0, `is_active` boolean default true, `timestamps`.
+    - Uniqueness constraints prevent duplicate identifiers at the database level, not just via validation (guards against races between validation and insert).
+    - Index on `slug` (unique already implies index); composite index on `(sort_order, name)` is **not** added — the result set is small and the default ordering is satisfied by a filesort on paginated pages; revisit if profiling shows otherwise. (Avoid index speculation per `AGENTS.md`.)
 - No foreign keys yet; Feature 13 adds `workplace_arrangement_id` FK on `jobs` with restrict-on-delete semantics when the referenced-option rule becomes enforceable.
 - `ProtectsSystemDefinition` concern **not** applied — these are not system-flagged rows (no `is_system` column), matching categories/employment types.
 
@@ -153,11 +153,11 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ## React/Inertia frontend
 
 - New page `resources/js/pages/admin/workplace-arrangements/index.tsx` mirroring `admin/employment-types/index.tsx`:
-  - `Head` title "Workplace Arrangements Management"; `SplitLayout` with form (create/edit) left and searchable paginated table right.
-  - `useForm<{ name, slug, description, sort_order, is_active }>`; Wayfinder actions from `WorkplaceArrangementController`; edit state via `useState`; toasts on success; `InputError` under each field; spinner/processing disabled states; empty-list state; `Pagination` component.
-  - Active/inactive badges identical to employment types (emerald active / muted inactive).
-  - Add a numeric "Display order" input (`type="number"`, min 0, max 9999) to the form.
-  - Optionally show `sort_order` in the table (small column) — recommended for admin clarity.
+    - `Head` title "Workplace Arrangements Management"; `SplitLayout` with form (create/edit) left and searchable paginated table right.
+    - `useForm<{ name, slug, description, sort_order, is_active }>`; Wayfinder actions from `WorkplaceArrangementController`; edit state via `useState`; toasts on success; `InputError` under each field; spinner/processing disabled states; empty-list state; `Pagination` component.
+    - Active/inactive badges identical to employment types (emerald active / muted inactive).
+    - Add a numeric "Display order" input (`type="number"`, min 0, max 9999) to the form.
+    - Optionally show `sort_order` in the table (small column) — recommended for admin clarity.
 - `resources/js/lib/navigation.ts`: add "Workplace Arrangements" item → `admin.workplaceArrangements.index()` with `requiredPermissions: ['admin.access', 'workplace_arrangements.view']` and icon `MapPin`.
 - Typed props: `workplaceArrangements: PaginatedData<WorkplaceArrangement>`, `filters: { search: string }`, `canManageWorkplaceArrangements: boolean`. No `any`; page data comes from Inertia props only.
 
