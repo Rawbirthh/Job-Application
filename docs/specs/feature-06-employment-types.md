@@ -32,7 +32,7 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 **Primary actors:**
 
 - Platform administrator (`platform_admin` role holding `admin.access`, plus the new `employment_types.view` / `employment_types.manage` permissions).
-- Job seekers and employers are read-only consumers of *active* employment types in later features; out of scope here.
+- Job seekers and employers are read-only consumers of _active_ employment types in later features; out of scope here.
 
 **Key flows:**
 
@@ -76,12 +76,12 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 
 ## Routes, middleware, authorization
 
-| Method | URI | Name | Middleware |
-|---|---|---|---|
-| GET | `/admin/employment-types` | `admin.employment-types.index` | `auth`, `permission:admin.access`, `permission:employment_types.view` |
-| POST | `/admin/employment-types` | `admin.employment-types.store` | `auth`, `permission:admin.access`, `permission:employment_types.manage` |
-| PUT | `/admin/employment-types/{employment_type}` | `admin.employment-types.update` | same as store |
-| DELETE | `/admin/employment-types/{employment_type}` | `admin.employment-types.destroy` | same as store |
+| Method | URI                                         | Name                             | Middleware                                                              |
+| ------ | ------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| GET    | `/admin/employment-types`                   | `admin.employment-types.index`   | `auth`, `permission:admin.access`, `permission:employment_types.view`   |
+| POST   | `/admin/employment-types`                   | `admin.employment-types.store`   | `auth`, `permission:admin.access`, `permission:employment_types.manage` |
+| PUT    | `/admin/employment-types/{employment_type}` | `admin.employment-types.update`  | same as store                                                           |
+| DELETE | `/admin/employment-types/{employment_type}` | `admin.employment-types.destroy` | same as store                                                           |
 
 - New `EmploymentTypePolicy`: `viewAny`/`view` → `employment_types.view`; `create`/`update`/`delete` → `employment_types.manage`. Controllers still call `$this->authorize(...)` per action (defense in depth, matching Feature 5).
 - No company/owner scoping applies — platform configuration resource with a single admin audience.
@@ -90,18 +90,18 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ## Form Requests and validation
 
 - `StoreEmploymentTypeRequest` / `UpdateEmploymentTypeRequest` in `app/Http/Requests/Admin/`, mirroring the category requests:
-  - `name`: `required, string, max:100, unique:employment_types,name` (update adds `ignore` on the route model).
-  - `slug`: `required, string, max:100, alpha_dash, unique:employment_types,slug` (update adds `ignore`).
-  - `description`: `nullable, string, max:500`.
-  - `is_active`: `boolean` (defaults `true` server-side when absent).
+    - `name`: `required, string, max:100, unique:employment_types,name` (update adds `ignore` on the route model).
+    - `slug`: `required, string, max:100, alpha_dash, unique:employment_types,slug` (update adds `ignore`).
+    - `description`: `nullable, string, max:500`.
+    - `is_active`: `boolean` (defaults `true` server-side when absent).
 - Typed `employmentTypeData()` accessor using `$this->safe()->all()` — no raw `$request->all()` writes.
 
 ## Model, migration, constraints
 
 - `EmploymentType` model (`app/Models/EmploymentType.php`): `$fillable = ['name','slug','description','is_active']`, boolean cast, `scopeActive`, typed factory. SoftDeletes **not** used — these are configuration options, not user data with retention semantics; the roadmap's "do not delete referenced options" rule is enforced by reference checks, not soft-deletes.
 - Migration `create_employment_types_table`:
-  - `id`, `name` string(100) **unique**, `slug` string(100) **unique + index**, `description` nullable text, `is_active` boolean default true, `timestamps`.
-  - Uniqueness constraints prevent duplicate identifiers at the database level, not just via validation (guards against races between validation and insert).
+    - `id`, `name` string(100) **unique**, `slug` string(100) **unique + index**, `description` nullable text, `is_active` boolean default true, `timestamps`.
+    - Uniqueness constraints prevent duplicate identifiers at the database level, not just via validation (guards against races between validation and insert).
 - No foreign keys yet; Feature 13 adds `employment_type_id` FK on `jobs` with restrict-on-delete semantics when the referenced-option rule becomes enforceable.
 
 ## Query shape
@@ -117,9 +117,9 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 ## React/Inertia frontend
 
 - New page `resources/js/pages/admin/employment-types/index.tsx` mirroring `admin/categories/index.tsx`:
-  - `Head` title "Employment Types Management"; `SplitLayout` with form (create/edit) left and searchable paginated table right.
-  - `useForm<{ name, slug, description, is_active }>`; Wayfinder actions from `EmploymentTypeController`; edit state via `useState`; toasts on success; `InputError` under each field; spinner/processing disabled states; empty-list state; `Pagination` component.
-  - Active/inactive badges identical to categories (emerald active / muted inactive).
+    - `Head` title "Employment Types Management"; `SplitLayout` with form (create/edit) left and searchable paginated table right.
+    - `useForm<{ name, slug, description, is_active }>`; Wayfinder actions from `EmploymentTypeController`; edit state via `useState`; toasts on success; `InputError` under each field; spinner/processing disabled states; empty-list state; `Pagination` component.
+    - Active/inactive badges identical to categories (emerald active / muted inactive).
 - `resources/js/lib/navigation.ts`: add "Employment Types" item → `admin.employment-types.index()` with `requiredPermissions: ['admin.access', 'employment_types.view']`.
 - Typed props: `employmentTypes: PaginatedData<EmploymentType>`, `filters: { search: string }`, `canManageEmploymentTypes: boolean`. No `any`; page data comes from Inertia props only.
 
@@ -135,7 +135,7 @@ Provide authorized platform administrators with a secure CRUD interface to manag
 
 - Admin sees index page with seeded rows (Inertia assertions).
 - Create happy path → persisted with defaults (`is_active` true when omitted).
-- Update happy path → fields and active toggle persisted; duplicate name/slug on *another* row rejected (unique-ignore correctness).
+- Update happy path → fields and active toggle persisted; duplicate name/slug on _another_ row rejected (unique-ignore correctness).
 - Delete happy path → row removed.
 - Duplicate name and slug on create → session errors on both fields.
 - Invalid input: missing name, bad slug (e.g. `not a slug!`), overlong description → validation errors.
