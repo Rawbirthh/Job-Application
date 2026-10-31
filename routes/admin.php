@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\JobCategoryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
+use App\Http\Controllers\Admin\WorkplaceArrangementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function (): void {
@@ -76,6 +77,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             Route::post('/', [EmploymentTypeController::class, 'store'])->name('store');
             Route::put('{employment_type}', [EmploymentTypeController::class, 'update'])->name('update');
             Route::delete('{employment_type}', [EmploymentTypeController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Workplace Arrangements management
+    Route::prefix('workplace-arrangements')->name('workplace-arrangements.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [WorkplaceArrangementController::class, 'index'])
+            ->middleware(['permission:workplace_arrangements.view'])
+            ->name('index');
+
+        Route::middleware(['permission:workplace_arrangements.manage'])->group(function (): void {
+            Route::post('/', [WorkplaceArrangementController::class, 'store'])->name('store');
+            Route::put('{workplace_arrangement}', [WorkplaceArrangementController::class, 'update'])->name('update');
+            Route::delete('{workplace_arrangement}', [WorkplaceArrangementController::class, 'destroy'])->name('destroy');
         });
     });
 });

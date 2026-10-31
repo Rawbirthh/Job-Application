@@ -15,4 +15,6 @@ enum PermissionSlug: string
     case CategoriesManage = 'categories.manage';
     case EmploymentTypesView = 'employment_types.view';
     case EmploymentTypesManage = 'employment_types.manage';
+    case WorkplaceArrangementsView = 'workplace_arrangements.view';
+    case WorkplaceArrangementsManage = 'workplace_arrangements.manage';
 }

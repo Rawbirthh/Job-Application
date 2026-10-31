@@ -4,6 +4,7 @@ import {
     Users,
     Layers,
     Briefcase,
+    MapPin,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -52,6 +53,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.employmentTypes.index(),
         icon: Briefcase,
         requiredPermissions: ['admin.access', 'employment_types.view'],
+    },
+    {
+        title: 'Workplace Arrangements',
+        href: admin.workplaceArrangements.index(),
+        icon: MapPin,
+        requiredPermissions: ['admin.access', 'workplace_arrangements.view'],
     },
 ];
 
