@@ -5,6 +5,7 @@ import {
     Layers,
     Briefcase,
     MapPin,
+    GraduationCap,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -59,6 +60,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.workplaceArrangements.index(),
         icon: MapPin,
         requiredPermissions: ['admin.access', 'workplace_arrangements.view'],
+    },
+    {
+        title: 'Experience Levels',
+        href: admin.experienceLevels.index(),
+        icon: GraduationCap,
+        requiredPermissions: ['admin.access', 'experience_levels.view'],
     },
 ];
 

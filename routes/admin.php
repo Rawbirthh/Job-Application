@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmploymentTypeController;
+use App\Http\Controllers\Admin\ExperienceLevelController;
 use App\Http\Controllers\Admin\JobCategoryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -90,6 +91,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             Route::post('/', [WorkplaceArrangementController::class, 'store'])->name('store');
             Route::put('{workplace_arrangement}', [WorkplaceArrangementController::class, 'update'])->name('update');
             Route::delete('{workplace_arrangement}', [WorkplaceArrangementController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Experience Levels management
+    Route::prefix('experience-levels')->name('experience-levels.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [ExperienceLevelController::class, 'index'])
+            ->middleware(['permission:experience_levels.view'])
+            ->name('index');
+
+        Route::middleware(['permission:experience_levels.manage'])->group(function (): void {
+            Route::post('/', [ExperienceLevelController::class, 'store'])->name('store');
+            Route::put('{experience_level}', [ExperienceLevelController::class, 'update'])->name('update');
+            Route::delete('{experience_level}', [ExperienceLevelController::class, 'destroy'])->name('destroy');
         });
     });
 });
