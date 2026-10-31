@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\EmploymentTypeController;
 use App\Http\Controllers\Admin\JobCategoryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -62,6 +63,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             Route::post('/', [JobCategoryController::class, 'store'])->name('store');
             Route::put('{category}', [JobCategoryController::class, 'update'])->name('update');
             Route::delete('{category}', [JobCategoryController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Employment Types management
+    Route::prefix('employment-types')->name('employment-types.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [EmploymentTypeController::class, 'index'])
+            ->middleware(['permission:employment_types.view'])
+            ->name('index');
+
+        Route::middleware(['permission:employment_types.manage'])->group(function (): void {
+            Route::post('/', [EmploymentTypeController::class, 'store'])->name('store');
+            Route::put('{employment_type}', [EmploymentTypeController::class, 'update'])->name('update');
+            Route::delete('{employment_type}', [EmploymentTypeController::class, 'destroy'])->name('destroy');
         });
     });
 });

@@ -40,6 +40,8 @@ class AuthorizationSeeder extends Seeder
             PermissionSlug::PermissionsManage->value => 'Manage permissions',
             PermissionSlug::CategoriesView->value => 'View job categories',
             PermissionSlug::CategoriesManage->value => 'Manage job categories',
+            PermissionSlug::EmploymentTypesView->value => 'View employment types',
+            PermissionSlug::EmploymentTypesManage->value => 'Manage employment types',
         ];
 
         foreach ($permissions as $slug => $name) {
@@ -67,6 +69,8 @@ class AuthorizationSeeder extends Seeder
             PermissionSlug::PermissionsManage->value,
             PermissionSlug::CategoriesView->value,
             PermissionSlug::CategoriesManage->value,
+            PermissionSlug::EmploymentTypesView->value,
+            PermissionSlug::EmploymentTypesManage->value,
         ];
 
         $permissionIds = Permission::query()
