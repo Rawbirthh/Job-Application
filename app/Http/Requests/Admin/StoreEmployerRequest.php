@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreEmployerRequest extends FormRequest
 {
@@ -29,11 +30,11 @@ class StoreEmployerRequest extends FormRequest
     }
 
     /**
-     * @param \Illuminate\Validation\Validator $validator
+     * @param  Validator  $validator
      */
     public function withValidator($validator): void
     {
-        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
+        $validator->after(function (Validator $validator): void {
             $status = $this->input('status');
             $reason = $this->input('suspension_reason');
 
