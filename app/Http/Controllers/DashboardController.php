@@ -25,7 +25,9 @@ class DashboardController extends Controller
         }
 
         if ($user->hasRole(RoleSlug::Employer)) {
-            return redirect()->route('employer.dashboard');
+            return $user->isApprovedEmployer()
+                ? redirect()->route('employer.dashboard')
+                : redirect()->route('employer.onboarding.index');
         }
 
         if ($user->hasRole(RoleSlug::JobSeeker)) {

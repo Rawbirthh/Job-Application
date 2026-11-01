@@ -39,6 +39,7 @@ class RegistrationAuthorizationTest extends TestCase
         $this->assertTrue($user->hasRole(RoleSlug::JobSeeker));
         $this->assertFalse($user->hasRole(RoleSlug::Employer));
         $this->assertFalse($user->hasRole(RoleSlug::PlatformAdmin));
+        $this->assertNull($user->status);
         $this->assertDatabaseCount('role_user', 1);
     }
 
@@ -52,6 +53,7 @@ class RegistrationAuthorizationTest extends TestCase
             'is_admin' => true,
             'permissions' => ['admin.access', 'users.view', 'users.roles.manage'],
             'account_status' => 'approved',
+            'status' => 'approved',
             'email_verified_at' => now()->toIso8601String(),
         ]));
 
@@ -66,6 +68,7 @@ class RegistrationAuthorizationTest extends TestCase
         );
         $this->assertFalse($user->hasPermission('admin.access'));
         $this->assertNull($user->email_verified_at);
+        $this->assertNull($user->status);
 
         foreach (['role', 'role_id', 'is_admin', 'permissions', 'account_status'] as $field) {
             $this->assertNull($user->getAttribute($field));

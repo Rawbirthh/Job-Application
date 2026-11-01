@@ -1,9 +1,120 @@
-import { Head } from '@inertiajs/react';
-import { Bookmark, FileText, Search } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import {
+    Bookmark,
+    Briefcase,
+    Clock,
+    FileText,
+    Search,
+    ShieldAlert,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import candidate from '@/routes/candidate';
+import employer from '@/routes/employer';
+import { index as employerOnboardingIndex } from '@/routes/employer/onboarding';
+import type { Auth } from '@/types';
 
 export default function CandidateDashboard() {
+    const { auth } = usePage<{ auth: Auth }>().props;
+    const employerStatus = auth.employer_status;
+
+    const renderEmployerAccess = () => {
+        if (employerStatus === 'approved') {
+            return (
+                <>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Your employer access is active.
+                    </p>
+                    <div className="mt-3">
+                        <Button asChild size="sm">
+                            <Link href={employer.dashboard()}>
+                                Employer dashboard
+                            </Link>
+                        </Button>
+                    </div>
+                </>
+            );
+        }
+
+        if (employerStatus === 'pending') {
+            return (
+                <>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Your application is under review.
+                    </p>
+                    <div className="mt-3">
+                        <Button asChild size="sm" variant="outline">
+                            <Link href={employerOnboardingIndex()}>
+                                View application status
+                            </Link>
+                        </Button>
+                    </div>
+                </>
+            );
+        }
+
+        if (employerStatus === 'suspended') {
+            return (
+                <>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Employer access is currently suspended.
+                    </p>
+                    <div className="mt-3">
+                        <Button asChild size="sm" variant="outline">
+                            <Link href={employerOnboardingIndex()}>
+                                View status
+                            </Link>
+                        </Button>
+                    </div>
+                </>
+            );
+        }
+
+        if (employerStatus === 'rejected') {
+            return (
+                <>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Your previous application was not approved. You may
+                        reapply.
+                    </p>
+                    <div className="mt-3">
+                        <Button asChild size="sm">
+                            <Link href={employerOnboardingIndex()}>
+                                Reapply
+                            </Link>
+                        </Button>
+                    </div>
+                </>
+            );
+        }
+
+        return (
+            <>
+                <p className="mt-1 text-xs text-muted-foreground">
+                    Request employer capability for your account.
+                </p>
+                <div className="mt-3">
+                    <Button asChild size="sm">
+                        <Link href={employerOnboardingIndex()}>
+                            Become an employer
+                        </Link>
+                    </Button>
+                </div>
+            </>
+        );
+    };
+
+    const employerIcon =
+        employerStatus === 'approved' ? (
+            <Briefcase className="size-4 text-teal-600 dark:text-teal-400" />
+        ) : employerStatus === 'pending' ? (
+            <Clock className="size-4 text-amber-600 dark:text-amber-400" />
+        ) : employerStatus === 'suspended' ? (
+            <ShieldAlert className="size-4 text-red-600 dark:text-red-400" />
+        ) : (
+            <Briefcase className="size-4 text-teal-600 dark:text-teal-400" />
+        );
+
     return (
         <>
             <Head title="Candidate Dashboard" />
@@ -69,15 +180,27 @@ export default function CandidateDashboard() {
                     </Card>
                 </div>
 
-                <div className="rounded-xl border border-border bg-card p-6 text-card-foreground">
-                    <h2 className="text-lg font-semibold tracking-tight">
-                        Candidate Profile Notice
-                    </h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Your account is set up as a job seeker. Candidate
-                        profile management and resume uploads will be available
-                        in Feature 18 &amp; 19.
-                    </p>
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground">
+                        <h2 className="text-lg font-semibold tracking-tight">
+                            Candidate Profile Notice
+                        </h2>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Your account is set up as a job seeker. Candidate
+                            profile management and resume uploads will be
+                            available in Feature 18 &amp; 19.
+                        </p>
+                    </div>
+
+                    <Card className="border-border">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Employer access
+                            </CardTitle>
+                            {employerIcon}
+                        </CardHeader>
+                        <CardContent>{renderEmployerAccess()}</CardContent>
+                    </Card>
                 </div>
             </div>
         </>

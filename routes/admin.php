@@ -146,11 +146,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             ->middleware(['permission:employers.view'])
             ->name('show');
 
-        Route::post('{user}/suspend', [EmployerController::class, 'store'])
+        Route::post('{user}/approve', [EmployerController::class, 'approve'])
+            ->middleware(['permission:employers.manage'])
+            ->name('approve');
+
+        Route::post('{user}/reject', [EmployerController::class, 'reject'])
+            ->middleware(['permission:employers.manage'])
+            ->name('reject');
+
+        Route::post('{user}/suspend', [EmployerController::class, 'suspend'])
             ->middleware(['permission:employers.manage'])
             ->name('suspend');
 
-        Route::post('{user}/reactivate', [EmployerController::class, 'store'])
+        Route::post('{user}/reactivate', [EmployerController::class, 'reactivate'])
             ->middleware(['permission:employers.manage'])
             ->name('reactivate');
     });

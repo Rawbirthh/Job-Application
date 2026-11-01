@@ -45,13 +45,22 @@ class DashboardRoutingTest extends TestCase
             ->assertRedirect(route('admin.dashboard'));
     }
 
-    public function test_employer_user_visiting_dashboard_is_redirected_to_employer_dashboard(): void
+    public function test_approved_employer_user_visiting_dashboard_is_redirected_to_employer_dashboard(): void
+    {
+        $employer = User::factory()->approvedEmployer()->create();
+
+        $this->actingAs($employer)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('employer.dashboard'));
+    }
+
+    public function test_employer_role_user_without_approved_status_visiting_dashboard_is_redirected_to_onboarding(): void
     {
         $employer = User::factory()->employer()->create();
 
         $this->actingAs($employer)
             ->get(route('dashboard'))
-            ->assertRedirect(route('employer.dashboard'));
+            ->assertRedirect(route('employer.onboarding.index'));
     }
 
     public function test_job_seeker_user_visiting_dashboard_is_redirected_to_candidate_dashboard(): void
@@ -122,14 +131,23 @@ class DashboardRoutingTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_employer_can_access_employer_dashboard_directly(): void
+    public function test_approved_employer_can_access_employer_dashboard_directly(): void
     {
-        $employer = User::factory()->employer()->create();
+        $employer = User::factory()->approvedEmployer()->create();
 
         $this->actingAs($employer)
             ->get(route('employer.dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('employer/dashboard'));
+    }
+
+    public function test_employer_role_user_without_approved_status_cannot_access_employer_dashboard(): void
+    {
+        $employer = User::factory()->employer()->create();
+
+        $this->actingAs($employer)
+            ->get(route('employer.dashboard'))
+            ->assertForbidden();
     }
 
     public function test_non_employer_cannot_access_employer_dashboard(): void
@@ -207,13 +225,14 @@ class DashboardRoutingTest extends TestCase
                 ->where('auth.user.email', $admin->email)
             );
 
-        $employer = User::factory()->employer()->create();
+        $employer = User::factory()->approvedEmployer()->create();
 
         $this->actingAs($employer)
             ->get(route('employer.dashboard'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('auth.roles', [RoleSlug::Employer->value])
+                ->where('auth.roles', [RoleSlug::Employer->value, RoleSlug::JobSeeker->value])
                 ->where('auth.permissions', [])
+                ->where('auth.employer_status', 'approved')
             );
 
         $candidate = User::factory()->jobSeeker()->create();
@@ -223,6 +242,7 @@ class DashboardRoutingTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('auth.roles', [RoleSlug::JobSeeker->value])
                 ->where('auth.permissions', [])
+                ->where('auth.employer_status', null)
             );
     }
 

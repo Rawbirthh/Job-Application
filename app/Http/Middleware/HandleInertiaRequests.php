@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
                 'roles' => $user instanceof User ? $user->roleSlugs() : [],
                 'permissions' => $user instanceof User ? $user->permissionSlugs() : [],
+                'employer_status' => $user instanceof User ? $user->status?->value : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

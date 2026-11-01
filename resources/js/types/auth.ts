@@ -1,3 +1,5 @@
+import type { EmployerStatus } from './authorization';
+
 export type User = {
     id: number;
     name: string;
@@ -9,6 +11,7 @@ export type Auth = {
     user: User | null;
     roles: string[];
     permissions: string[];
+    employer_status: EmployerStatus | null;
 };
 
 export type Passkey = {

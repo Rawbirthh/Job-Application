@@ -29,7 +29,9 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('employers.viewAny', [EmployerPolicy::class, 'viewAny']);
         Gate::define('employers.view', [EmployerPolicy::class, 'view']);
-        Gate::define('employers.manage', [EmployerPolicy::class, 'create']);
+        Gate::define('employers.review', [EmployerPolicy::class, 'review']);
+        Gate::define('employers.suspend', [EmployerPolicy::class, 'suspend']);
+        Gate::define('employers.reactivate', [EmployerPolicy::class, 'reactivate']);
     }
 
     /**

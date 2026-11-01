@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\EmployerStatus;
 use App\Enums\RoleSlug;
 use App\Models\Role;
 use App\Models\User;
@@ -91,6 +92,39 @@ class UserFactory extends Factory
     public function employer(): static
     {
         return $this->withRole(RoleSlug::Employer);
+    }
+
+    /**
+     * Indicate that the created user is an approved employer.
+     */
+    public function approvedEmployer(): static
+    {
+        return $this->withRole(RoleSlug::JobSeeker)->employer()->afterCreating(function (User $user): void {
+            $user->forceFill(['status' => EmployerStatus::Approved])->save();
+        });
+    }
+
+    /**
+     * Indicate that the created user is a pending employer applicant.
+     */
+    public function pendingEmployerApplicant(): static
+    {
+        return $this->jobSeeker()->afterCreating(function (User $user): void {
+            $user->forceFill(['status' => EmployerStatus::Pending])->save();
+        });
+    }
+
+    /**
+     * Indicate that the created user is a suspended employer.
+     */
+    public function suspendedEmployer(): static
+    {
+        return $this->withRole(RoleSlug::JobSeeker)->employer()->afterCreating(function (User $user): void {
+            $user->forceFill([
+                'status' => EmployerStatus::Suspended,
+                'suspension_reason' => 'Suspended for testing',
+            ])->save();
+        });
     }
 
     /**

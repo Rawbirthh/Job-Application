@@ -24,25 +24,25 @@ class EmployerPolicy
     }
 
     /**
-     * Determine whether the actor may create/manage employer accounts.
+     * Determine whether the actor may approve or reject an employer request.
      */
-    public function create(User $actor): bool
+    public function review(User $actor, User $user): bool
     {
         return $actor->hasPermission(PermissionSlug::EmployersManage);
     }
 
     /**
-     * Determine whether the actor may update employer status (approve/reject/suspend).
+     * Determine whether the actor may suspend an approved employer.
      */
-    public function update(User $actor, User $user): bool
+    public function suspend(User $actor, User $user): bool
     {
         return $actor->hasPermission(PermissionSlug::EmployersManage);
     }
 
     /**
-     * Determine whether the actor may delete/remove employer accounts.
+     * Determine whether the actor may reactivate a suspended employer.
      */
-    public function delete(User $actor, User $user): bool
+    public function reactivate(User $actor, User $user): bool
     {
         return $actor->hasPermission(PermissionSlug::EmployersManage);
     }
