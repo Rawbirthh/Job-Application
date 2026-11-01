@@ -50,6 +50,8 @@ class AuthorizationSeeder extends Seeder
             PermissionSlug::PayPeriodsManage->value => 'Manage pay periods',
             PermissionSlug::SalaryBandsView->value => 'View salary bands',
             PermissionSlug::SalaryBandsManage->value => 'Manage salary filter bands',
+            PermissionSlug::EmployersView->value => 'View employers',
+            PermissionSlug::EmployersManage->value => 'Manage employers',
         ];
 
         foreach ($permissions as $slug => $name) {
@@ -87,6 +89,8 @@ class AuthorizationSeeder extends Seeder
             PermissionSlug::PayPeriodsManage->value,
             PermissionSlug::SalaryBandsView->value,
             PermissionSlug::SalaryBandsManage->value,
+            PermissionSlug::EmployersView->value,
+            PermissionSlug::EmployersManage->value,
         ];
 
         $permissionIds = Permission::query()

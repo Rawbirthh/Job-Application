@@ -75,3 +75,22 @@ export type AdminPermissionsIndexProps = {
     };
     canManagePermissions: boolean;
 };
+
+export type EmployerRow = {
+    id: number;
+    name: string;
+    email: string;
+    status: 'pending' | 'approved' | 'suspended';
+    status_badge: string;
+    company_count: number | null;
+    suspension_reason: string | null;
+};
+
+export type AdminEmployerIndexProps = {
+    employers: PaginatedData<EmployerRow>;
+    filters: {
+        search: string;
+        status: 'pending' | 'approved' | 'suspended' | null;
+    };
+    canManageEmployers: boolean;
+};

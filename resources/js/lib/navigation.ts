@@ -81,6 +81,12 @@ export const mainNavConfig: NavItemConfig[] = [
         icon: Banknote,
         requiredPermissions: ['admin.access', 'salary_bands.view'],
     },
+    {
+        title: 'Employers',
+        href: admin.employers.index(),
+        icon: Users,
+        requiredPermissions: ['admin.access', 'employers.view'],
+    },
 ];
 
 export function getFilteredNavItems(

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\EmployerController;
 use App\Http\Controllers\Admin\EmploymentTypeController;
 use App\Http\Controllers\Admin\ExperienceLevelController;
 use App\Http\Controllers\Admin\JobCategoryController;
@@ -133,5 +134,24 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             Route::put('{salary_band}', [SalaryBandController::class, 'update'])->name('update');
             Route::delete('{salary_band}', [SalaryBandController::class, 'destroy'])->name('destroy');
         });
+    });
+
+    // Employers management
+    Route::prefix('employers')->name('employers.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [EmployerController::class, 'index'])
+            ->middleware(['permission:employers.view'])
+            ->name('index');
+
+        Route::get('{user}', [EmployerController::class, 'show'])
+            ->middleware(['permission:employers.view'])
+            ->name('show');
+
+        Route::post('{user}/suspend', [EmployerController::class, 'store'])
+            ->middleware(['permission:employers.manage'])
+            ->name('suspend');
+
+        Route::post('{user}/reactivate', [EmployerController::class, 'store'])
+            ->middleware(['permission:employers.manage'])
+            ->name('reactivate');
     });
 });
