@@ -1,7 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Briefcase, Building2, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import employer from '@/routes/employer';
+import { index as companiesIndex } from '@/routes/employer/companies';
 
 export default function EmployerDashboard() {
     return (
@@ -27,13 +29,17 @@ export default function EmployerDashboard() {
                             <Building2 className="size-4 text-teal-600 dark:text-teal-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">
-                                Pending Setup
-                            </div>
+                            <div className="text-2xl font-bold">Manage</div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Company verification and profile creation unlock
-                                in Feature 11 &amp; 12.
+                                Create and edit your company profiles.
                             </p>
+                            <div className="mt-3">
+                                <Button asChild size="sm">
+                                    <Link href={companiesIndex()}>
+                                        Company Profiles
+                                    </Link>
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
 

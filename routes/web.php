@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Candidate\CandidateDashboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,17 @@ Route::middleware(['auth'])->group(function (): void {
         Route::get('dashboard', EmployerDashboardController::class)
             ->middleware(['role:employer', 'employer.approved'])
             ->name('dashboard');
+
+        Route::prefix('companies')->name('companies.')->middleware(['role:employer', 'employer.approved'])->group(function (): void {
+            Route::get('/', [CompanyController::class, 'index'])->name('index');
+            Route::get('create', [CompanyController::class, 'create'])->name('create');
+            Route::post('/', [CompanyController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('store');
+            Route::get('{company}', [CompanyController::class, 'show'])->name('show');
+            Route::get('{company}/edit', [CompanyController::class, 'edit'])->name('edit');
+            Route::put('{company}', [CompanyController::class, 'update'])->name('update');
+        });
     });
 
     Route::prefix('candidate')->name('candidate.')->middleware(['role:job_seeker'])->group(function (): void {

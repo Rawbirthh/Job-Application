@@ -1,3 +1,5 @@
+import type { Company } from './company';
+
 export type RoleSummary = {
     id: number;
     slug: string;
@@ -99,6 +101,7 @@ export type EmployerRow = {
         EmployerOnboardingRequestSummary,
         'company_name' | 'submitted_at' | 'reviewed_at' | 'review_note'
     > | null;
+    company: Company | null;
     can_manage: boolean;
 };
 
@@ -127,6 +130,7 @@ export type AdminEmployerShowProps = {
                   reviewer: { id: number; name: string } | null;
               })
             | null;
+        company: Company | null;
         roles: RoleSummary[];
         actions: {
             approve: boolean;

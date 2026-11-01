@@ -9,7 +9,7 @@
 - Database target: unresolved. `AGENTS.md` baseline is MySQL; local runtime and test suite use SQLite.
 - Authentication: session-based Laravel Fortify. Registration, login/logout, password reset, 2FA, passkeys enabled; email verification disabled.
 - Authorization: custom dynamic DB-backed role/permission system (Features 3–10). Roles: `platform_admin`, `employer`, `job_seeker`. Permissions include `admin.access`, `users.*`, `roles.*`, `permissions.*`, catalogue permissions, and `employers.view`/`employers.manage`. Policies, middleware, services, and admin management UI in place.
-- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **239 passed, 1732 assertions**.
+- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **266 passed, 1911 assertions** (Feature 12 added `tests/Feature/Employer/CompanyTest.php`; admin company payload changes included).
 - Frontend conventions: Inertia page props, Wayfinder actions/routes, named routes, vendored shadcn/ui, pagination component, split layout.
 
 ## Confirmed architecture decisions
@@ -28,26 +28,30 @@
 - Employer capability requires **role `employer` + status `approved`**. Status is separate from role/permission and lives on `users.status` (nullable enum-backed via accessor; empty/invalid values normalize to `null`). Suspension preserves data and blocks employer routes via `employer.approved` middleware but does not ban login.
 - Feature 10 admin employer review/suspension is implemented; `/admin/employers` scopes to applicants/employers and uses explicit approve/reject/suspend/reactivate actions.
 - Feature 11 onboarding persists one `employer_onboarding_requests` row per user (unique `user_id`), with reviewer metadata and `review_note` (rejection reason). Approval adds `employer` additively while retaining `job_seeker`.
+- Feature 12 implemented: approved employers create/manage company profiles via new `companies` table (`owner_user_id` FK→users, unique `slug`, `is_active` boolean default true, free-text `industry`/`size_band`/`location`, optional public logo on `public` disk). No new permissions; owner Policy-based. No Service/Repository for company CRUD. Admin employer index/show now surface the owner’s `company` summary. Company deletion deferred to Feature 13 (restrict-on-delete).
 
 ## Current task / latest handoff
 
-- Status: **Feature 11 implemented, tested, built, typechecked, linted, formatted, migrated, and committed locally** as `6d2ee64` on `main`. Not pushed (push declined).
-- Summary: Added employer onboarding flow (`/employer/onboarding`), eligibility enforcement (`role:employer` + `employer.approved`), admin review page, candidate dashboard employer-access card, shared `auth.employer_status`. Resolved Feature 10 contradictions: `rejected` is now a real status, admin actions are explicit, directory scoped to applicants/employers. Hardened `users.status` cast against legacy empty strings.
-- Key files:
-    - Backend: `app/Enums/EmployerStatus.php`, `app/Models/User.php`, `app/Models/EmployerOnboardingRequest.php`, `app/Services/Employer/EmployerOnboardingService.php`, `app/Http/Controllers/Employer/EmployerOnboardingController.php`, `app/Http/Controllers/Admin/EmployerController.php`, `app/Http/Middleware/EnsureEmployerIsApproved.php`, `app/Policies/EmployerOnboardingRequestPolicy.php`, `app/Policies/EmployerPolicy.php`, `app/Providers/AppServiceProvider.php`, `bootstrap/app.php`, `routes/web.php`, `routes/admin.php`, migrations `2026_11_01_000005_*` and `2026_11_01_000006_*`.
-    - Frontend: `resources/js/pages/employer/onboarding.tsx`, `resources/js/pages/admin/employers/index.tsx`, `resources/js/pages/admin/employers/show.tsx`, `resources/js/pages/candidate/dashboard.tsx`, `resources/js/types/authorization.ts`, `resources/js/types/auth.ts`.
-    - Tests/spec: `tests/Feature/Employer/EmployerOnboardingTest.php`, `tests/Feature/Admin/EmployerTest.php`, `tests/Feature/DashboardRoutingTest.php`, `tests/Feature/Authorization/RegistrationAuthorizationTest.php`, `docs/specs/feature-11-employer-onboarding-and-eligibility-state.md`.
-- Verification observed:
-    - `php artisan test`: **239 passed, 1732 assertions**
+- Status: **Feature 12 implemented, tested, built, typechecked, linted, formatted, migrated, and verified via follow-up fixes** (this session). Not committed/pushed.
+- Summary: Employer company profiles added (`companies` table + `Company` model + `CompanyPolicy` + `Store/UpdateCompanyRequest` + `CompanyController` + employer company routes under `role:employer` + `employer.approved` + `throttle:20,1`; Inertia pages `employer/companies/{index,create,edit,show}`; employer dashboard card now links to company list; admin employer show/index expose owner `company` summary).
+- Key files (Feature 12):
+    - Backend: `database/migrations/2026_11_01_000007_create_companies_table.php`, `app/Models/Company.php`, `database/factories/CompanyFactory.php`, `app/Policies/CompanyPolicy.php`, `app/Http/Requests/Employer/StoreCompanyRequest.php`, `app/Http/Requests/Employer/UpdateCompanyRequest.php`, `app/Http/Controllers/Employer/CompanyController.php`, `app/Models/User.php` (companies relation), `app/Http/Controllers/Admin/EmployerController.php` (company payload), `routes/web.php`, migrations `2026_11_01_000005_*`, `2026_11_01_000006_*`.
+    - Frontend: `resources/js/types/company.ts`, `resources/js/types/index.ts`, `resources/js/pages/employer/companies/*`, `resources/js/pages/admin/employers/{index,show}.tsx`, `resources/js/pages/employer/dashboard.tsx`, `resources/js/types/authorization.ts`.
+    - Tests/spec: `tests/Feature/Employer/CompanyTest.php`, `docs/specs/feature-12-employer-company-profile.md`.
+- Verification observed (latest run):
+    - `php artisan test`: **266 passed, 1911 assertions**
     - `npm run types:check`: no errors
-    - `npm run check`: 132 files formatted, 88 files no warnings/lint errors
+    - `npm run check`: 138 files formatted, no lint errors
     - `npm run build`: built successfully (Wayfinder regenerated)
     - `vendor/bin/pint --test`: passed
     - `vendor/bin/phpstan analyse --memory-limit=512M`: 0 errors
-    - `php artisan migrate`: applied through `2026_11_01_000006`
-    - `php artisan route:list`: onboarding 2 routes; admin employers 6 routes; employer dashboard has `role:employer` + `employer.approved`
-- Behavior notes: `company_count` remains `null` (no `companies` table; Feature 12 will introduce). Onboarding collects minimal review context only. No notifications, audit logging, or document uploads in this increment. Suspended users retain the employer role and can view onboarding status but receive 403 on employer business routes.
-- Next recommended step: push `main` when ready; then start Feature 12 (company profile creation/editing) via `/architect feature 12`.
+    - `php artisan migrate`: applied through `2026_11_01_000007`
+- Behavior notes:
+    - Company status = `is_active` boolean (default true); no new permission; owner-only Policy checks.
+    - Optional public logo (jpeg/png/webp, ≤2MB) on `public` disk; fixed missing `public/storage` symlink via `php artisan storage:link` (root cause of invisible logo).
+    - Admin employer review now shows employer-created `company` (falls back to onboarding request company name in list).
+    - Company deletion deferred to Feature 13 (restrict-on-delete when jobs exist).
+- Next recommended step: start Feature 13 (employer job draft CRUD) via `/architect feature 13`.
 
 ## Durable notes
 

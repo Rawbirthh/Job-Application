@@ -264,8 +264,10 @@ export default function AdminEmployersIndex({
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            {employer.onboarding_request
-                                                ?.company_name ?? '—'}
+                                            {employer.company?.name ??
+                                                employer.onboarding_request
+                                                    ?.company_name ??
+                                                '—'}
                                         </td>
                                         <td className="px-4 py-3">
                                             <Badge

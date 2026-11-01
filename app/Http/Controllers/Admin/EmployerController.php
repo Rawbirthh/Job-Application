@@ -7,6 +7,7 @@ use App\Enums\PermissionSlug;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectEmployerRequest;
 use App\Http\Requests\Admin\SuspendEmployerRequest;
+use App\Models\Company;
 use App\Models\User;
 use App\Services\Employer\EmployerOnboardingService;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,6 +56,7 @@ class EmployerController extends Controller
                         'review_note',
                     ]);
                 },
+                'companies',
             ]);
 
         if ($prefix !== null) {
@@ -94,6 +96,7 @@ class EmployerController extends Controller
                     'reviewed_at' => $user->employerOnboardingRequest->reviewed_at?->toIso8601String(),
                     'review_note' => $user->employerOnboardingRequest->review_note,
                 ],
+                'company' => $this->companySummary($user->companies->first()),
                 'can_manage' => $actor instanceof User
                     && $actor->hasPermission(PermissionSlug::EmployersManage),
             ];
@@ -141,7 +144,7 @@ class EmployerController extends Controller
         }
 
         $employer = $user;
-        $employer->loadMissing('employerOnboardingRequest.reviewer', 'roles');
+        $employer->loadMissing('employerOnboardingRequest.reviewer', 'roles', 'companies');
 
         $actor = $request->user();
         $status = $employer->status?->value;
@@ -171,6 +174,7 @@ class EmployerController extends Controller
                         'name' => $onboardingRequest->reviewer->name,
                     ],
                 ],
+                'company' => $this->companySummary($employer->companies->first()),
                 'roles' => $employer->roles->map(function ($role): array {
                     return [
                         'id' => $role->id,
@@ -294,5 +298,32 @@ class EmployerController extends Controller
     private function escapeLike(string $value): string
     {
         return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+    }
+
+    /**
+     * Build the company summary exposed on the admin employer payloads.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function companySummary(?Company $company): ?array
+    {
+        if ($company === null) {
+            return null;
+        }
+
+        return [
+            'id' => $company->id,
+            'name' => $company->name,
+            'slug' => $company->slug,
+            'overview' => $company->overview,
+            'industry' => $company->industry,
+            'website' => $company->website,
+            'size_band' => $company->size_band,
+            'location' => $company->location,
+            'logo_url' => $company->logo_url,
+            'is_active' => $company->is_active,
+            'created_at' => $company->created_at?->toIso8601String(),
+            'updated_at' => $company->updated_at?->toIso8601String(),
+        ];
     }
 }

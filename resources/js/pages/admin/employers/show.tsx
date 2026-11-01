@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
+    Building2,
     CheckCircle2,
     PlayCircle,
     ShieldAlert,
@@ -236,6 +237,114 @@ export default function AdminEmployerShow({
                         </CardContent>
                     </Card>
                 </div>
+
+                <Card className="border-border">
+                    <CardHeader>
+                        <CardTitle className="text-lg">
+                            Company profile
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        {employer.company ? (
+                            <>
+                                <div className="flex items-center gap-3">
+                                    {employer.company.logo_url ? (
+                                        <img
+                                            src={employer.company.logo_url}
+                                            alt={`${employer.company.name} logo`}
+                                            className="size-16 rounded-md object-cover"
+                                        />
+                                    ) : (
+                                        <div className="flex size-16 items-center justify-center rounded-md bg-muted">
+                                            <Building2 className="size-8 text-muted-foreground" />
+                                        </div>
+                                    )}
+                                    <div className="space-y-1">
+                                        <div className="font-medium">
+                                            {employer.company.name}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {employer.company.slug}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="font-medium">
+                                        Industry:
+                                    </span>{' '}
+                                    {employer.company.industry ?? '—'}
+                                </div>
+                                <div>
+                                    <span className="font-medium">
+                                        Website:
+                                    </span>{' '}
+                                    {employer.company.website ? (
+                                        <a
+                                            href={employer.company.website}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-teal-600 underline dark:text-teal-400"
+                                        >
+                                            {employer.company.website}
+                                        </a>
+                                    ) : (
+                                        '—'
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="font-medium">
+                                        Size band:
+                                    </span>{' '}
+                                    {employer.company.size_band ?? '—'}
+                                </div>
+                                <div>
+                                    <span className="font-medium">
+                                        Location:
+                                    </span>{' '}
+                                    {employer.company.location ?? '—'}
+                                </div>
+                                <div>
+                                    <span className="font-medium">
+                                        Overview:
+                                    </span>{' '}
+                                    {employer.company.overview ?? '—'}
+                                </div>
+                                <div>
+                                    <span className="font-medium">Status:</span>{' '}
+                                    {employer.company.is_active ? (
+                                        <Badge
+                                            variant="outline"
+                                            className="gap-1 border-emerald-300 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400"
+                                        >
+                                            Active
+                                        </Badge>
+                                    ) : (
+                                        <Badge
+                                            variant="outline"
+                                            className="gap-1 border-border text-muted-foreground"
+                                        >
+                                            Inactive
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="font-medium">
+                                        Created:
+                                    </span>{' '}
+                                    {employer.company.created_at
+                                        ? new Date(
+                                              employer.company.created_at,
+                                          ).toLocaleString()
+                                        : '—'}
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-muted-foreground">
+                                No company profile on file.
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {canManageEmployers ? (
                     <Card className="border-border">

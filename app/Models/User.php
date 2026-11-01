@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -68,6 +69,14 @@ class User extends Authenticatable implements PasskeyUser
     public function employerOnboardingRequest(): HasOne
     {
         return $this->hasOne(EmployerOnboardingRequest::class);
+    }
+
+    /**
+     * @return HasMany<Company, $this>
+     */
+    public function companies(): HasMany
+    {
+        return $this->hasMany(Company::class, 'owner_user_id');
     }
 
     /**
