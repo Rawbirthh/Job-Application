@@ -28,9 +28,12 @@ class UpdateEmployerRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator)
+    /**
+     * @param \Illuminate\Validation\Validator $validator
+     */
+    public function withValidator($validator): void
     {
-        $validator->after(function ($validator) {
+        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
             $status = $this->input('status');
             $reason = $this->input('suspension_reason');
 
@@ -38,7 +41,7 @@ class UpdateEmployerRequest extends FormRequest
                 $validator->errors()->add('suspension_reason', 'Suspension reason is required when status is suspended.');
             }
 
-            if (in_array($status, ['approved', 'rejected']) && ! empty($reason)) {
+            if (in_array($status, ['approved', 'rejected'], true) && ! empty($reason)) {
                 $validator->errors()->add('suspension_reason', 'Suspension reason must not be set when status is approved or rejected.');
             }
         });
