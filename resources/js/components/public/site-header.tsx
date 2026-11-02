@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { dashboard, home, login, register } from '@/routes';
 
 const navItems = [
+    { label: 'Browse Jobs', href: '/jobs' },
     { label: 'How it works', href: '#how-it-works' },
     { label: 'For employers', href: '#for-employers' },
     { label: 'FAQ', href: '#faq' },

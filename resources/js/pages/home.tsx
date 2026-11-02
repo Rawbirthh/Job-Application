@@ -155,6 +155,14 @@ export default function Home() {
                                 variant="outline"
                                 className="h-11 px-6 focus-visible:ring-2 focus-visible:ring-foreground"
                             >
+                                <Link href="/jobs">Browse Jobs</Link>
+                            </Button>
+                            <Button
+                                asChild
+                                size="lg"
+                                variant="outline"
+                                className="h-11 px-6 focus-visible:ring-2 focus-visible:ring-foreground"
+                            >
                                 <a href="#how-it-works">See how it works</a>
                             </Button>
                         </div>

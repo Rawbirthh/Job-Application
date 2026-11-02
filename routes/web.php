@@ -6,9 +6,11 @@ use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
 use App\Http\Controllers\Employer\JobController;
+use App\Http\Controllers\PublicJobController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'home')->name('home');
+Route::get('/jobs', [PublicJobController::class, 'index'])->name('jobs.index');
 
 Route::middleware(['auth'])->group(function (): void {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
