@@ -166,14 +166,53 @@ class JobController extends Controller
     {
         $this->authorize('update', $job);
 
-        $job->update($request->jobData());
+        $job->fill($request->jobData());
+        if ($job->status === 'published') {
+            $job->status = 'draft';
+        }
+        $job->save();
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => __('Job draft updated.'),
+            'message' => __('Job updated successfully.'),
         ]);
 
         return to_route('employer.jobs.edit', $job);
+    }
+
+    public function submit(Job $job): RedirectResponse
+    {
+        $this->authorize('submit', $job);
+
+        if (! in_array($job->status, ['draft', 'rejected', 'closed'], true)) {
+            return back()->with('error', __('This job cannot be submitted for review.'));
+        }
+
+        $job->status = 'pending_review';
+        $job->rejection_reason = null;
+        $job->save();
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Job submitted for review successfully.'),
+        ]);
+
+        return to_route('employer.jobs.index');
+    }
+
+    public function close(Job $job): RedirectResponse
+    {
+        $this->authorize('close', $job);
+
+        $job->status = 'closed';
+        $job->save();
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Job closed successfully.'),
+        ]);
+
+        return to_route('employer.jobs.index');
     }
 
     /**
@@ -290,6 +329,7 @@ class JobController extends Controller
             'location' => $job->location,
             'application_deadline' => $job->application_deadline?->toIso8601String(),
             'status' => $job->status,
+            'rejection_reason' => $job->rejection_reason,
             'company' => $job->company ? [
                 'id' => $job->company->id,
                 'name' => $job->company->name,

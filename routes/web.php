@@ -46,6 +46,12 @@ Route::middleware(['auth'])->group(function (): void {
             Route::put('{job}', [JobController::class, 'update'])
                 ->middleware(['throttle:20,1'])
                 ->name('update');
+            Route::post('{job}/submit', [JobController::class, 'submit'])
+                ->middleware(['throttle:20,1'])
+                ->name('submit');
+            Route::post('{job}/close', [JobController::class, 'close'])
+                ->middleware(['throttle:20,1'])
+                ->name('close');
         });
     });
 

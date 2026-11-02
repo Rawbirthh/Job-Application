@@ -17,6 +17,7 @@ export type Job = {
     location: string | null;
     application_deadline: string | null;
     status: string;
+    rejection_reason: string | null;
     created_at: string;
     updated_at: string;
     company?: CompanyOption;

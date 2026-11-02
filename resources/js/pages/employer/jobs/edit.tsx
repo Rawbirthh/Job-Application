@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useForm } from '@inertiajs/react';
@@ -18,7 +18,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import { update as jobsUpdate } from '@/routes/employer/jobs';
+import {
+    update as jobsUpdate,
+    submit as jobsSubmit,
+    close as jobsClose,
+} from '@/routes/employer/jobs';
 import { index as companiesIndex } from '@/routes/employer/companies';
 import type { JobForm, JobEditProps, CatalogueOption } from '@/types';
 
@@ -77,14 +81,58 @@ export default function EmployerJobEdit({
                     </Button>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                        Edit Job Draft
-                    </h1>
-                    <p className="text-sm text-muted-foreground md:text-base">
-                        Update your job draft. Status: {job.status}
-                    </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                            Edit Job Draft
+                        </h1>
+                        <p className="text-sm text-muted-foreground md:text-base">
+                            Update your job draft. Status: {job.status}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {['draft', 'rejected', 'closed'].includes(
+                            job.status,
+                        ) && (
+                            <Button
+                                type="button"
+                                onClick={() =>
+                                    router.post(
+                                        jobsSubmit.url({ job: job.id }),
+                                        {},
+                                        { preserveScroll: true },
+                                    )
+                                }
+                            >
+                                Submit for Review
+                            </Button>
+                        )}
+                        {['published', 'pending_review'].includes(
+                            job.status,
+                        ) && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                    router.post(
+                                        jobsClose.url({ job: job.id }),
+                                        {},
+                                        { preserveScroll: true },
+                                    )
+                                }
+                            >
+                                Close Job
+                            </Button>
+                        )}
+                    </div>
                 </div>
+
+                {job.rejection_reason && (
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-destructive">
+                        <h3 className="font-semibold">Rejection Reason</h3>
+                        <p className="mt-1 text-sm">{job.rejection_reason}</p>
+                    </div>
+                )}
 
                 <Card className="border-border">
                     <CardHeader>

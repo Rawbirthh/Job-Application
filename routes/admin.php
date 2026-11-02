@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\EmployerController;
 use App\Http\Controllers\Admin\EmploymentTypeController;
 use App\Http\Controllers\Admin\ExperienceLevelController;
 use App\Http\Controllers\Admin\JobCategoryController;
+use App\Http\Controllers\Admin\JobModerationController;
 use App\Http\Controllers\Admin\PayPeriodController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -161,5 +162,14 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
         Route::post('{user}/reactivate', [EmployerController::class, 'reactivate'])
             ->middleware(['permission:employers.manage'])
             ->name('reactivate');
+    });
+
+    // Job Moderation
+    Route::prefix('jobs')->name('jobs.')->middleware(['permission:admin.access', 'permission:jobs.moderate'])->group(function (): void {
+        Route::get('/', [JobModerationController::class, 'index'])->name('index');
+        Route::get('{job}', [JobModerationController::class, 'show'])->name('show');
+        Route::post('{job}/approve', [JobModerationController::class, 'approve'])->name('approve');
+        Route::post('{job}/reject', [JobModerationController::class, 'reject'])->name('reject');
+        Route::post('{job}/close', [JobModerationController::class, 'close'])->name('close');
     });
 });

@@ -55,6 +55,7 @@ class Job extends Model
         'pay_period_id',
         'location',
         'application_deadline',
+        'rejection_reason',
     ];
 
     protected function casts(): array
@@ -146,5 +147,49 @@ class Job extends Model
     public function scopeDraft(Builder $query): Builder
     {
         return $query->where('status', 'draft');
+    }
+
+    /**
+     * Scope a query to only pending_review jobs.
+     *
+     * @param  Builder<Job>  $query
+     * @return Builder<Job>
+     */
+    public function scopePendingReview(Builder $query): Builder
+    {
+        return $query->where('status', 'pending_review');
+    }
+
+    /**
+     * Scope a query to only published jobs.
+     *
+     * @param  Builder<Job>  $query
+     * @return Builder<Job>
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published');
+    }
+
+    /**
+     * Scope a query to only rejected jobs.
+     *
+     * @param  Builder<Job>  $query
+     * @return Builder<Job>
+     */
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $query->where('status', 'rejected');
+    }
+
+    /**
+     * Scope a query to only closed jobs.
+     *
+     * @param  Builder<Job>  $query
+     * @return Builder<Job>
+     */
+    public function scopeClosed(Builder $query): Builder
+    {
+        return $query->where('status', 'closed');
     }
 }

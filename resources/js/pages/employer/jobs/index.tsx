@@ -225,22 +225,29 @@ export default function EmployerJobsIndex({
                                                         ).toLocaleDateString()}
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={jobsEdit.url(
-                                                                    {
-                                                                        job: job.id,
-                                                                    },
-                                                                )}
+                                                        {job.status ===
+                                                        'pending_review' ? (
+                                                            <span className="text-xs text-muted-foreground italic">
+                                                                Under review
+                                                            </span>
+                                                        ) : (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                asChild
                                                             >
-                                                                <Pencil className="size-4" />
-                                                                Edit
-                                                            </Link>
-                                                        </Button>
+                                                                <Link
+                                                                    href={jobsEdit.url(
+                                                                        {
+                                                                            job: job.id,
+                                                                        },
+                                                                    )}
+                                                                >
+                                                                    <Pencil className="size-4" />
+                                                                    Edit
+                                                                </Link>
+                                                            </Button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}

@@ -101,6 +101,12 @@ export const mainNavConfig: NavItemConfig[] = [
         icon: Users,
         requiredPermissions: ['admin.access', 'employers.view'],
     },
+    {
+        title: 'Job Moderation',
+        href: admin.jobs.index(),
+        icon: Briefcase,
+        requiredPermissions: ['admin.access', 'jobs.moderate'],
+    },
 ];
 
 export function getFilteredNavItems(

@@ -25,4 +25,5 @@ enum PermissionSlug: string
     case SalaryBandsManage = 'salary_bands.manage';
     case EmployersView = 'employers.view';
     case EmployersManage = 'employers.manage';
+    case JobsModerate = 'jobs.moderate';
 }

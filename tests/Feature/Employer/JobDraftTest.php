@@ -214,7 +214,7 @@ class JobDraftTest extends TestCase
         $company = Company::factory()->create(['owner_user_id' => $user->id]);
         $job = Job::factory()->create([
             'company_id' => $company->id,
-            'status' => 'published',
+            'status' => 'pending_review',
         ]);
 
         $this->actingAs($user)->put(route('employer.jobs.update', $job), [
