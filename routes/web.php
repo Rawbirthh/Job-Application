@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
+use App\Http\Controllers\Employer\JobController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'home')->name('home');
@@ -33,6 +34,18 @@ Route::middleware(['auth'])->group(function (): void {
             Route::get('{company}', [CompanyController::class, 'show'])->name('show');
             Route::get('{company}/edit', [CompanyController::class, 'edit'])->name('edit');
             Route::put('{company}', [CompanyController::class, 'update'])->name('update');
+        });
+
+        Route::prefix('jobs')->name('jobs.')->middleware(['role:employer', 'employer.approved'])->group(function (): void {
+            Route::get('/', [JobController::class, 'index'])->name('index');
+            Route::get('create', [JobController::class, 'create'])->name('create');
+            Route::post('/', [JobController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('store');
+            Route::get('{job}/edit', [JobController::class, 'edit'])->name('edit');
+            Route::put('{job}', [JobController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('update');
         });
     });
 

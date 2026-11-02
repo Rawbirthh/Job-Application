@@ -8,9 +8,11 @@ import {
     GraduationCap,
     Clock,
     Banknote,
+    Building2,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
+import employer from '@/routes/employer';
 import { dashboard } from '@/routes';
 
 export type NavItemConfig = {
@@ -26,6 +28,18 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Company Profiles',
+        href: employer.companies.index(),
+        icon: Building2,
+        requiredRoles: ['employer'],
+    },
+    {
+        title: 'Job Drafts',
+        href: employer.jobs.index(),
+        icon: Briefcase,
+        requiredRoles: ['employer'],
     },
     {
         title: 'Users',

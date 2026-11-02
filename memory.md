@@ -9,7 +9,7 @@
 - Database target: unresolved. `AGENTS.md` baseline is MySQL; local runtime and test suite use SQLite.
 - Authentication: session-based Laravel Fortify. Registration, login/logout, password reset, 2FA, passkeys enabled; email verification disabled.
 - Authorization: custom dynamic DB-backed role/permission system (Features 3–10). Roles: `platform_admin`, `employer`, `job_seeker`. Permissions include `admin.access`, `users.*`, `roles.*`, `permissions.*`, catalogue permissions, and `employers.view`/`employers.manage`. Policies, middleware, services, and admin management UI in place.
-- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **266 passed, 1911 assertions** (Feature 12 added `tests/Feature/Employer/CompanyTest.php`; admin company payload changes included).
+- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **278 passed, 1968 assertions** (Feature 13 added `tests/Feature/Employer/JobDraftTest.php`).
 - Frontend conventions: Inertia page props, Wayfinder actions/routes, named routes, vendored shadcn/ui, pagination component, split layout.
 
 ## Confirmed architecture decisions
@@ -28,38 +28,31 @@
 - Employer capability requires **role `employer` + status `approved`**. Status is separate from role/permission and lives on `users.status` (nullable enum-backed via accessor; empty/invalid values normalize to `null`). Suspension preserves data and blocks employer routes via `employer.approved` middleware but does not ban login.
 - Feature 10 admin employer review/suspension is implemented; `/admin/employers` scopes to applicants/employers and uses explicit approve/reject/suspend/reactivate actions.
 - Feature 11 onboarding persists one `employer_onboarding_requests` row per user (unique `user_id`), with reviewer metadata and `review_note` (rejection reason). Approval adds `employer` additively while retaining `job_seeker`.
-- Feature 12 implemented: approved employers create/manage company profiles via new `companies` table (`owner_user_id` FK→users, unique `slug`, `is_active` boolean default true, free-text `industry`/`size_band`/`location`, optional public logo on `public` disk). No new permissions; owner Policy-based. No Service/Repository for company CRUD. Admin employer index/show now surface the owner’s `company` summary. Company deletion deferred to Feature 13 (restrict-on-delete).
+- Feature 12 implemented: approved employers create/manage company profiles via new `companies` table (`owner_user_id` FK→users, unique `slug`, `is_active` boolean default true, free-text `industry`/`size_band`/`location`, optional public logo on `public` disk). No new permissions; owner Policy-based. No Service/Repository for company CRUD. Admin employer index/show now surface the owner’s `company` summary. Company deletion restricted when jobs exist.
+- Feature 13 implemented: approved employers can create and edit job drafts (`job_postings` table) associated with their owned companies. Includes migration with restrict-on-delete constraints on catalogues (activating deferred delete protections for Features 6–9), `Job` model & factory, `JobPolicy`, `StoreJobRequest` & `UpdateJobRequest` with salary validation (min ≤ max, currency/pay period rules), `JobController` with owned-scope IDOR protection, routes (`employer.jobs.*`), Inertia React pages (`employer/jobs/create.tsx`, `edit.tsx`), and comprehensive Pest test suite (`tests/Feature/Employer/JobDraftTest.php`).
+- Fixed missing `sort_order` column on `employment_types` via migration `2026_11_01_000009_add_sort_order_to_employment_types_table.php` to resolve `Column not found: 1054 Unknown column 'sort_order'` on `/employer/jobs/create`.
 
 ## Current task / latest handoff
 
-- Status: **Feature 12 implemented, tested, built, typechecked, linted, formatted, migrated, and verified via follow-up fixes** (this session). Not committed/pushed.
-- Summary: Employer company profiles added (`companies` table + `Company` model + `CompanyPolicy` + `Store/UpdateCompanyRequest` + `CompanyController` + employer company routes under `role:employer` + `employer.approved` + `throttle:20,1`; Inertia pages `employer/companies/{index,create,edit,show}`; employer dashboard card now links to company list; admin employer show/index expose owner `company` summary).
-- Key files (Feature 12):
-    - Backend: `database/migrations/2026_11_01_000007_create_companies_table.php`, `app/Models/Company.php`, `database/factories/CompanyFactory.php`, `app/Policies/CompanyPolicy.php`, `app/Http/Requests/Employer/StoreCompanyRequest.php`, `app/Http/Requests/Employer/UpdateCompanyRequest.php`, `app/Http/Controllers/Employer/CompanyController.php`, `app/Models/User.php` (companies relation), `app/Http/Controllers/Admin/EmployerController.php` (company payload), `routes/web.php`, migrations `2026_11_01_000005_*`, `2026_11_01_000006_*`.
-    - Frontend: `resources/js/types/company.ts`, `resources/js/types/index.ts`, `resources/js/pages/employer/companies/*`, `resources/js/pages/admin/employers/{index,show}.tsx`, `resources/js/pages/employer/dashboard.tsx`, `resources/js/types/authorization.ts`.
-    - Tests/spec: `tests/Feature/Employer/CompanyTest.php`, `docs/specs/feature-12-employer-company-profile.md`.
+- Status: **Feature 13 implemented, tested, built, typechecked, linted, formatted, migrated, and verified** (this session). Feature 14 draft was discarded per user request. Not committed/pushed.
+- Summary: Employer job draft CRUD added (`job_postings` table + `Job` model + `JobPolicy` + `Store/UpdateJobRequest` + `JobController` + employer job routes under `role:employer` + `employer.approved` + `throttle:20,1`; Inertia pages `employer/jobs/{create,edit}.tsx`).
+- Key files (Feature 13):
+    - Backend: `database/migrations/2026_11_01_000008_create_job_postings_table.php`, `database/migrations/2026_11_01_000009_add_sort_order_to_employment_types_table.php`, `app/Models/Job.php`, `database/factories/JobFactory.php`, `app/Policies/JobPolicy.php`, `app/Http/Requests/Employer/StoreJobRequest.php`, `app/Http/Requests/Employer/UpdateJobRequest.php`, `app/Http/Controllers/Employer/JobController.php`, `routes/web.php`.
+    - Frontend: `resources/js/types/job.ts`, `resources/js/types/index.ts`, `resources/js/pages/employer/jobs/{create,edit}.tsx`.
+    - Tests/spec: `tests/Feature/Employer/JobDraftTest.php`, `docs/specs/feature-13-employer-job-draft-crud.md`.
 - Verification observed (latest run):
-    - `php artisan test`: **266 passed, 1911 assertions**
-    - `npm run types:check`: no errors
-    - `npm run check`: 138 files formatted, no lint errors
-    - `npm run build`: built successfully (Wayfinder regenerated)
-    - `vendor/bin/pint --test`: passed
+    - `php artisan test`: **278 passed, 1968 assertions**
+    - `npm run types:check`: 0 errors (`tsc --noEmit`)
+    - `npm run build`: built successfully with Wayfinder route regeneration
+    - `vendor/bin/pint`: passed formatted
     - `vendor/bin/phpstan analyse --memory-limit=512M`: 0 errors
-    - `php artisan migrate`: applied through `2026_11_01_000007`
-- Behavior notes:
-    - Company status = `is_active` boolean (default true); no new permission; owner-only Policy checks.
-    - Optional public logo (jpeg/png/webp, ≤2MB) on `public` disk; fixed missing `public/storage` symlink via `php artisan storage:link` (root cause of invisible logo).
-    - Admin employer review now shows employer-created `company` (falls back to onboarding request company name in list).
-    - Company deletion deferred to Feature 13 (restrict-on-delete when jobs exist).
-- Next recommended step: start Feature 13 (employer job draft CRUD) via `/architect feature 13`.
+    - `php artisan migrate`: applied through `2026_11_01_000009`
+- Next recommended step: Await further instructions from the user on next features or tasks.
 
 ## Durable notes
 
 - Preserve custom authorization architecture and last-administrator safeguards.
 - Keep route permission middleware and Policy checks authoritative on the server.
 - Rebuild frontend assets (`npm run build`) after modifying controller actions or route definitions used by Wayfinder.
-- Feature 6 deferred rule: "do not delete an employment type referenced by jobs" cannot be enforced until Feature 13 creates the `jobs` table; Feature 13's spec must add `employment_type_id` FK with restrict-on-delete plus admin-UI protection.
-- Feature 7 deferred rule: same referenced-option delete protection for workplace arrangements, pending Feature 13.
-- Feature 8 deferred rule: same referenced-option delete protection for experience levels, pending Feature 13; Feature 13 must add `experience_level_id` FK with restrict-on-delete.
-- Feature 9 deferred rules: job `pay_period_id` FK (restrict-on-delete) + active-period enforcement in Feature 13; band filtering by currency+period/half-open semantics in Feature 16/17; saved-search band references in Feature 29.
+- Feature 6–9 deferred delete protections (employment types, workplace arrangements, experience levels, pay periods, categories) are now fully active via `restrictOnDelete` foreign key constraints on `job_postings`.
 - Never store `.env` values, credentials, tokens, private keys, or personal data here.
