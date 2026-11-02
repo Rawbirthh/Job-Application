@@ -18,6 +18,7 @@ export type Job = {
     application_deadline: string | null;
     status: string;
     rejection_reason: string | null;
+    applications_count?: number;
     created_at: string;
     updated_at: string;
     company?: CompanyOption;
@@ -79,6 +80,7 @@ export type JobEditProps = {
 export type JobFilters = {
     company_id?: number | null;
     status?: string | null;
+    search?: string | null;
 };
 
 export type JobIndexProps = {

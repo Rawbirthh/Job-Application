@@ -34,6 +34,7 @@ class JobController extends Controller
 
         $companyId = request()->integer('company_id');
         $status = request()->string('status')->toString();
+        $search = request()->string('search')->toString();
 
         $query = Job::query()
             ->forOwner($user)
@@ -52,6 +53,10 @@ class JobController extends Controller
             $query->where('status', $status);
         }
 
+        if ($search !== '') {
+            $query->where('title', 'like', "%{$search}%");
+        }
+
         $jobs = $query->paginate(10)->withQueryString();
 
         return Inertia::render('employer/jobs/index', [
@@ -64,6 +69,7 @@ class JobController extends Controller
             'filters' => [
                 'company_id' => $companyId > 0 ? $companyId : null,
                 'status' => $status !== '' && $status !== 'all' ? $status : null,
+                'search' => $search !== '' ? $search : null,
             ],
         ]);
     }
@@ -330,6 +336,9 @@ class JobController extends Controller
             'application_deadline' => $job->application_deadline?->toIso8601String(),
             'status' => $job->status,
             'rejection_reason' => $job->rejection_reason,
+            'applications_count' => 0,
+            'created_at' => $job->created_at?->toIso8601String(),
+            'updated_at' => $job->updated_at?->toIso8601String(),
             'company' => $job->company ? [
                 'id' => $job->company->id,
                 'name' => $job->company->name,

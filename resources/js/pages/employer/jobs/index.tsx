@@ -1,9 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Briefcase, Pencil, Plus } from 'lucide-react';
+import { Briefcase, Pencil, Plus, Search } from 'lucide-react';
+import { useState } from 'react';
 import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -23,6 +25,8 @@ export default function EmployerJobsIndex({
     companies,
     filters,
 }: JobIndexProps) {
+    const [search, setSearch] = useState(filters.search || '');
+
     const handleCompanyChange = (value: string) => {
         router.get(
             jobsIndex.url(),
@@ -41,6 +45,18 @@ export default function EmployerJobsIndex({
             {
                 ...filters,
                 status: value && value !== 'all' ? value : null,
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.get(
+            jobsIndex.url(),
+            {
+                ...filters,
+                search: search !== '' ? search : null,
             },
             { preserveState: true, replace: true },
         );
@@ -70,8 +86,18 @@ export default function EmployerJobsIndex({
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap gap-4">
-                    <div className="w-64">
+                <form
+                    onSubmit={handleSearch}
+                    className="flex flex-wrap items-center gap-2"
+                >
+                    <div className="w-full sm:w-60">
+                        <Input
+                            placeholder="Search by job title..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <div className="w-full sm:w-48">
                         <Select
                             value={filters.company_id?.toString() ?? 'all'}
                             onValueChange={handleCompanyChange}
@@ -95,7 +121,7 @@ export default function EmployerJobsIndex({
                         </Select>
                     </div>
 
-                    <div className="w-48">
+                    <div className="w-full sm:w-40">
                         <Select
                             value={filters.status ?? 'all'}
                             onValueChange={handleStatusChange}
@@ -114,11 +140,24 @@ export default function EmployerJobsIndex({
                                 <SelectItem value="published">
                                     Published
                                 </SelectItem>
+                                <SelectItem value="rejected">
+                                    Rejected
+                                </SelectItem>
                                 <SelectItem value="closed">Closed</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                </div>
+                    <div>
+                        <Button
+                            type="submit"
+                            variant="secondary"
+                            className="w-full sm:w-auto"
+                        >
+                            <Search className="mr-1.5 size-4" />
+                            Search
+                        </Button>
+                    </div>
+                </form>
 
                 {jobs.data.length === 0 ? (
                     <Card className="border-border">

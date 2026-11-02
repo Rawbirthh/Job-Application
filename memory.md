@@ -31,23 +31,23 @@
 - Feature 12 implemented: approved employers create/manage company profiles via new `companies` table (`owner_user_id` FK→users, unique `slug`, `is_active` boolean default true, free-text `industry`/`size_band`/`location`, optional public logo on `public` disk). No new permissions; owner Policy-based. No Service/Repository for company CRUD. Admin employer index/show now surface the owner’s `company` summary. Company deletion restricted when jobs exist.
 - Feature 13 implemented: approved employers can create and edit job drafts (`job_postings` table) associated with their owned companies. Includes migration with restrict-on-delete constraints on catalogues, `Job` model & factory, `JobPolicy`, `StoreJobRequest` & `UpdateJobRequest` with salary validation, `JobController` with owned-scope IDOR protection, routes (`employer.jobs.*`), Inertia React pages (`employer/jobs/create.tsx`, `edit.tsx`), and Pest test suite (`tests/Feature/Employer/JobDraftTest.php`).
 - Feature 14 implemented: Job submission (`draft`/`rejected` → `pending_review`), admin moderation queue & approval (`pending_review` → `published`), rejection with required reason (`pending_review` → `rejected`), closure (`published`/`pending_review` → `closed`), and re-review rule (editing a published job resets status to `draft`). Includes migration for `rejection_reason`, `jobs.moderate` permission in `AuthorizationSeeder`, `JobPolicy` moderation/submission/closure rules, `JobModerationController` (`admin/jobs/*`), admin React pages (`admin/jobs/index.tsx`, `show.tsx`), employer submission/closure controller actions, and comprehensive Pest test suites (`JobSubmissionTest.php`, `JobModerationTest.php`).
+- Feature 15 implemented: Employer job dashboard and listing filters (`employer/jobs`). Includes company selection, status filtering, title search (`search`), application counts (`withCount('applications')`), pagination preserving query strings, and context-aware action links. Backed by Pest feature test suite (`tests/Feature/Employer/JobDashboardTest.php`).
 
 ## Current task / latest handoff
 
-- Status: **Feature 14 implemented, tested, built, typechecked, linted, formatted, migrated, and verified** (this session). Not committed/pushed.
-- Summary: Job submission, admin moderation, publication, and closure fully implemented with strict state transitions, server-side policy authorization, form request validation, admin queue/review pages, employer submission/closure buttons and rejection reason banner in `employer/jobs/edit.tsx`, redirect to `employer.jobs.index` after job submission/closure, UI theme color uniformity (`bg-card`), and test coverage.
-- Key files (Feature 14):
-    - Backend: `database/migrations/2026_11_02_000010_add_moderation_fields_to_job_postings_table.php`, `app/Enums/PermissionSlug.php`, `database/seeders/AuthorizationSeeder.php`, `app/Policies/JobPolicy.php`, `app/Http/Requests/Admin/RejectJobRequest.php`, `app/Http/Controllers/Admin/JobModerationController.php`, `app/Http/Controllers/Employer/JobController.php`, `routes/web.php`, `routes/admin.php`.
-    - Frontend: `resources/js/pages/admin/jobs/index.tsx`, `resources/js/pages/admin/jobs/show.tsx`, `resources/js/pages/employer/jobs/edit.tsx`.
-    - Tests/spec: `tests/Feature/Employer/JobSubmissionTest.php`, `tests/Feature/Admin/JobModerationTest.php`, `docs/specs/feature-14-job-submission-admin-moderation-publication-and-closure.md`.
+- Status: **Feature 15 implemented, tested, built, typechecked, linted, formatted, and verified.**
+- Summary: Approved employer job dashboard (`employer/jobs`) fully implemented with company selection, status filtering, title search (`search`), pagination preserving query strings, dates, application count indicators, and context-aware action links.
+- Key files (Feature 15):
+    - Backend: `app/Http/Controllers/Employer/JobController.php` (search & payload support).
+    - Frontend: `resources/js/pages/employer/jobs/index.tsx`, `resources/js/types/job.ts`.
+    - Tests/spec: `tests/Feature/Employer/JobDashboardTest.php`, `docs/specs/feature-15-employer-job-dashboard-and-listing-filters.md`.
 - Verification observed (latest run):
-    - `php artisan test`: **287 passed, 1995 assertions**
+    - `php artisan test`: **294 passed, 2093 assertions**
     - `npm run types:check`: 0 errors (`tsc --noEmit`)
-    - `npm run build`: built successfully with Wayfinder route regeneration
+    - `npm run build`: built successfully
     - `vendor/bin/pint`: passed formatted
     - `vendor/bin/phpstan analyse --memory-limit=512M`: 0 errors
-    - `php artisan migrate`: applied through `2026_11_02_000010`
-- Next recommended step: Await further instructions from the user on next features (e.g. Feature 15 employer job dashboard & listing filters or Feature 16 public job listing).
+- Next recommended step: Await further instructions from the user on next features (e.g. Feature 16 public job listing).
 
 ## Durable notes
 
