@@ -91,6 +91,9 @@ class UpdateCandidateProfileRequest extends FormRequest
         $this->merge($merged);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

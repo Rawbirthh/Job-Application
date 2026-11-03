@@ -6,6 +6,9 @@ use App\Models\CandidateExperience;
 use App\Models\CandidateProfile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<\App\Models\CandidateExperience>
+ */
 class CandidateExperienceFactory extends Factory
 {
     protected $model = CandidateExperience::class;

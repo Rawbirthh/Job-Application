@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  */
 class CandidateExperience extends Model
 {
+    /** @use HasFactory<\Database\Factories\CandidateExperienceFactory> */
     use HasFactory;
 
     protected $fillable = [
