@@ -103,7 +103,7 @@ class CandidateProfileService
             }
         }
 
-        return array_values($filtered);
+        return $filtered;
     }
 
     /**
@@ -147,6 +147,6 @@ class CandidateProfileService
             }
         }
 
-        return array_values($filtered);
+        return $filtered;
     }
 }

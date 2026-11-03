@@ -78,10 +78,8 @@ class UpdateCandidateProfileRequest extends FormRequest
                 }
 
                 if (array_key_exists('is_current', $normalizedRow)) {
-                    $normalizedRow['is_current'] = filter_var($normalizedRow['is_current'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
-                    if ($normalizedRow['is_current'] === null) {
-                        $normalizedRow['is_current'] = false;
-                    }
+                    $filtered = filter_var($normalizedRow['is_current'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    $normalizedRow['is_current'] = $filtered === null ? false : $filtered;
                 }
 
                 $normalizedRows[$index] = $normalizedRow;

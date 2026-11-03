@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Candidate\UpdateCandidateProfileRequest;
+use App\Models\CandidateEducation;
+use App\Models\CandidateExperience;
 use App\Models\CandidateProfile;
 use App\Models\User;
 use App\Services\Candidate\CandidateProfileService;
@@ -79,7 +81,7 @@ class CandidateProfileController extends Controller
             'summary' => $profile->summary,
             'location' => $profile->location,
             'skills' => $profile->skills ?? [],
-            'educations' => $profile->educations->map(fn ($education): array => [
+            'educations' => $profile->educations->map(fn (CandidateEducation $education): array => [
                 'id' => $education->id,
                 'institution' => $education->institution,
                 'degree' => $education->degree,
@@ -88,7 +90,7 @@ class CandidateProfileController extends Controller
                 'end_date' => $education->end_date?->toDateString(),
                 'description' => $education->description,
             ])->values()->all(),
-            'experiences' => $profile->experiences->map(fn ($experience): array => [
+            'experiences' => $profile->experiences->map(fn (CandidateExperience $experience): array => [
                 'id' => $experience->id,
                 'company_name' => $experience->company_name,
                 'job_title' => $experience->job_title,
