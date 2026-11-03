@@ -7,7 +7,7 @@ use App\Models\CandidateProfile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\CandidateExperience>
+ * @extends Factory<CandidateExperience>
  */
 class CandidateExperienceFactory extends Factory
 {
