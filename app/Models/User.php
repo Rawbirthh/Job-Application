@@ -72,6 +72,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasOne<CandidateProfile, $this>
+     */
+    public function candidateProfile(): HasOne
+    {
+        return $this->hasOne(CandidateProfile::class);
+    }
+
+    /**
      * @return HasMany<Company, $this>
      */
     public function companies(): HasMany

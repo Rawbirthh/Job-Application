@@ -9,7 +9,7 @@
 - Database target: unresolved. `AGENTS.md` baseline is MySQL; local runtime and test suite use SQLite.
 - Authentication: session-based Laravel Fortify. Registration, login/logout, password reset, 2FA, passkeys enabled; email verification disabled.
 - Authorization: custom dynamic DB-backed role/permission system (Features 3–14). Roles: `platform_admin`, `employer`, `job_seeker`. Permissions include `admin.access`, `users.*`, `roles.*`, `permissions.*`, catalogue permissions, `employers.view`/`employers.manage`, and `jobs.moderate`. Policies, middleware, services, and admin management UI in place.
-- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **315 passed, 2301 assertions** (Features 16-17 added public job tests).
+- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **327 passed, 2457 assertions** (Features 16-18).
 - Frontend conventions: Inertia page props, Wayfinder actions/routes, named routes, vendored shadcn/ui, pagination component, split/admin layouts.
 
 ## Confirmed architecture decisions
@@ -34,22 +34,24 @@
 - Feature 15 implemented: Employer job dashboard and listing filters (`employer/jobs`). Includes company selection, status filtering, title search (`search`), application counts (`withCount('applications')`), pagination preserving query strings, and context-aware action links. Backed by Pest feature test suite (`tests/Feature/Employer/JobDashboardTest.php`).
 - Feature 16 implemented: Public job listing with server-side pagination (`docs/specs/feature-16-public-job-listing.md`). Includes `PublicJobController`, public `GET /jobs` route, `PublicLayout` mapping for `jobs/*`, React Inertia index page (`resources/js/pages/jobs/index.tsx`) with search and filter dropdowns (category, employment type, workplace arrangement, experience level), homepage/header navigation links, and Pest test suite (`tests/Feature/PublicJobListTest.php`).
 - Feature 17 implemented: Public job detail page (`docs/specs/feature-17-public-job-detail.md`). Includes `PublicJobController::show` with server-side visibility enforcement (only `published` jobs from approved active companies viewable, all others 404), eager loading to prevent N+1, `GET /jobs/{job}` route (`jobs.show`), responsive React Inertia detail page (`resources/js/pages/jobs/show.tsx`) with two-column layout, contextual CTA (guest: sign-in link, job seeker: apply button, employer/admin: role note), company sidebar, salary formatting, deadline handling, accessible markup, and Pest test suite (`tests/Feature/PublicJobDetailTest.php` with 14 tests covering visibility rules, field exclusion, optional fields).
+- Feature 18 implemented: Candidate profile management (`docs/specs/feature-18-candidate-profile-management.md`). Includes `candidate_profiles`, `candidate_educations`, `candidate_experiences` tables; `CandidateProfile`/`CandidateEducation`/`CandidateExperience` models; `CandidateProfilePolicy` (owner-only); `UpdateCandidateProfileRequest`; `CandidateProfileService` (transactional sync); `CandidateProfileController` (`candidate.profile.edit`/`update`); Inertia page `resources/js/pages/candidate/profile/edit.tsx`; types `resources/js/types/candidate.ts`; dashboard link. Privacy: owner-only, no ID-based access, forged IDs ignored.
 
 ## Current task / latest handoff
 
-- Status: **Feature 17 implemented, tested, and verified.**
-- Summary: Public job detail page (`/jobs/{job}`) fully implemented allowing anyone (guests and authenticated users) to view published jobs with comprehensive information, company profile, and contextual call-to-action. Server-side visibility enforcement ensures only `published` jobs from approved active companies are viewable; all other states return 404 without leaking information.
-- Key files (Feature 17):
-    - Backend: `app/Http/Controllers/PublicJobController.php` (added `show` method), `routes/web.php` (added `jobs.show` route).
-    - Frontend: `resources/js/pages/jobs/show.tsx`.
-    - Tests/spec: `tests/Feature/PublicJobDetailTest.php` (18 tests, 150 assertions), `docs/specs/feature-17-public-job-detail.md`.
+- Status: **Feature 18 implemented, tested, and verified.**
+- Summary: Candidate profile management implemented. Authenticated job seekers can create/edit private professional profile (headline, summary, location, skills, education entries, work experience entries) at `/candidate/profile`. Owner-only access; no ID-based route; forged IDs ignored. Data persisted across `candidate_profiles`, `candidate_educations`, `candidate_experiences`. Validation via `UpdateCandidateProfileRequest`; transactional sync via `CandidateProfileService`. Inertia page with dynamic rows, skills chips, empty states, nested errors.
+- Key files (Feature 18):
+    - Backend: migration `database/migrations/2026_11_03_000000_create_candidate_profile_tables.php`; models `CandidateProfile`, `CandidateEducation`, `CandidateExperience`, `User::candidateProfile`; `CandidateProfilePolicy`; `UpdateCandidateProfileRequest`; `CandidateProfileService`; `CandidateProfileController`; routes `candidate.profile.edit`/`update`.
+    - Frontend: `resources/js/types/candidate.ts`, `resources/js/pages/candidate/profile/edit.tsx`, dashboard link.
+    - Tests: `tests/Feature/Candidate/CandidateProfileTest.php` (12 tests, 156 assertions).
+    - Spec: `docs/specs/feature-18-candidate-profile-management.md` (status IMPLEMENTED).
 - Verification observed (2026-11-03):
-    - `php artisan test`: **315 passed, 2301 assertions** (no regressions)
-    - `php artisan test --filter=PublicJobDetailTest`: **18 passed, 150 assertions**
-    - `npx tsc --noEmit`: **0 errors** (TypeScript types valid)
-    - `npm run build`: TypeScript compilation successful (build had Windows file lock, not code issue)
-    - Bug fixed during testing: enum comparison in visibility check (line 143)
-- Next recommended step: Feature 18 (Candidate profile management) or Feature 20 (Saved jobs) per `project-overview.md` roadmap.
+    - `php artisan test --filter=CandidateProfileTest`: **12 passed, 156 assertions**
+    - `php artisan test`: **327 passed, 2457 assertions**
+    - `npx tsc --noEmit`: **0 errors**
+    - `npm run build`: success
+    - `vendor/bin/pint`: fixed formatting on 2 files; rerun tests passed
+- Next recommended step: Feature 19 (Private resume upload) or Feature 20 (Saved jobs) per `project-overview.md` roadmap.
 
 ## Durable notes
 

@@ -6,6 +6,7 @@ import {
     FileText,
     Search,
     ShieldAlert,
+    UserCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -181,16 +182,30 @@ export default function CandidateDashboard() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground">
-                        <h2 className="text-lg font-semibold tracking-tight">
-                            Candidate Profile Notice
-                        </h2>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Your account is set up as a job seeker. Candidate
-                            profile management and resume uploads will be
-                            available in Feature 18 &amp; 19.
-                        </p>
-                    </div>
+                    <Card className="border-border">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Candidate Profile
+                            </CardTitle>
+                            <UserCircle className="size-4 text-teal-600 dark:text-teal-400" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                Manage profile
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Update your headline, skills, education, and
+                                work experience.
+                            </p>
+                            <div className="mt-3">
+                                <Button asChild size="sm">
+                                    <Link href={candidate.profile.edit()}>
+                                        Edit profile
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     <Card className="border-border">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">

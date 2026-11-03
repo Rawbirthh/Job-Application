@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Candidate\CandidateDashboardController;
+use App\Http\Controllers\Candidate\CandidateProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
@@ -60,6 +61,10 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::prefix('candidate')->name('candidate.')->middleware(['role:job_seeker'])->group(function (): void {
         Route::get('dashboard', CandidateDashboardController::class)->name('dashboard');
+        Route::get('profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [CandidateProfileController::class, 'update'])
+            ->middleware(['throttle:20,1'])
+            ->name('profile.update');
     });
 });
 
