@@ -10,6 +10,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string|null $headline
+ * @property string|null $summary
+ * @property string|null $location
+ * @property array<int, string>|null $skills
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, CandidateEducation> $educations
+ * @property-read Collection<int, CandidateExperience> $experiences
+ * @property-read User $user
+ */
 class CandidateProfile extends Model
 {
     /** @use HasFactory<CandidateProfileFactory> */

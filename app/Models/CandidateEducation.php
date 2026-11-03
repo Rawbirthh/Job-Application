@@ -8,9 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $candidate_profile_id
+ * @property string $institution
+ * @property string|null $degree
+ * @property string|null $field_of_study
+ * @property Carbon|null $start_date
+ * @property Carbon|null $end_date
+ * @property string|null $description
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class CandidateEducation extends Model
 {
-
+    /** @use HasFactory<CandidateEducationFactory> */
     use HasFactory;
 
     protected $table = 'candidate_educations';
