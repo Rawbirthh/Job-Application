@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'home')->name('home');
 Route::get('/jobs', [PublicJobController::class, 'index'])->name('jobs.index');
+Route::get('/jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
 
 Route::middleware(['auth'])->group(function (): void {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

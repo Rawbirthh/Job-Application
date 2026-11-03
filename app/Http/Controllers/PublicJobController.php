@@ -132,4 +132,60 @@ class PublicJobController extends Controller
             ],
         ]);
     }
+
+    public function show(Job $job): Response
+    {
+        // Visibility check: only published jobs from active companies with approved owners are viewable
+        if (
+            $job->status !== 'published' ||
+            ! $job->company ||
+            ! $job->company->is_active ||
+            $job->company->owner->status !== EmployerStatus::Approved
+        ) {
+            abort(404);
+        }
+
+        // Eager load relationships
+        $job->load([
+            'company:id,name,slug,logo_path,overview,website,location,industry,size_band',
+            'category:id,name',
+            'employmentType:id,name',
+            'workplaceArrangement:id,name',
+            'experienceLevel:id,name',
+            'payPeriod:id,name',
+        ]);
+
+        return Inertia::render('jobs/show', [
+            'job' => [
+                'id' => $job->id,
+                'title' => $job->title,
+                'description' => $job->description,
+                'responsibilities' => $job->responsibilities,
+                'requirements' => $job->requirements,
+                'location' => $job->location,
+                'salary_min' => $job->salary_min,
+                'salary_max' => $job->salary_max,
+                'salary_currency' => $job->salary_currency,
+                'salary_negotiable' => $job->salary_negotiable,
+                'application_deadline' => $job->application_deadline?->toIso8601String(),
+                'published_at' => $job->created_at?->toIso8601String(),
+                'company' => $job->company ? [
+                    'id' => $job->company->id,
+                    'name' => $job->company->name,
+                    'slug' => $job->company->slug,
+                    'logo_url' => $job->company->logo_url,
+                    'overview' => $job->company->overview,
+                    'website' => $job->company->website,
+                    'location' => $job->company->location,
+                    'industry' => $job->company->industry,
+                    'size_band' => $job->company->size_band,
+                ] : null,
+                'category' => $job->category ? ['id' => $job->category->id, 'name' => $job->category->name] : null,
+                'employment_type' => $job->employmentType ? ['id' => $job->employmentType->id, 'name' => $job->employmentType->name] : null,
+                'workplace_arrangement' => $job->workplaceArrangement ? ['id' => $job->workplaceArrangement->id, 'name' => $job->workplaceArrangement->name] : null,
+                'experience_level' => $job->experienceLevel ? ['id' => $job->experienceLevel->id, 'name' => $job->experienceLevel->name] : null,
+                'pay_period' => $job->payPeriod ? ['id' => $job->payPeriod->id, 'name' => $job->payPeriod->name] : null,
+            ],
+        ]);
+    }
 }

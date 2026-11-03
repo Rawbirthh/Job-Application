@@ -9,7 +9,7 @@
 - Database target: unresolved. `AGENTS.md` baseline is MySQL; local runtime and test suite use SQLite.
 - Authentication: session-based Laravel Fortify. Registration, login/logout, password reset, 2FA, passkeys enabled; email verification disabled.
 - Authorization: custom dynamic DB-backed role/permission system (Features 3–14). Roles: `platform_admin`, `employer`, `job_seeker`. Permissions include `admin.access`, `users.*`, `roles.*`, `permissions.*`, catalogue permissions, `employers.view`/`employers.manage`, and `jobs.moderate`. Policies, middleware, services, and admin management UI in place.
-- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **297 passed, 2151 assertions** (Feature 16 added `tests/Feature/PublicJobListTest.php`).
+- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **315 passed, 2301 assertions** (Features 16-17 added public job tests).
 - Frontend conventions: Inertia page props, Wayfinder actions/routes, named routes, vendored shadcn/ui, pagination component, split/admin layouts.
 
 ## Confirmed architecture decisions
@@ -33,19 +33,23 @@
 - Feature 14 implemented: Job submission (`draft`/`rejected` → `pending_review`), admin moderation queue & approval (`pending_review` → `published`), rejection with required reason (`pending_review` → `rejected`), closure (`published`/`pending_review` → `closed`), and re-review rule (editing a published job resets status to `draft`). Includes migration for `rejection_reason`, `jobs.moderate` permission in `AuthorizationSeeder`, `JobPolicy` moderation/submission/closure rules, `JobModerationController` (`admin/jobs/*`), admin React pages (`admin/jobs/index.tsx`, `show.tsx`), employer submission/closure controller actions, and comprehensive Pest test suites (`JobSubmissionTest.php`, `JobModerationTest.php`).
 - Feature 15 implemented: Employer job dashboard and listing filters (`employer/jobs`). Includes company selection, status filtering, title search (`search`), application counts (`withCount('applications')`), pagination preserving query strings, and context-aware action links. Backed by Pest feature test suite (`tests/Feature/Employer/JobDashboardTest.php`).
 - Feature 16 implemented: Public job listing with server-side pagination (`docs/specs/feature-16-public-job-listing.md`). Includes `PublicJobController`, public `GET /jobs` route, `PublicLayout` mapping for `jobs/*`, React Inertia index page (`resources/js/pages/jobs/index.tsx`) with search and filter dropdowns (category, employment type, workplace arrangement, experience level), homepage/header navigation links, and Pest test suite (`tests/Feature/PublicJobListTest.php`).
+- Feature 17 implemented: Public job detail page (`docs/specs/feature-17-public-job-detail.md`). Includes `PublicJobController::show` with server-side visibility enforcement (only `published` jobs from approved active companies viewable, all others 404), eager loading to prevent N+1, `GET /jobs/{job}` route (`jobs.show`), responsive React Inertia detail page (`resources/js/pages/jobs/show.tsx`) with two-column layout, contextual CTA (guest: sign-in link, job seeker: apply button, employer/admin: role note), company sidebar, salary formatting, deadline handling, accessible markup, and Pest test suite (`tests/Feature/PublicJobDetailTest.php` with 14 tests covering visibility rules, field exclusion, optional fields).
 
 ## Current task / latest handoff
 
-- Status: **Feature 16 implemented, tested, built, and verified.**
-- Summary: Public job listing (`/jobs`) fully implemented allowing anyone (guests and users) to search published jobs from approved active employers and filter by category, employment type, workplace arrangement, and experience level with server-side pagination.
-- Key files (Feature 16):
-    - Backend: `app/Http/Controllers/PublicJobController.php`, `routes/web.php`.
-    - Frontend: `resources/js/pages/jobs/index.tsx`, `resources/js/app.tsx`, `resources/js/components/public/site-header.tsx`, `resources/js/pages/home.tsx`.
-    - Tests/spec: `tests/Feature/PublicJobListTest.php`, `docs/specs/feature-16-public-job-listing.md`.
-- Verification observed (latest run):
-    - `php artisan test`: **297 passed, 2151 assertions**
-    - `npm run build`: built successfully
-- Next recommended step: Await further instructions from the user on next features (e.g., Feature 17 detailed job view page).
+- Status: **Feature 17 implemented, tested, and verified.**
+- Summary: Public job detail page (`/jobs/{job}`) fully implemented allowing anyone (guests and authenticated users) to view published jobs with comprehensive information, company profile, and contextual call-to-action. Server-side visibility enforcement ensures only `published` jobs from approved active companies are viewable; all other states return 404 without leaking information.
+- Key files (Feature 17):
+    - Backend: `app/Http/Controllers/PublicJobController.php` (added `show` method), `routes/web.php` (added `jobs.show` route).
+    - Frontend: `resources/js/pages/jobs/show.tsx`.
+    - Tests/spec: `tests/Feature/PublicJobDetailTest.php` (18 tests, 150 assertions), `docs/specs/feature-17-public-job-detail.md`.
+- Verification observed (2026-11-03):
+    - `php artisan test`: **315 passed, 2301 assertions** (no regressions)
+    - `php artisan test --filter=PublicJobDetailTest`: **18 passed, 150 assertions**
+    - `npx tsc --noEmit`: **0 errors** (TypeScript types valid)
+    - `npm run build`: TypeScript compilation successful (build had Windows file lock, not code issue)
+    - Bug fixed during testing: enum comparison in visibility check (line 143)
+- Next recommended step: Feature 18 (Candidate profile management) or Feature 20 (Saved jobs) per `project-overview.md` roadmap.
 
 ## Durable notes
 
