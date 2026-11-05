@@ -36,6 +36,7 @@ interface JobDetail {
     application_deadline: string | null;
     published_at: string | null;
     is_saved?: boolean;
+    has_applied?: boolean;
     company: {
         id: number;
         name: string;
