@@ -3,6 +3,7 @@
 use App\Http\Controllers\Candidate\CandidateDashboardController;
 use App\Http\Controllers\Candidate\CandidateProfileController;
 use App\Http\Controllers\Candidate\CandidateResumeController;
+use App\Http\Controllers\Candidate\JobApplicationController;
 use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
@@ -83,8 +84,8 @@ Route::middleware(['auth'])->group(function (): void {
         Route::delete('saved-jobs/{jobPosting}', [SavedJobController::class, 'destroy'])
             ->name('saved-jobs.destroy');
 
-        Route::get('jobs/{job}/apply', [\App\Http\Controllers\Candidate\JobApplicationController::class, 'create'])->name('applications.create');
-        Route::post('jobs/{job}/apply', [\App\Http\Controllers\Candidate\JobApplicationController::class, 'store'])
+        Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])->name('applications.create');
+        Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
             ->middleware(['throttle:20,1'])
             ->name('applications.store');
     });

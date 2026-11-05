@@ -6,6 +6,7 @@ use App\Enums\EmployerStatus;
 use App\Models\EmploymentType;
 use App\Models\ExperienceLevel;
 use App\Models\Job;
+use App\Models\JobApplication;
 use App\Models\JobCategory;
 use App\Models\User;
 use App\Models\WorkplaceArrangement;
@@ -169,7 +170,7 @@ class PublicJobController extends Controller
             ? $user->savedJobs()->where('job_posting_id', $job->id)->exists()
             : false;
         $hasApplied = $user && $user->hasRole('job_seeker')
-            ? \App\Models\JobApplication::query()
+            ? JobApplication::query()
                 ->where('user_id', $user->id)
                 ->where('job_posting_id', $job->id)
                 ->exists()

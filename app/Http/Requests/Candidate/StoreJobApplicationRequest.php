@@ -5,6 +5,7 @@ namespace App\Http\Requests\Candidate;
 use App\Models\CandidateResume;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\User;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -58,6 +59,7 @@ class StoreJobApplicationRequest extends FormRequest
 
             if (! $job) {
                 $validator->errors()->add('job_posting_id', __('The selected job posting could not be found.'));
+
                 return;
             }
 
@@ -69,7 +71,7 @@ class StoreJobApplicationRequest extends FormRequest
                 $validator->errors()->add('job_posting_id', __('This job application deadline has passed.'));
             }
 
-            /** @var \App\Models\User|null $user */
+            /** @var User|null $user */
             $user = $this->user();
 
             if ($user && JobApplication::query()->where('user_id', $user->id)->where('job_posting_id', $job->id)->exists()) {
