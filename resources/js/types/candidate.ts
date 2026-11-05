@@ -97,3 +97,78 @@ export type SavedJobsIndexProps = {
     prevPageUrl?: string | null;
     nextPageUrl?: string | null;
 };
+
+export type JobApplicationForm = {
+    resume_id: number;
+    cover_letter?: string;
+};
+
+export type ApplicationStatus = 'submitted' | 'reviewing' | 'shortlisted' | 'interview_scheduled' | 'offer_sent' | 'hired' | 'rejected' | 'withdrawn';
+
+export type ApplicationIndexProps = {
+    applications: Application[];
+    currentPage?: number;
+    lastPage?: number;
+    perPage?: number;
+    total?: number;
+    prevPageUrl?: string | null;
+    nextPageUrl?: string | null;
+};
+
+export type Application = {
+    id: number;
+    job_id: number;
+    company_name: string | null;
+    job_title: string;
+    status: ApplicationStatus;
+    applied_at: string | null;
+    cover_letter?: string | null;
+    resume: CandidateResumeData | null;
+};
+
+export type ApplicationIndexFormProps = {
+    application: Application;
+};
+
+export type JobDetail = {
+    id: number;
+    title: string;
+    description: string;
+    responsibilities: string | null;
+    requirements: string | null;
+    location: string | null;
+    salary_min: string | null;
+    salary_max: string | null;
+    salary_currency: string | null;
+    salary_negotiable: boolean;
+    application_deadline: string | null;
+    published_at: string | null;
+    is_saved?: boolean;
+    isSaved?: boolean;
+    has_applied?: boolean;
+    company: {
+        id: number;
+        name: string;
+        slug: string;
+        logo_url: string | null;
+        overview: string | null;
+        website: string | null;
+        location: string | null;
+        industry: string | null;
+        size_band: string | null;
+    } | null;
+    category: { id: number; name: string } | null;
+    employment_type: { id: number; name: string } | null;
+    workplace_arrangement: { id: number; name: string } | null;
+    experience_level: { id: number; name: string } | null;
+    pay_period: { id: number; name: string } | null;
+};
+
+export type JobDetailPageProps = {
+    job: JobDetail;
+    auth: { user?: { id: number; name?: string; email?: string; roles: string[] }; employerStatus?: string };
+    application: {
+        exists: boolean;
+        alreadyApplied: boolean;
+    };
+};

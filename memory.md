@@ -9,8 +9,15 @@
 - Database target: unresolved. `AGENTS.md` baseline is MySQL; local runtime and test suite use SQLite.
 - Authentication: session-based Laravel Fortify. Registration, login/logout, password reset, 2FA, passkeys enabled; email verification disabled.
 - Authorization: custom dynamic DB-backed role/permission system (Features 3–14). Roles: `platform_admin`, `employer`, `job_seeker`. Permissions include `admin.access`, `users.*`, `roles.*`, `permissions.*`, catalogue permissions, `employers.view`/`employers.manage`, and `jobs.moderate`. Policies, middleware, services, and admin management UI in place.
-- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **342 passed, 2523 assertions** (Feature 20).
+- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **349 passed, 2571 assertions** across all features.
 - Frontend conventions: Inertia page props, Wayfinder actions/routes, named routes, vendored shadcn/ui, pagination component, split/admin layouts.
+- Feature 21 implemented: Submit a job application. Eligible job seekers can submit applications to published jobs with their selected resume and optional cover letter, enforcing duplicate prevention via DB unique constraint + Form Request closure validation, deadline validation, and server-side authorization. On application submit the `has_applied` prop is set server-side and propagated to the job detail page, rendering a readonly "Applied" button consistently across mobile and desktop viewports.
+
+- Key files (Feature 21):
+    - Backend: `database/migrations/2026_11_05_120000_create_job_applications_table.php`, `JobApplication`, `JobApplicationPolicy`, `StoreJobApplicationRequest`, `JobApplicationController`, routes (`candidate.applications.*`).
+    - Frontend: `resources/js/types/candidate.ts`, `resources/js/pages/jobs/show.tsx`.
+    - Tests: `tests/Feature/Candidate/JobApplicationTest.php` (7 tests).
+    - Spec: `docs/specs/feature-21-submit-job-application.md` (status APPROVED).
 
 ## Confirmed architecture decisions
 
@@ -40,17 +47,18 @@
 
 ## Current task / latest handoff
 
-- Status: **Feature 20 implemented, tested, and verified.**
-- Summary: Saved jobs feature fully implemented and tested. `saved_jobs` table with unique constraint and foreign keys. `SavedJobController` (`index`, `store`, `destroy`), `SavedJobPolicy`, `SaveJobRequest` validation ensuring only published jobs can be saved. React Inertia pages (`resources/js/pages/candidate/saved-jobs/index.tsx`, updated `jobs/index.tsx`, `jobs/show.tsx`) with pagination, status badges, and bookmark toggle actions. Navigation and candidate dashboard updated.
-- Key files (Feature 20):
-    - Backend: `database/migrations/2026_11_05_000000_create_saved_jobs_table.php`, `SavedJob`, `SavedJobPolicy`, `SaveJobRequest`, `SavedJobController`, routes (`candidate.saved-jobs.*`).
-    - Frontend: `resources/js/pages/candidate/saved-jobs/index.tsx`, `resources/js/pages/jobs/index.tsx`, `resources/js/pages/jobs/show.tsx`, `resources/js/lib/navigation.ts`, `resources/js/pages/candidate/dashboard.tsx`, `resources/js/types/candidate.ts`.
-    - Tests: `tests/Feature/Candidate/SavedJobTest.php` (5 tests).
-    - Spec: `docs/specs/feature-20-saved-jobs.md` (status IMPLEMENTED).
+- Status: **Feature 21 implemented, tested, and verified.**
+- Summary: Submit a job application feature fully implemented and tested. Job seekers can submit applications to published jobs with their selected resume and optional cover letter. Duplicate prevention enforced via DB unique constraint on `['user_id', 'job_posting_id']` and Form Request closure validation checking existing applications. Deadline validation rejects applications past `application_deadline`. Server-side authorization via `EnsureUserHasRole('job_seeker')` middleware and `JobApplicationPolicy` actions (`viewAny`, `create`, `view`). On successful submit, `has_applied` prop is computed in `PublicJobController::show()` and passed to `jobs/show.tsx`, rendering a readonly "Applied" button consistently across mobile (`lg:hidden`) and desktop (`hidden lg:block`) viewports. Three UI bugs resolved: 404 on apply link (fixed route to `/candidate/jobs/{id}/apply`), button not becoming readonly after submit (added `has_applied` prop and conditional rendering), and inconsistent mobile/desktop rendering (applied same `has_applied` logic to both CTA sections).
+- Key files (Feature 21):
+    - Backend: `database/migrations/2026_11_05_120000_create_job_applications_table.php`, `JobApplication`, `JobApplicationPolicy`, `StoreJobApplicationRequest`, `JobApplicationController`, routes (`candidate.applications.*`).
+    - Frontend: `resources/js/types/candidate.ts`, `resources/js/pages/jobs/show.tsx`.
+    - Tests: `tests/Feature/Candidate/JobApplicationTest.php` (7 tests including `test_job_detail_reflects_has_applied_status` regression test).
+    - Spec: `docs/specs/feature-21-submit-job-application.md` (status APPROVED).
 - Verification observed (2026-11-05):
-    - `php artisan test`: **342 passed, 2,523 assertions** across all features.
+    - `php artisan test`: **349 passed, 2571 assertions** across all features.
+    - `php artisan test --filter=JobApplicationTest`: 7 passed, 48 assertions.
     - Frontend build: `npm run build` compiled successfully without errors.
-- Next recommended step: Feature 21 (Submit a job application) per `project-overview.md` roadmap.
+- Next recommended step: Feature 22 (Candidate application history and status view) per `project-overview.md` roadmap.
 
 ## Durable notes
 

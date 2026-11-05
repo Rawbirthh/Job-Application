@@ -355,13 +355,15 @@ export default function PublicJobShow({ job }: Props) {
                                         <h3 className="mb-3 text-lg font-semibold text-foreground">
                                             Ready to apply?
                                         </h3>
-                                        {isDeadlinePassed ? (
+                                        {isDeadlinePassed || job.has_applied ? (
                                             <Button
                                                 size="lg"
                                                 className="w-full"
                                                 disabled
                                             >
-                                                Application deadline passed
+                                                {isDeadlinePassed
+                                                    ? 'Application deadline passed'
+                                                    : 'Applied'}
                                             </Button>
                                         ) : (
                                             <Button
@@ -370,13 +372,13 @@ export default function PublicJobShow({ job }: Props) {
                                                 asChild
                                             >
                                                 <Link
-                                                    href={`/jobs/${job.id}/apply`}
+                                                    href={`/candidate/jobs/${job.id}/apply`}
                                                 >
                                                     Apply for this role
                                                 </Link>
                                             </Button>
                                         )}
-                                        {isDeadlinePassed && (
+                                        {isDeadlinePassed && ! job.has_applied && (
                                             <p className="mt-2 text-xs text-muted-foreground">
                                                 This position is no longer
                                                 accepting applications.
@@ -536,14 +538,15 @@ export default function PublicJobShow({ job }: Props) {
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent>
-                                                {isDeadlinePassed ? (
+                                                {isDeadlinePassed || job.has_applied ? (
                                                     <Button
                                                         size="lg"
                                                         className="w-full"
                                                         disabled
                                                     >
-                                                        Application deadline
-                                                        passed
+                                                        {isDeadlinePassed
+                                                            ? 'Application deadline passed'
+                                                            : 'Applied'}
                                                     </Button>
                                                 ) : (
                                                     <Button
@@ -552,14 +555,14 @@ export default function PublicJobShow({ job }: Props) {
                                                         asChild
                                                     >
                                                         <Link
-                                                            href={`/jobs/${job.id}/apply`}
+                                                            href={`/candidate/jobs/${job.id}/apply`}
                                                         >
                                                             <Briefcase className="size-4" />
                                                             Apply for this role
                                                         </Link>
                                                     </Button>
                                                 )}
-                                                {isDeadlinePassed && (
+                                                {isDeadlinePassed && ! job.has_applied && (
                                                     <p className="mt-3 text-xs text-muted-foreground">
                                                         This position is no
                                                         longer accepting

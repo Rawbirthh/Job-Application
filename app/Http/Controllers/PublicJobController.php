@@ -168,6 +168,12 @@ class PublicJobController extends Controller
         $isSaved = $user && $user->hasRole('job_seeker')
             ? $user->savedJobs()->where('job_posting_id', $job->id)->exists()
             : false;
+        $hasApplied = $user && $user->hasRole('job_seeker')
+            ? \App\Models\JobApplication::query()
+                ->where('user_id', $user->id)
+                ->where('job_posting_id', $job->id)
+                ->exists()
+            : false;
 
         return Inertia::render('jobs/show', [
             'job' => [
@@ -184,6 +190,7 @@ class PublicJobController extends Controller
                 'application_deadline' => $job->application_deadline?->toIso8601String(),
                 'published_at' => $job->created_at?->toIso8601String(),
                 'is_saved' => $isSaved,
+                'has_applied' => $hasApplied,
                 'company' => $job->company ? [
                     'id' => $job->company->id,
                     'name' => $job->company->name,

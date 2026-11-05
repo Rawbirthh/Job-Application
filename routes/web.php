@@ -82,6 +82,11 @@ Route::middleware(['auth'])->group(function (): void {
             ->name('saved-jobs.store');
         Route::delete('saved-jobs/{jobPosting}', [SavedJobController::class, 'destroy'])
             ->name('saved-jobs.destroy');
+
+        Route::get('jobs/{job}/apply', [\App\Http\Controllers\Candidate\JobApplicationController::class, 'create'])->name('applications.create');
+        Route::post('jobs/{job}/apply', [\App\Http\Controllers\Candidate\JobApplicationController::class, 'store'])
+            ->middleware(['throttle:20,1'])
+            ->name('applications.store');
     });
 });
 
