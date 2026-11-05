@@ -119,25 +119,34 @@ export default function PublicJobShow({ job }: Props) {
                                 size="sm"
                                 onClick={() => {
                                     if (job.is_saved) {
-                                        router.delete(`/candidate/saved-jobs/${job.id}`, {
-                                            preserveScroll: true,
-                                            onSuccess: () => {
-                                                // Assuming a state-based update would be handled by props
-                                                // or full page reload by inertia on success for simplicity
-                                                router.reload();
+                                        router.delete(
+                                            `/candidate/saved-jobs/${job.id}`,
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    // Assuming a state-based update would be handled by props
+                                                    // or full page reload by inertia on success for simplicity
+                                                    router.reload();
+                                                },
                                             },
-                                        });
+                                        );
                                     } else {
-                                        router.post('/candidate/saved-jobs', { job_posting_id: job.id }, {
-                                            preserveScroll: true,
-                                            onSuccess: () => {
-                                                router.reload();
+                                        router.post(
+                                            '/candidate/saved-jobs',
+                                            { job_posting_id: job.id },
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    router.reload();
+                                                },
                                             },
-                                        });
+                                        );
                                     }
                                 }}
                             >
-                                <Bookmark className={`mr-2 size-4 ${job.is_saved ? 'fill-current' : ''}`} />
+                                <Bookmark
+                                    className={`mr-2 size-4 ${job.is_saved ? 'fill-current' : ''}`}
+                                />
                                 {job.is_saved ? 'Saved' : 'Save Job'}
                             </Button>
                         )}

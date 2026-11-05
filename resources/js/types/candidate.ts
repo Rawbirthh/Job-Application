@@ -97,4 +97,3 @@ export type SavedJobsIndexProps = {
     prevPageUrl?: string | null;
     nextPageUrl?: string | null;
 };
-

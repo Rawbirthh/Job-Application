@@ -444,10 +444,21 @@ export default function PublicJobsIndex({
                                                     variant="ghost"
                                                     size="icon"
                                                     className="size-8 text-muted-foreground hover:text-primary"
-                                                    onClick={() => handleToggleSave(job.id, isSaved)}
-                                                    title={isSaved ? 'Remove from saved jobs' : 'Save job'}
+                                                    onClick={() =>
+                                                        handleToggleSave(
+                                                            job.id,
+                                                            isSaved,
+                                                        )
+                                                    }
+                                                    title={
+                                                        isSaved
+                                                            ? 'Remove from saved jobs'
+                                                            : 'Save job'
+                                                    }
                                                 >
-                                                    <Bookmark className={`size-4 ${isSaved ? 'fill-primary text-primary' : ''}`} />
+                                                    <Bookmark
+                                                        className={`size-4 ${isSaved ? 'fill-primary text-primary' : ''}`}
+                                                    />
                                                 </Button>
                                             )}
                                         </div>

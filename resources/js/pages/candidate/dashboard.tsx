@@ -158,7 +158,8 @@ export default function CandidateDashboard() {
                         </CardHeader>
                         <CardContent>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                View and manage your bookmarked career opportunities.
+                                View and manage your bookmarked career
+                                opportunities.
                             </p>
                             <div className="mt-3">
                                 <Button asChild size="sm">
