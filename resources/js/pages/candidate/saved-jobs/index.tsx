@@ -148,8 +148,15 @@ export default function SavedJobsIndex({ savedJobs }: SavedJobsIndexProps) {
                     })}
 
                     {pagination && pagination.last_page > 1 && (
-                        <div className="mt-6 flex justify-center">
-                            <Pagination links={pagination as any} />
+                        <div className="mt-8">
+                            <Pagination
+                                currentPage={pagination.current_page}
+                                lastPage={pagination.last_page}
+                                perPage={pagination.per_page}
+                                total={pagination.total}
+                                prevPageUrl={pagination.prev_page_url}
+                                nextPageUrl={pagination.next_page_url}
+                            />
                         </div>
                     )}
                 </div>

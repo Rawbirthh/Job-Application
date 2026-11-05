@@ -29,6 +29,8 @@ class SaveJobRequest extends FormRequest
                 'integer',
                 'exists:job_postings,id',
                 function (string $attribute, mixed $value, Closure $fail): void {
+                    /** @var Job|null $job */
+                    /** @var Job|null $job */
                     $job = Job::query()->find($value);
 
                     if (! $job || $job->status !== 'published') {

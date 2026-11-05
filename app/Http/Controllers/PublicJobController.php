@@ -7,6 +7,7 @@ use App\Models\EmploymentType;
 use App\Models\ExperienceLevel;
 use App\Models\Job;
 use App\Models\JobCategory;
+use App\Models\User;
 use App\Models\WorkplaceArrangement;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
@@ -82,7 +83,7 @@ class PublicJobController extends Controller
 
         $jobs = $query->paginate(12)->withQueryString();
 
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = request()->user();
         $savedJobIds = $user && $user->hasRole('job_seeker')
             ? $user->savedJobs()->pluck('job_posting_id')->all()
@@ -162,7 +163,7 @@ class PublicJobController extends Controller
             'payPeriod:id,name',
         ]);
 
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = request()->user();
         $isSaved = $user && $user->hasRole('job_seeker')
             ? $user->savedJobs()->where('job_posting_id', $job->id)->exists()

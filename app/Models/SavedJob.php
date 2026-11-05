@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User $user
- * @property-read Job $jobPosting
+ * @property-read JobPosting $jobPosting
  */
 class SavedJob extends Model
 {
@@ -35,10 +35,10 @@ class SavedJob extends Model
     }
 
     /**
-     * @return BelongsTo<Job, $this>
+     * @return BelongsTo<JobPosting, $this>
      */
     public function jobPosting(): BelongsTo
     {
-        return $this->belongsTo(Job::class, 'job_posting_id');
+        return $this->belongsTo(JobPosting::class, 'job_posting_id');
     }
 }

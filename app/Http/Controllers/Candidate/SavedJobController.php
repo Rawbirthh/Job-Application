@@ -57,40 +57,44 @@ class SavedJobController extends Controller
             ->latest('created_at')
             ->paginate(10)
             ->withQueryString()
-            ->through(fn (SavedJob $savedJob): array => [
-                'id' => $savedJob->id,
-                'job_posting_id' => $savedJob->job_posting_id,
-                'created_at' => $savedJob->created_at?->toIso8601String(),
-                'job' => $savedJob->jobPosting ? [
-                    'id' => $savedJob->jobPosting->id,
-                    'title' => $savedJob->jobPosting->title,
-                    'location' => $savedJob->jobPosting->location,
-                    'status' => $savedJob->jobPosting->status,
-                    'salary_min' => $savedJob->jobPosting->salary_min,
-                    'salary_max' => $savedJob->jobPosting->salary_max,
-                    'salary_currency' => $savedJob->jobPosting->salary_currency,
-                    'salary_negotiable' => $savedJob->jobPosting->salary_negotiable,
-                    'application_deadline' => $savedJob->jobPosting->application_deadline?->toDateString(),
-                    'company' => $savedJob->jobPosting->company ? [
-                        'id' => $savedJob->jobPosting->company->id,
-                        'name' => $savedJob->jobPosting->company->name,
-                        'slug' => $savedJob->jobPosting->company->slug,
-                        'logo_path' => $savedJob->jobPosting->company->logo_path,
-                    ] : null,
-                    'category' => $savedJob->jobPosting->category ? [
-                        'id' => $savedJob->jobPosting->category->id,
-                        'name' => $savedJob->jobPosting->category->name,
-                    ] : null,
-                    'employment_type' => $savedJob->jobPosting->employmentType ? [
-                        'id' => $savedJob->jobPosting->employmentType->id,
-                        'name' => $savedJob->jobPosting->employmentType->name,
-                    ] : null,
-                    'workplace_arrangement' => $savedJob->jobPosting->workplaceArrangement ? [
-                        'id' => $savedJob->jobPosting->workplaceArrangement->id,
-                        'name' => $savedJob->jobPosting->workplaceArrangement->name,
-                    ] : null,
-                ] : null,
-            ]);
+            ->through(function (SavedJob $savedJob): array {
+                $job = $savedJob->jobPosting;
+
+                return [
+                    'id' => $savedJob->id,
+                    'job_posting_id' => $savedJob->job_posting_id,
+                    'created_at' => $savedJob->created_at?->toIso8601String(),
+                    'job' => [
+                        'id' => $job->id,
+                        'title' => $job->title,
+                        'location' => $job->location,
+                        'status' => $job->status,
+                        'salary_min' => $job->salary_min,
+                        'salary_max' => $job->salary_max,
+                        'salary_currency' => $job->salary_currency,
+                        'salary_negotiable' => $job->salary_negotiable,
+                        'application_deadline' => $job->application_deadline?->toDateString(),
+                        'company' => $job->company ? [
+                            'id' => $job->company->id,
+                            'name' => $job->company->name,
+                            'slug' => $job->company->slug,
+                            'logo_path' => $job->company->logo_path,
+                        ] : null,
+                        'category' => $job->category ? [
+                            'id' => $job->category->id,
+                            'name' => $job->category->name,
+                        ] : null,
+                        'employment_type' => $job->employmentType ? [
+                            'id' => $job->employmentType->id,
+                            'name' => $job->employmentType->name,
+                        ] : null,
+                        'workplace_arrangement' => $job->workplaceArrangement ? [
+                            'id' => $job->workplaceArrangement->id,
+                            'name' => $job->workplaceArrangement->name,
+                        ] : null,
+                    ],
+                ];
+            });
 
         return Inertia::render('candidate/saved-jobs/index', [
             'savedJobs' => $savedJobs,

@@ -4,7 +4,6 @@ namespace Tests\Feature\Candidate;
 
 use App\Models\Company;
 use App\Models\Job;
-use App\Models\SavedJob;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
