@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  */
 class JobApplication extends Model
 {
-    /** @use HasFactory */
+    /** @use HasFactory<\Database\Factories\JobApplicationFactory> */
     use HasFactory;
 
     protected $fillable = [

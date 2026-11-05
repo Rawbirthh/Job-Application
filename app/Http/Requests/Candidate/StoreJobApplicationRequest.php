@@ -8,6 +8,7 @@ use App\Models\JobApplication;
 use App\Models\User;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreJobApplicationRequest extends FormRequest
 {
@@ -31,7 +32,7 @@ class StoreJobApplicationRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:candidate_resumes,id',
-                function (string $attribute, mixed $value, Closure $fail): void {
+                function ($value, Closure $fail): void {
                     /** @var CandidateResume|null $resume */
                     $resume = CandidateResume::query()->find($value);
 
@@ -51,7 +52,7 @@ class StoreJobApplicationRequest extends FormRequest
     /**
      * Configure the validator instance.
      *
-     * @param \Illuminate\Validation\Validator $validator
+     * @param  Validator  $validator
      */
     public function withValidator($validator): void
     {
