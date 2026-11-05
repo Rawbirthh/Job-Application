@@ -32,7 +32,7 @@ class StoreJobApplicationRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:candidate_resumes,id',
-                function ($value, Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     /** @var CandidateResume|null $resume */
                     $resume = CandidateResume::query()->find($value);
 
