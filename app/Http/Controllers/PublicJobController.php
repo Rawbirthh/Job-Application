@@ -82,7 +82,14 @@ class PublicJobController extends Controller
 
         $jobs = $query->paginate(12)->withQueryString();
 
+        /** @var \App\Models\User|null $user */
+        $user = request()->user();
+        $savedJobIds = $user && $user->hasRole('job_seeker')
+            ? $user->savedJobs()->pluck('job_posting_id')->all()
+            : [];
+
         return Inertia::render('jobs/index', [
+            'savedJobIds' => $savedJobIds,
             'jobs' => $jobs->through(fn (Job $job): array => [
                 'id' => $job->id,
                 'title' => $job->title,
@@ -155,6 +162,12 @@ class PublicJobController extends Controller
             'payPeriod:id,name',
         ]);
 
+        /** @var \App\Models\User|null $user */
+        $user = request()->user();
+        $isSaved = $user && $user->hasRole('job_seeker')
+            ? $user->savedJobs()->where('job_posting_id', $job->id)->exists()
+            : false;
+
         return Inertia::render('jobs/show', [
             'job' => [
                 'id' => $job->id,
@@ -169,6 +182,7 @@ class PublicJobController extends Controller
                 'salary_negotiable' => $job->salary_negotiable,
                 'application_deadline' => $job->application_deadline?->toIso8601String(),
                 'published_at' => $job->created_at?->toIso8601String(),
+                'is_saved' => $isSaved,
                 'company' => $job->company ? [
                     'id' => $job->company->id,
                     'name' => $job->company->name,

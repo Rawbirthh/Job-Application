@@ -9,6 +9,7 @@ import {
     Clock,
     Banknote,
     Building2,
+    Bookmark,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -28,6 +29,12 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Saved Jobs',
+        href: '/candidate/saved-jobs',
+        icon: Bookmark,
+        requiredRoles: ['job_seeker'],
     },
     {
         title: 'Company Profiles',

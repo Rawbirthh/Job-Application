@@ -9,7 +9,7 @@
 - Database target: unresolved. `AGENTS.md` baseline is MySQL; local runtime and test suite use SQLite.
 - Authentication: session-based Laravel Fortify. Registration, login/logout, password reset, 2FA, passkeys enabled; email verification disabled.
 - Authorization: custom dynamic DB-backed role/permission system (Features 3–14). Roles: `platform_admin`, `employer`, `job_seeker`. Permissions include `admin.access`, `users.*`, `roles.*`, `permissions.*`, catalogue permissions, `employers.view`/`employers.manage`, and `jobs.moderate`. Policies, middleware, services, and admin management UI in place.
-- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **327 passed, 2457 assertions** (Features 16-19).
+- Tests: Pest 5 on PHPUnit 13; `php artisan test`. Latest full suite: **342 passed, 2523 assertions** (Feature 20).
 - Frontend conventions: Inertia page props, Wayfinder actions/routes, named routes, vendored shadcn/ui, pagination component, split/admin layouts.
 
 ## Confirmed architecture decisions
@@ -36,20 +36,21 @@
 - Feature 17 implemented: Public job detail.
 - Feature 18 implemented: Candidate profile management (`candidate_profiles`, `candidate_educations`, `candidate_experiences`).
 - Feature 19 implemented: Private candidate resume management (upload, replace, delete, download). Uses `Storage::disk('local')` for secure private storage; `CandidateResumePolicy` enforces owner-only access.
+- Feature 20 implemented: Saved jobs. Job seekers can bookmark published jobs, view a private paginated saved jobs list at `/candidate/saved-jobs`, remove saved jobs, and toggle bookmarks directly on public job listings and detail pages. Idempotent duplicate prevention, policy authorization, and closed job handling.
 
 ## Current task / latest handoff
 
-- Status: **Feature 19 implemented, tested, and verified.**
-- Summary: Private resume upload/management implemented. Job seekers can upload, replace, delete, and download their single PDF resume at `/candidate/resumes`. Atomic file replacement, soft deletes, secure streaming download via `CandidateResumeController::download` and `CandidateResumePolicy`. Fixed oversized file validation bug (`max:5120` KB). UI polished for consistency and accessibility.
-- Key files (Feature 19):
-    - Backend: `database/migrations/2026_11_04_000000_create_candidate_resumes.php`, `CandidateResume`, `CandidateResumePolicy`, `UploadResumeRequest`, `CandidateResumeService`, `CandidateResumeController`, routes (`candidate.resumes.*`, `candidate.resume.download`).
-    - Frontend: `resources/js/pages/candidate/resumes/index.tsx`, `resources/js/pages/candidate/dashboard.tsx` (updated UI), `resources/js/types/candidate.ts`.
-    - Tests: `tests/Feature/Candidate/CandidateResumeTest.php` (10 tests).
-    - Spec: `docs/specs/feature-19-private-resume-upload-and-management.md` (status IMPLEMENTED).
+- Status: **Feature 20 implemented, tested, and verified.**
+- Summary: Saved jobs feature fully implemented and tested. `saved_jobs` table with unique constraint and foreign keys. `SavedJobController` (`index`, `store`, `destroy`), `SavedJobPolicy`, `SaveJobRequest` validation ensuring only published jobs can be saved. React Inertia pages (`resources/js/pages/candidate/saved-jobs/index.tsx`, updated `jobs/index.tsx`, `jobs/show.tsx`) with pagination, status badges, and bookmark toggle actions. Navigation and candidate dashboard updated.
+- Key files (Feature 20):
+    - Backend: `database/migrations/2026_11_05_000000_create_saved_jobs_table.php`, `SavedJob`, `SavedJobPolicy`, `SaveJobRequest`, `SavedJobController`, routes (`candidate.saved-jobs.*`).
+    - Frontend: `resources/js/pages/candidate/saved-jobs/index.tsx`, `resources/js/pages/jobs/index.tsx`, `resources/js/pages/jobs/show.tsx`, `resources/js/lib/navigation.ts`, `resources/js/pages/candidate/dashboard.tsx`, `resources/js/types/candidate.ts`.
+    - Tests: `tests/Feature/Candidate/SavedJobTest.php` (5 tests).
+    - Spec: `docs/specs/feature-20-saved-jobs.md` (status IMPLEMENTED).
 - Verification observed (2026-11-05):
-    - `php artisan test --filter CandidateResumeTest`: **10 passed**
-    - `php artisan test`: All passed.
-- Next recommended step: Feature 20 (Saved jobs) or Feature 21 (Submit a job application) per `project-overview.md` roadmap.
+    - `php artisan test`: **342 passed, 2,523 assertions** across all features.
+    - Frontend build: `npm run build` compiled successfully without errors.
+- Next recommended step: Feature 21 (Submit a job application) per `project-overview.md` roadmap.
 
 ## Durable notes
 

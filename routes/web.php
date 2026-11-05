@@ -3,6 +3,7 @@
 use App\Http\Controllers\Candidate\CandidateDashboardController;
 use App\Http\Controllers\Candidate\CandidateProfileController;
 use App\Http\Controllers\Candidate\CandidateResumeController;
+use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
@@ -74,6 +75,13 @@ Route::middleware(['auth'])->group(function (): void {
             ->name('resume.download');
         Route::delete('profile/resume/{resume}', [CandidateResumeController::class, 'delete'])
             ->name('resumes.delete');
+
+        Route::get('saved-jobs', [SavedJobController::class, 'index'])->name('saved-jobs.index');
+        Route::post('saved-jobs', [SavedJobController::class, 'store'])
+            ->middleware(['throttle:30,1'])
+            ->name('saved-jobs.store');
+        Route::delete('saved-jobs/{jobPosting}', [SavedJobController::class, 'destroy'])
+            ->name('saved-jobs.destroy');
     });
 });
 

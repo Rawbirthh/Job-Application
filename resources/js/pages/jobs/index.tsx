@@ -1,5 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    Bookmark,
     Building2,
     Calendar,
     MapPin,
@@ -19,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import type { Auth } from '@/types';
 
 interface Job {
     id: number;
@@ -48,6 +50,7 @@ interface FilterOption {
 }
 
 interface Props {
+    savedJobIds?: number[];
     jobs: {
         data: Job[];
         current_page: number;
@@ -71,6 +74,7 @@ interface Props {
 }
 
 export default function PublicJobsIndex({
+    savedJobIds = [],
     jobs,
     categories,
     employmentTypes,
@@ -78,6 +82,9 @@ export default function PublicJobsIndex({
     experienceLevels,
     filters,
 }: Props) {
+    const { auth } = usePage<{ auth: Auth }>().props;
+    const isJobSeeker = auth.user && auth.roles.includes('job_seeker');
+
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(
         filters.category ? String(filters.category) : 'all',
@@ -93,6 +100,27 @@ export default function PublicJobsIndex({
     const [selectedExperience, setSelectedExperience] = useState(
         filters.experience_level ? String(filters.experience_level) : 'all',
     );
+
+    const handleToggleSave = (jobId: number, isCurrentlySaved: boolean) => {
+        if (!auth.user) {
+            router.visit('/login');
+            return;
+        }
+        if (!isJobSeeker) {
+            return;
+        }
+        if (isCurrentlySaved) {
+            router.delete(`/candidate/saved-jobs/${jobId}`, {
+                preserveScroll: true,
+            });
+        } else {
+            router.post(
+                '/candidate/saved-jobs',
+                { job_posting_id: jobId },
+                { preserveScroll: true },
+            );
+        }
+    };
 
     const applyFilters = (newFilters: Record<string, any>) => {
         router.get(
@@ -376,6 +404,7 @@ export default function PublicJobsIndex({
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {jobs.data.map((job) => {
                             const salaryText = formatSalary(job);
+                            const isSaved = savedJobIds.includes(job.id);
                             return (
                                 <div
                                     key={job.id}
@@ -410,6 +439,17 @@ export default function PublicJobsIndex({
                                                     )}
                                                 </div>
                                             </div>
+                                            {isJobSeeker && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-8 text-muted-foreground hover:text-primary"
+                                                    onClick={() => handleToggleSave(job.id, isSaved)}
+                                                    title={isSaved ? 'Remove from saved jobs' : 'Save job'}
+                                                >
+                                                    <Bookmark className={`size-4 ${isSaved ? 'fill-primary text-primary' : ''}`} />
+                                                </Button>
+                                            )}
                                         </div>
 
                                         <h2 className="mt-4 text-lg font-bold tracking-tight text-foreground">

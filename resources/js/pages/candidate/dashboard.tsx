@@ -157,10 +157,16 @@ export default function CandidateDashboard() {
                             <Bookmark className="size-4 text-teal-600 dark:text-teal-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">0</div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Bookmarking opportunities unlocks in Feature 20.
+                                View and manage your bookmarked career opportunities.
                             </p>
+                            <div className="mt-3">
+                                <Button asChild size="sm">
+                                    <Link href="/candidate/saved-jobs">
+                                        View saved jobs
+                                    </Link>
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
 

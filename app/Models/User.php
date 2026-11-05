@@ -96,6 +96,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasMany<SavedJob, $this>
+     */
+    public function savedJobs(): HasMany
+    {
+        return $this->hasMany(SavedJob::class);
+    }
+
+    /**
      * Determine whether the user holds the employer role and is approved.
      */
     public function isApprovedEmployer(): bool

@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     Briefcase,
@@ -8,6 +8,7 @@ import {
     ExternalLink,
     MapPin,
     Users,
+    Bookmark,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ interface JobDetail {
     salary_negotiable: boolean;
     application_deadline: string | null;
     published_at: string | null;
+    is_saved?: boolean;
     company: {
         id: number;
         name: string;
@@ -103,13 +105,42 @@ export default function PublicJobShow({ job }: Props) {
             <div className="min-h-screen bg-background text-foreground">
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     {/* Back navigation */}
-                    <div className="mb-6">
+                    <div className="mb-6 flex items-center justify-between">
                         <Button variant="ghost" size="sm" asChild>
                             <Link href="/jobs">
                                 <ArrowLeft className="size-4" />
                                 Back to job listings
                             </Link>
                         </Button>
+
+                        {isJobSeeker && (
+                            <Button
+                                variant={job.is_saved ? 'secondary' : 'outline'}
+                                size="sm"
+                                onClick={() => {
+                                    if (job.is_saved) {
+                                        router.delete(`/candidate/saved-jobs/${job.id}`, {
+                                            preserveScroll: true,
+                                            onSuccess: () => {
+                                                // Assuming a state-based update would be handled by props
+                                                // or full page reload by inertia on success for simplicity
+                                                router.reload();
+                                            },
+                                        });
+                                    } else {
+                                        router.post('/candidate/saved-jobs', { job_posting_id: job.id }, {
+                                            preserveScroll: true,
+                                            onSuccess: () => {
+                                                router.reload();
+                                            },
+                                        });
+                                    }
+                                }}
+                            >
+                                <Bookmark className={`mr-2 size-4 ${job.is_saved ? 'fill-current' : ''}`} />
+                                {job.is_saved ? 'Saved' : 'Save Job'}
+                            </Button>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
