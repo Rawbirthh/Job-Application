@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Job as JobPosting;
+use Database\Factories\JobApplicationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class JobApplication extends Model
 {
-    /** @use HasFactory<\Database\Factories\JobApplicationFactory> */
+    /** @use HasFactory<JobApplicationFactory> */
     use HasFactory;
 
     protected $fillable = [
