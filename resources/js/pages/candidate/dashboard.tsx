@@ -210,6 +210,31 @@ export default function CandidateDashboard() {
                     <Card className="border-border">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">
+                                Resume Management
+                            </CardTitle>
+                            <FileText className="size-4 text-blue-600 dark:text-blue-400" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                Private resume
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Upload, replace, or manage your private PDF
+                                resume for job applications.
+                            </p>
+                            <div className="mt-3">
+                                <Button asChild size="sm">
+                                    <Link href={candidate.resumes.index()}>
+                                        Manage resume
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">
                                 Employer access
                             </CardTitle>
                             {employerIcon}

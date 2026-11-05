@@ -80,6 +80,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasOne<CandidateResume, $this>
+     */
+    public function candidateResume(): HasOne
+    {
+        return $this->hasOne(CandidateResume::class);
+    }
+
+    /**
      * @return HasMany<Company, $this>
      */
     public function companies(): HasMany

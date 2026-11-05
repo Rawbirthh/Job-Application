@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Candidate\CandidateDashboardController;
 use App\Http\Controllers\Candidate\CandidateProfileController;
+use App\Http\Controllers\Candidate\CandidateResumeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
@@ -65,6 +66,14 @@ Route::middleware(['auth'])->group(function (): void {
         Route::put('profile', [CandidateProfileController::class, 'update'])
             ->middleware(['throttle:20,1'])
             ->name('profile.update');
+        Route::get('profile/resumes', [CandidateResumeController::class, 'index'])->name('resumes.index');
+        Route::post('profile/resume', [CandidateResumeController::class, 'upload'])
+            ->middleware(['throttle:10,1'])
+            ->name('resumes.upload');
+        Route::get('resume/{resume}/download', [CandidateResumeController::class, 'download'])
+            ->name('resume.download');
+        Route::delete('profile/resume/{resume}', [CandidateResumeController::class, 'delete'])
+            ->name('resumes.delete');
     });
 });
 

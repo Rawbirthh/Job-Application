@@ -41,3 +41,16 @@ export type CandidateProfileForm = {
 export type CandidateProfileEditProps = {
     profile: CandidateProfile;
 };
+
+export type CandidateResumeData = {
+    id: number;
+    original_filename: string;
+    mime_type: string;
+    size: number;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+export type ResumeIndexProps = {
+    resume: CandidateResumeData | null;
+};
