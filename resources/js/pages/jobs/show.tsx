@@ -378,12 +378,13 @@ export default function PublicJobShow({ job }: Props) {
                                                 </Link>
                                             </Button>
                                         )}
-                                        {isDeadlinePassed && ! job.has_applied && (
-                                            <p className="mt-2 text-xs text-muted-foreground">
-                                                This position is no longer
-                                                accepting applications.
-                                            </p>
-                                        )}
+                                        {isDeadlinePassed &&
+                                            !job.has_applied && (
+                                                <p className="mt-2 text-xs text-muted-foreground">
+                                                    This position is no longer
+                                                    accepting applications.
+                                                </p>
+                                            )}
                                     </div>
                                 )}
 
@@ -538,7 +539,8 @@ export default function PublicJobShow({ job }: Props) {
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent>
-                                                {isDeadlinePassed || job.has_applied ? (
+                                                {isDeadlinePassed ||
+                                                job.has_applied ? (
                                                     <Button
                                                         size="lg"
                                                         className="w-full"
@@ -562,13 +564,14 @@ export default function PublicJobShow({ job }: Props) {
                                                         </Link>
                                                     </Button>
                                                 )}
-                                                {isDeadlinePassed && ! job.has_applied && (
-                                                    <p className="mt-3 text-xs text-muted-foreground">
-                                                        This position is no
-                                                        longer accepting
-                                                        applications.
-                                                    </p>
-                                                )}
+                                                {isDeadlinePassed &&
+                                                    !job.has_applied && (
+                                                        <p className="mt-3 text-xs text-muted-foreground">
+                                                            This position is no
+                                                            longer accepting
+                                                            applications.
+                                                        </p>
+                                                    )}
                                             </CardContent>
                                         </Card>
                                     )}

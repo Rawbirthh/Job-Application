@@ -43,6 +43,7 @@ Allow eligible job seekers to apply to published, active job postings by submitt
 - **Feature 19**: Private resume upload and management (`candidate_resumes`).
 
 **Existing conventions inspected**:
+
 - Controllers are thin; Form Requests handle validation; Policies enforce resource authorization.
 - Inertia pages render React components with typed props and toast notifications.
 - Routes use explicit middleware grouping (`auth`, `role:job_seeker`).
@@ -100,6 +101,7 @@ New migration `database_applications_table` (e.g. `2026_11_05_120000_create_job_
 ## Form Requests & Validation
 
 `App\Http\Requests\Candidate\StoreJobApplicationRequest`:
+
 - `authorize()`: returns `true` (policy/role middleware enforced).
 - `rules()`:
     - `candidate_resume_id` => `['required', 'integer', 'exists:candidate_resumes,id']` (must belong to authenticated user).
@@ -113,6 +115,7 @@ New migration `database_applications_table` (e.g. `2026_11_05_120000_create_job_
 ## Controllers & Query Shape
 
 `App\Http\Controllers\Candidate\JobApplicationController`:
+
 - `create(JobPosting $job)`:
     - Authorize create.
     - Check if job is published and not expired, and candidate has not already applied.
@@ -136,6 +139,7 @@ New migration `database_applications_table` (e.g. `2026_11_05_120000_create_job_
 ## Tests
 
 `tests/Feature/Candidate/JobApplicationTest.php`:
+
 - Job seeker can view application form for a published job.
 - Job seeker can successfully submit an application with a valid resume and optional cover letter.
 - Cannot apply to a closed, draft, or expired job.

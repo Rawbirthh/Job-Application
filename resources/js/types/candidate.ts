@@ -103,7 +103,15 @@ export type JobApplicationForm = {
     cover_letter?: string;
 };
 
-export type ApplicationStatus = 'submitted' | 'reviewing' | 'shortlisted' | 'interview_scheduled' | 'offer_sent' | 'hired' | 'rejected' | 'withdrawn';
+export type ApplicationStatus =
+    | 'submitted'
+    | 'reviewing'
+    | 'shortlisted'
+    | 'interview_scheduled'
+    | 'offer_sent'
+    | 'hired'
+    | 'rejected'
+    | 'withdrawn';
 
 export type ApplicationIndexProps = {
     applications: Application[];
@@ -166,7 +174,10 @@ export type JobDetail = {
 
 export type JobDetailPageProps = {
     job: JobDetail;
-    auth: { user?: { id: number; name?: string; email?: string; roles: string[] }; employerStatus?: string };
+    auth: {
+        user?: { id: number; name?: string; email?: string; roles: string[] };
+        employerStatus?: string;
+    };
     application: {
         exists: boolean;
         alreadyApplied: boolean;
