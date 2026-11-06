@@ -113,8 +113,12 @@ export type ApplicationStatus =
     | 'rejected'
     | 'withdrawn';
 
+export type ApplicationListResponse = {
+    data: Application[];
+};
+
 export type ApplicationIndexProps = {
-    applications: Application[];
+    applications: ApplicationListResponse;
     currentPage?: number;
     lastPage?: number;
     perPage?: number;

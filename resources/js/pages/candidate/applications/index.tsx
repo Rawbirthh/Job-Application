@@ -3,11 +3,12 @@ import { Bookmark, Building, Briefcase, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Pagination } from '@/components/ui/pagination';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import type { Application } from '@/types/candidate';
 
 interface Props {
-    applications: Application[];
+    applications: { data: Application[] };
     pagination: {
         current_page: number;
         last_page: number;
@@ -52,9 +53,7 @@ export default function CandidateApplicationsIndex({
         return statusMap[status] || status;
     };
 
-    const items = Array.isArray(applications)
-        ? applications
-        : applications.data;
+    const items = applications.data;
 
     return (
         <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -95,7 +94,7 @@ export default function CandidateApplicationsIndex({
                 </Card>
             ) : (
                 <div className="space-y-4">
-                    {items.map((application) => (
+                    {items.map((application: any) => (
                         <Card
                             key={application.id}
                             className="transition-shadow hover:shadow-md"
