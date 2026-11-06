@@ -3,7 +3,7 @@ import { Bookmark, Building, Briefcase, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Pagination } from '@/components/pagination';
+import Pagination from '@/components/pagination';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import type { Application } from '@/types/candidate';
 
