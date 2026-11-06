@@ -113,12 +113,14 @@ class ApplicationHistoryController extends Controller
                 'status' => $application->status,
                 'applied_at' => $application->created_at?->toIso8601String(),
                 'cover_letter' => $application->cover_letter,
-                'resume' => $application->candidateResume ? [
-                    'id' => $application->candidateResume->id,
-                    'original_filename' => $application->candidateResume->original_filename,
-                    'mime_type' => $application->candidateResume->mime_type,
-                    'size' => $application->candidateResume->size,
-                ] : null,
+                'resume' => $application->candidateResume
+                    ? [
+                        'id' => $application->candidateResume->id,
+                        'original_filename' => $application->candidateResume->original_filename,
+                        'mime_type' => $application->candidateResume->mime_type,
+                        'size' => $application->candidateResume->size,
+                    ]
+                    : null,
             ],
             'job' => [
                 'id' => $job->id,
