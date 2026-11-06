@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Candidate\ApplicationHistoryController;
 use App\Http\Controllers\Candidate\CandidateDashboardController;
 use App\Http\Controllers\Candidate\CandidateProfileController;
 use App\Http\Controllers\Candidate\CandidateResumeController;
@@ -88,6 +89,10 @@ Route::middleware(['auth'])->group(function (): void {
         Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
             ->middleware(['throttle:20,1'])
             ->name('applications.store');
+
+        // Feature 22: Candidate application history and status view
+        Route::get('applications', [ApplicationHistoryController::class, 'index'])->name('applications.index');
+        Route::get('applications/{application}', [ApplicationHistoryController::class, 'show'])->name('applications.show');
     });
 });
 

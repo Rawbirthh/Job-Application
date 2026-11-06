@@ -16,7 +16,7 @@ import { index as employerOnboardingIndex } from '@/routes/employer/onboarding';
 import type { Auth } from '@/types';
 
 export default function CandidateDashboard() {
-    const { auth } = usePage<{ auth: Auth }>().props;
+    const { auth, applicationCount } = usePage<{ auth: Auth; applicationCount: number }>().props;
     const employerStatus = auth.employer_status;
 
     const renderEmployerAccess = () => {
@@ -179,10 +179,9 @@ export default function CandidateDashboard() {
                             <FileText className="size-4 text-teal-600 dark:text-teal-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">0</div>
+                            <div className="text-2xl font-bold">{applicationCount ?? 0}</div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Application tracking unlocks in Feature 21 &amp;
-                                22.
+                                Application tracking unlocks in Feature 21 &amp; 22.
                             </p>
                         </CardContent>
                     </Card>

@@ -124,6 +124,27 @@ export type ApplicationIndexProps = {
 };
 
 export type Application = {
+    // Full application details (used for show page)
+    // ... existing fields
+};
+
+// Simplified version for the index listing (includes company info)
+export type ApplicationListItem = {
+    id: number;
+    job_id: number;
+    job_title: string;
+    company: {
+        id: number;
+        name: string;
+        logo_path: string | null;
+    } | null;
+    location: string | null;
+    employment_type: string | null;
+    salary_min: string | null;
+    salary_max: string | null;
+    status: ApplicationStatus;
+    applied_at: string | null;
+};
     id: number;
     job_id: number;
     company_name: string | null;

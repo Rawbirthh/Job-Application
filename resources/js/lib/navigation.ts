@@ -10,6 +10,7 @@ import {
     Banknote,
     Building2,
     Bookmark,
+    FileText,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -34,6 +35,12 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Saved Jobs',
         href: '/candidate/saved-jobs',
         icon: Bookmark,
+        requiredRoles: ['job_seeker'],
+    },
+    {
+        title: 'My Applications',
+        href: '/candidate/applications',
+        icon: FileText,
         requiredRoles: ['job_seeker'],
     },
     {

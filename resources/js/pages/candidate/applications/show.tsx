@@ -1,0 +1,211 @@
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, Building, Clock, MapPin, Building2, Users, ExternalLink, Briefcase } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { useFlashToast } from '@/hooks/use-flash-toast';
+import type { Application } from '@/types/candidate';
+
+interface Props {
+    application: Application;
+    job: {
+        id: number;
+        title: string;
+        description: string;
+        responsibilities: string | null;
+        requirements: string | null;
+        location: string | null;
+        salary_min: string | null;
+        salary_max: string | null;
+        salary_currency: string | null;
+        salary_negotiable: boolean;
+        application_deadline: string | null;
+        company: {
+            id: number;
+            name: string;
+            logo_path: string | null;
+            overview: string | null;
+            website: string | null;
+            location: string | null;
+            industry: string | null;
+            size_band: string | null;
+        } | null;
+        employment_type: { name: string } | null;
+        workplace_arrangement: { name: string } | null;
+        experience_level: { name: string } | null;
+        pay_period: { name: string } | null;
+    };
+}
+
+export default function CandidateApplicationShow({
+    application,
+    job,
+}: Props) {
+    useFlashToast();
+
+    const statusVariants: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+        'submitted': 'default',
+        'reviewing': 'outline',
+        'shortlisted': 'outline',
+        'interview_scheduled': 'outline',
+        'offer_sent': 'outline',
+        'hired': 'default',
+        'rejected': 'destructive',
+        'withdrawn': 'default',
+    };
+
+    const formatStatus = (status: string) => {
+        const statusMap: Record<string, string> = {
+            'submitted': 'Submitted',
+            'reviewing': 'Reviewing',
+            'shortlisted': 'Shortlisted',
+            'interview_scheduled': 'Interview Scheduled',
+            'offer_sent': 'Offer Sent',
+            'hired': 'Hired',
+            'rejected': 'Rejected',
+            'withdrawn': 'Withdrawn',
+        };
+        return statusMap[status] || status;
+    };
+
+    return (
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+            <Head title={`Application: ${job.title}`} />
+
+            <div className="mb-8 flex items-center justify-between">
+                <div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="-ml-2 mb-2"
+                    >
+                        <Link href="/candidate/applications">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to My Applications
+                        </Link>
+                    </Button>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        {job.title}
+                    </h1>
+                    {job.company && (
+                        <p className="mt-1 flex items-center gap-2 text-muted-foreground">
+                            <Building className="h-4 w-4" />
+                            {job.company.name}
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Application Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-muted-foreground">Status</span>
+                                <Badge variant={statusVariants[application.status] || 'default'}>
+                                    {formatStatus(application.status)}
+                                </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-muted-foreground">Applied Date</span>
+                                <span className="text-sm">
+                                    {application.applied_at
+                                        ? new Date(application.applied_at).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                            })
+                                        : 'N/A'}
+                                </span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {job.description && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Job Description</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-sm whitespace-pre-wrap">
+                                    {job.description}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {job.company && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Building2 className="size-5" />
+                                    About {job.company.name}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {job.company.overview && (
+                                    <p className="text-sm leading-relaxed text-muted-foreground">
+                                        {job.company.overview}
+                                    </p>
+                                )}
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    {job.company.industry && (
+                                        <div>
+                                            <span className="block font-medium text-muted-foreground">Industry</span>
+                                            <span>{job.company.industry}</span>
+                                        </div>
+                                    )}
+                                    {job.company.size_band && (
+                                        <div>
+                                            <span className="block font-medium text-muted-foreground">Size</span>
+                                            <span>{job.company.size_band}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+
+                <div className="lg:col-span-1 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-2">
+                            <Button asChild variant="outline" size="sm">
+                                <Link href={`/jobs/${job.id}`}>
+                                    View Full Job Details
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    {job.company?.website && (
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Company Website</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <a
+                                    href={job.company.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-primary underline-offset-4 transition-colors hover:underline"
+                                >
+                                    Visit website
+                                    <ExternalLink className="size-3" />
+                                </a>
+                            </CardContent>
+                         </Card>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
