@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read JobPosting $jobPosting
  * @property-read User $user
- * @property-read CandidateResume $candidateResume
+ * @property-read CandidateResume|null $candidateResume
  */
 class JobApplication extends Model
 {
