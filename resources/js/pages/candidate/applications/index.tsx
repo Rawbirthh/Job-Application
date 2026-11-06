@@ -24,32 +24,37 @@ export default function CandidateApplicationsIndex({
 }: Props) {
     useFlashToast();
 
-    const statusVariants: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-        'submitted': 'default',
-        'reviewing': 'outline',
-        'shortlisted': 'outline',
-        'interview_scheduled': 'outline',
-        'offer_sent': 'outline',
-        'hired': 'default',
-        'rejected': 'destructive',
-        'withdrawn': 'default',
+    const statusVariants: Record<
+        string,
+        'default' | 'secondary' | 'outline' | 'destructive'
+    > = {
+        submitted: 'default',
+        reviewing: 'outline',
+        shortlisted: 'outline',
+        interview_scheduled: 'outline',
+        offer_sent: 'outline',
+        hired: 'default',
+        rejected: 'destructive',
+        withdrawn: 'default',
     };
 
     const formatStatus = (status: string) => {
         const statusMap: Record<string, string> = {
-            'submitted': 'Submitted',
-            'reviewing': 'Reviewing',
-            'shortlisted': 'Shortlisted',
-            'interview_scheduled': 'Interview Scheduled',
-            'offer_sent': 'Offer Sent',
-            'hired': 'Hired',
-            'rejected': 'Rejected',
-            'withdrawn': 'Withdrawn',
+            submitted: 'Submitted',
+            reviewing: 'Reviewing',
+            shortlisted: 'Shortlisted',
+            interview_scheduled: 'Interview Scheduled',
+            offer_sent: 'Offer Sent',
+            hired: 'Hired',
+            rejected: 'Rejected',
+            withdrawn: 'Withdrawn',
         };
         return statusMap[status] || status;
     };
 
-    const items = Array.isArray(applications) ? applications : applications.data;
+    const items = Array.isArray(applications)
+        ? applications
+        : applications.data;
 
     return (
         <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -105,7 +110,13 @@ export default function CandidateApplicationsIndex({
                                             {application.job_title}
                                         </Link>
                                     </CardTitle>
-                                    <Badge variant={statusVariants[application.status] || 'default'}>
+                                    <Badge
+                                        variant={
+                                            statusVariants[
+                                                application.status
+                                            ] || 'default'
+                                        }
+                                    >
                                         {formatStatus(application.status)}
                                     </Badge>
                                 </div>
@@ -131,7 +142,8 @@ export default function CandidateApplicationsIndex({
                                     )}
                                     {application.salary_min && (
                                         <span>
-                                            Salary: {application.salary_min} - {application.salary_max}
+                                            Salary: {application.salary_min} -{' '}
+                                            {application.salary_max}
                                         </span>
                                     )}
                                 </div>
@@ -140,15 +152,19 @@ export default function CandidateApplicationsIndex({
                                     <span className="text-sm text-muted-foreground">
                                         Applied on{' '}
                                         {application.applied_at
-                                            ? new Date(application.applied_at).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                })
+                                            ? new Date(
+                                                  application.applied_at,
+                                              ).toLocaleDateString('en-US', {
+                                                  year: 'numeric',
+                                                  month: 'long',
+                                                  day: 'numeric',
+                                              })
                                             : 'N/A'}
                                     </span>
                                     <Button asChild variant="ghost" size="sm">
-                                        <Link href={`/candidate/applications/${application.id}`}>
+                                        <Link
+                                            href={`/candidate/applications/${application.id}`}
+                                        >
                                             View Details
                                         </Link>
                                     </Button>

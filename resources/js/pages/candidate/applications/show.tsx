@@ -1,5 +1,14 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, Building, Clock, MapPin, Building2, Users, ExternalLink, Briefcase } from 'lucide-react';
+import {
+    ArrowLeft,
+    Building,
+    Clock,
+    MapPin,
+    Building2,
+    Users,
+    ExternalLink,
+    Briefcase,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,33 +47,33 @@ interface Props {
     };
 }
 
-export default function CandidateApplicationShow({
-    application,
-    job,
-}: Props) {
+export default function CandidateApplicationShow({ application, job }: Props) {
     useFlashToast();
 
-    const statusVariants: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-        'submitted': 'default',
-        'reviewing': 'outline',
-        'shortlisted': 'outline',
-        'interview_scheduled': 'outline',
-        'offer_sent': 'outline',
-        'hired': 'default',
-        'rejected': 'destructive',
-        'withdrawn': 'default',
+    const statusVariants: Record<
+        string,
+        'default' | 'secondary' | 'outline' | 'destructive'
+    > = {
+        submitted: 'default',
+        reviewing: 'outline',
+        shortlisted: 'outline',
+        interview_scheduled: 'outline',
+        offer_sent: 'outline',
+        hired: 'default',
+        rejected: 'destructive',
+        withdrawn: 'default',
     };
 
     const formatStatus = (status: string) => {
         const statusMap: Record<string, string> = {
-            'submitted': 'Submitted',
-            'reviewing': 'Reviewing',
-            'shortlisted': 'Shortlisted',
-            'interview_scheduled': 'Interview Scheduled',
-            'offer_sent': 'Offer Sent',
-            'hired': 'Hired',
-            'rejected': 'Rejected',
-            'withdrawn': 'Withdrawn',
+            submitted: 'Submitted',
+            reviewing: 'Reviewing',
+            shortlisted: 'Shortlisted',
+            interview_scheduled: 'Interview Scheduled',
+            offer_sent: 'Offer Sent',
+            hired: 'Hired',
+            rejected: 'Rejected',
+            withdrawn: 'Withdrawn',
         };
         return statusMap[status] || status;
     };
@@ -79,7 +88,7 @@ export default function CandidateApplicationShow({
                         variant="ghost"
                         size="sm"
                         asChild
-                        className="-ml-2 mb-2"
+                        className="mb-2 -ml-2"
                     >
                         <Link href="/candidate/applications">
                             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -99,27 +108,38 @@ export default function CandidateApplicationShow({
             </div>
 
             <div className="grid gap-8 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6 lg:col-span-2">
                     <Card>
                         <CardHeader>
                             <CardTitle>Application Details</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-muted-foreground">Status</span>
-                                <Badge variant={statusVariants[application.status] || 'default'}>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                    Status
+                                </span>
+                                <Badge
+                                    variant={
+                                        statusVariants[application.status] ||
+                                        'default'
+                                    }
+                                >
                                     {formatStatus(application.status)}
                                 </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-muted-foreground">Applied Date</span>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                    Applied Date
+                                </span>
                                 <span className="text-sm">
                                     {application.applied_at
-                                        ? new Date(application.applied_at).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                            })
+                                        ? new Date(
+                                              application.applied_at,
+                                          ).toLocaleDateString('en-US', {
+                                              year: 'numeric',
+                                              month: 'long',
+                                              day: 'numeric',
+                                          })
                                         : 'N/A'}
                                 </span>
                             </div>
@@ -156,13 +176,17 @@ export default function CandidateApplicationShow({
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     {job.company.industry && (
                                         <div>
-                                            <span className="block font-medium text-muted-foreground">Industry</span>
+                                            <span className="block font-medium text-muted-foreground">
+                                                Industry
+                                            </span>
                                             <span>{job.company.industry}</span>
                                         </div>
                                     )}
                                     {job.company.size_band && (
                                         <div>
-                                            <span className="block font-medium text-muted-foreground">Size</span>
+                                            <span className="block font-medium text-muted-foreground">
+                                                Size
+                                            </span>
                                             <span>{job.company.size_band}</span>
                                         </div>
                                     )}
@@ -172,7 +196,7 @@ export default function CandidateApplicationShow({
                     )}
                 </div>
 
-                <div className="lg:col-span-1 space-y-6">
+                <div className="space-y-6 lg:col-span-1">
                     <Card>
                         <CardHeader>
                             <CardTitle>Actions</CardTitle>
@@ -187,7 +211,7 @@ export default function CandidateApplicationShow({
                     </Card>
 
                     {job.company?.website && (
-                         <Card>
+                        <Card>
                             <CardHeader>
                                 <CardTitle>Company Website</CardTitle>
                             </CardHeader>
@@ -202,7 +226,7 @@ export default function CandidateApplicationShow({
                                     <ExternalLink className="size-3" />
                                 </a>
                             </CardContent>
-                         </Card>
+                        </Card>
                     )}
                 </div>
             </div>
