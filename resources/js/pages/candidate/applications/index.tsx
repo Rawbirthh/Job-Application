@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
-import { Bookmark, Building, Briefcase, Clock, MapPin } from 'lucide-react';
+import { Bookmark, Building, Briefcase } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import type { Application } from '@/types/candidate';
 

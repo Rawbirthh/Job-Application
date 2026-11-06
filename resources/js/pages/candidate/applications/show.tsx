@@ -1,18 +1,15 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     Building,
-    Clock,
-    MapPin,
     Building2,
-    Users,
     ExternalLink,
-    Briefcase,
+    MapPin,
+    Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import type { Application } from '@/types/candidate';
 
