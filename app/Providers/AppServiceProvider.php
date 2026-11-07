@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Policies\EmployerPolicy;
+use App\Policies\NotificationPolicy;
 use Carbon\CarbonImmutable;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('employers.review', [EmployerPolicy::class, 'review']);
         Gate::define('employers.suspend', [EmployerPolicy::class, 'suspend']);
         Gate::define('employers.reactivate', [EmployerPolicy::class, 'reactivate']);
+
+        Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
     }
 
     /**

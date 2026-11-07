@@ -8,6 +8,7 @@ use App\Http\Requests\Employer\StoreEmployerOnboardingRequest;
 use App\Models\EmployerOnboardingRequest;
 use App\Models\User;
 use App\Services\Employer\EmployerOnboardingService;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,6 +18,7 @@ class EmployerOnboardingController extends Controller
 {
     public function __construct(
         private readonly EmployerOnboardingService $employerOnboardingService,
+        private readonly NotificationService $notificationService,
     ) {}
 
     /**
@@ -78,7 +80,9 @@ class EmployerOnboardingController extends Controller
 
         $this->authorize('create', EmployerOnboardingRequest::class);
 
-        $this->employerOnboardingService->submit($user, $request->validated());
+        $onboardingRequest = $this->employerOnboardingService->submit($user, $request->validated());
+
+        $this->notificationService->employerOnboardingSubmitted($user, $onboardingRequest);
 
         Inertia::flash('toast', [
             'type' => 'success',

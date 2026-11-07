@@ -11,6 +11,7 @@ use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobApplicationStatusHistory;
 use App\Services\ApplicationStatusTransitionService;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -182,15 +183,21 @@ class EmployerJobApplicationController extends Controller
     public function updateStatus(
         TransitionApplicationStatusRequest $request,
         JobApplication $application,
-        ApplicationStatusTransitionService $transitionService
+        ApplicationStatusTransitionService $transitionService,
+        NotificationService $notificationService
     ): RedirectResponse {
-        $transitionService->transitionAsEmployer(
+        $from = $application->status;
+        $newStatus = JobApplicationStatus::from($request->validated('new_status'));
+
+        $updated = $transitionService->transitionAsEmployer(
             $application,
-            JobApplicationStatus::from($request->validated('new_status')),
+            $newStatus,
             $request->validated('current_status'),
             $request->user(),
             $request->validated('reason')
         );
+
+        $notificationService->applicationStatusChanged($updated, $from, $newStatus);
 
         return Redirect::back()->with('success', __('Application status updated successfully.'));
     }

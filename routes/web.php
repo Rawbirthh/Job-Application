@@ -12,6 +12,7 @@ use App\Http\Controllers\Employer\EmployerDashboardController;
 use App\Http\Controllers\Employer\EmployerJobApplicationController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
 use App\Http\Controllers\Employer\JobController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicJobController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,17 @@ Route::get('/jobs', [PublicJobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
 
 Route::middleware(['auth'])->group(function (): void {
+    Route::get('notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->middleware(['throttle:30,1'])
+        ->name('notifications.read-all');
+
+    Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->middleware(['throttle:30,1'])
+        ->name('notifications.read');
+
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::prefix('employer')->name('employer.')->group(function (): void {

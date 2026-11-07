@@ -13,6 +13,7 @@ use App\Models\JobCategory;
 use App\Models\PayPeriod;
 use App\Models\User;
 use App\Models\WorkplaceArrangement;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -186,7 +187,7 @@ class JobController extends Controller
         return to_route('employer.jobs.edit', $job);
     }
 
-    public function submit(Job $job): RedirectResponse
+    public function submit(Job $job, NotificationService $notificationService): RedirectResponse
     {
         $this->authorize('submit', $job);
 
@@ -197,6 +198,8 @@ class JobController extends Controller
         $job->status = 'pending_review';
         $job->rejection_reason = null;
         $job->save();
+
+        $notificationService->jobSubmittedForReview($job);
 
         Inertia::flash('toast', [
             'type' => 'success',

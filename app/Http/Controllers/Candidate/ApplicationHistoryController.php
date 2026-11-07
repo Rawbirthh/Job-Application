@@ -8,6 +8,7 @@ use App\Models\JobApplication;
 use App\Models\JobApplicationStatusHistory;
 use App\Models\User;
 use App\Services\ApplicationStatusTransitionService;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -176,13 +177,16 @@ class ApplicationHistoryController extends Controller
     public function withdraw(
         WithdrawApplicationRequest $request,
         JobApplication $application,
-        ApplicationStatusTransitionService $transitionService
+        ApplicationStatusTransitionService $transitionService,
+        NotificationService $notificationService
     ): RedirectResponse {
         $transitionService->withdrawAsCandidate(
             $application,
             $request->user(),
             $request->validated('reason')
         );
+
+        $notificationService->applicationWithdrawn($application);
 
         return Redirect::back()->with('success', __('Application withdrawn successfully.'));
     }

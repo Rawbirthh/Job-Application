@@ -8,6 +8,7 @@ use App\Models\CandidateResume;
 use App\Models\Job as JobPosting;
 use App\Models\JobApplication;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -84,20 +85,26 @@ class JobApplicationController extends Controller
     /**
      * Store a newly created job application.
      */
-    public function store(StoreJobApplicationRequest $request, JobPosting $job): RedirectResponse
-    {
+    public function store(
+        StoreJobApplicationRequest $request,
+        JobPosting $job,
+        NotificationService $notificationService
+    ): RedirectResponse {
         $this->authorize('create', JobApplication::class);
 
         /** @var User $user */
         $user = $request->user();
 
-        JobApplication::create([
+        $application = JobApplication::create([
             'job_posting_id' => $job->id,
             'user_id' => $user->id,
             'candidate_resume_id' => $request->validated('candidate_resume_id'),
             'cover_letter' => $request->validated('cover_letter'),
             'status' => 'submitted',
         ]);
+
+        $notificationService->applicationSubmitted($application);
+        $notificationService->newJobApplication($application);
 
         Inertia::flash('toast', [
             'type' => 'success',

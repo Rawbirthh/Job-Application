@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectJobRequest;
 use App\Models\Job;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -106,7 +107,7 @@ class JobModerationController extends Controller
         ]);
     }
 
-    public function approve(Job $job): RedirectResponse
+    public function approve(Job $job, NotificationService $notificationService): RedirectResponse
     {
         $this->authorize('moderate', $job);
 
@@ -118,6 +119,8 @@ class JobModerationController extends Controller
         $job->rejection_reason = null;
         $job->save();
 
+        $notificationService->jobModerationOutcome($job, true);
+
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => __('Job approved and published successfully.'),
@@ -126,7 +129,7 @@ class JobModerationController extends Controller
         return to_route('admin.jobs.index');
     }
 
-    public function reject(RejectJobRequest $request, Job $job): RedirectResponse
+    public function reject(RejectJobRequest $request, Job $job, NotificationService $notificationService): RedirectResponse
     {
         $this->authorize('moderate', $job);
 
@@ -134,9 +137,13 @@ class JobModerationController extends Controller
             return back()->with('error', __('Only jobs pending review can be rejected.'));
         }
 
+        $reason = $request->validated('rejection_reason');
+
         $job->status = 'rejected';
-        $job->rejection_reason = $request->validated('rejection_reason');
+        $job->rejection_reason = $reason;
         $job->save();
+
+        $notificationService->jobModerationOutcome($job, false, $reason);
 
         Inertia::flash('toast', [
             'type' => 'success',

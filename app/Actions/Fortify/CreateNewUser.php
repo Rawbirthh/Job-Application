@@ -7,6 +7,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Enums\RoleSlug;
 use App\Models\User;
 use App\Services\Authorization\RoleAssignmentService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -17,6 +18,7 @@ class CreateNewUser implements CreatesNewUsers
 
     public function __construct(
         private readonly RoleAssignmentService $roleAssignmentService,
+        private readonly NotificationService $notificationService,
     ) {}
 
     /**
@@ -31,7 +33,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return DB::transaction(function () use ($input): User {
+        $user = DB::transaction(function () use ($input): User {
             $user = User::create([
                 'name' => $input['name'],
                 'email' => $input['email'],
@@ -42,5 +44,9 @@ class CreateNewUser implements CreatesNewUsers
 
             return $user;
         });
+
+        $this->notificationService->userRegistered($user);
+
+        return $user;
     }
 }

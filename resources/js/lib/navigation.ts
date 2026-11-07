@@ -11,6 +11,7 @@ import {
     Building2,
     Bookmark,
     FileText,
+    Bell,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -48,6 +49,11 @@ export const mainNavConfig: NavItemConfig[] = [
         href: '/candidate/applications',
         icon: FileText,
         requiredRoles: ['job_seeker'],
+    },
+    {
+        title: 'Notifications',
+        href: '/notifications',
+        icon: Bell,
     },
     {
         title: 'Company Profiles',
