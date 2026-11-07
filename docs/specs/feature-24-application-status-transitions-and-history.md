@@ -2,10 +2,10 @@
 name: feature-24-application-status-transitions-and-history
 description: Specification for Feature 24 — Application status transitions and history
 metadata:
-  type: project
-  status: APPROVED
-  created: 2026-11-07
-  updated: 2026-11-07
+    type: project
+    status: APPROVED
+    created: 2026-11-07
+    updated: 2026-11-07
 ---
 
 # Feature 24 — Application status transitions and history
@@ -40,6 +40,7 @@ Provide authorized recruiters with the ability to advance or reject applications
 ## Actors and Flows
 
 ### 1. Recruiter / Approved Employer
+
 - Navigates to `/employer/applications/{application}`.
 - Views the current application status, allowed next actions, and the status history timeline.
 - Selects a valid next status from allowed transitions (e.g., from `submitted` to `reviewing` or `rejected`).
@@ -49,6 +50,7 @@ Provide authorized recruiters with the ability to advance or reject applications
 - On success, the application status updates, a new `job_application_status_histories` entry is created, and the updated detail view renders with a flash success message.
 
 ### 2. Candidate (Job Seeker)
+
 - Navigates to `/candidate/applications/{application}`.
 - Views the updated status badge and visible status history timeline (date, status change, and optional reason).
 - For any non-terminal application (`submitted`, `reviewing`, `shortlisted`, `interview_scheduled`, `offer_sent`), candidate can click "Withdraw Application".
@@ -61,6 +63,7 @@ Provide authorized recruiters with the ability to advance or reject applications
 ## Transition Matrix & Business Rules
 
 ### Defined Statuses
+
 - `submitted` (Initial state)
 - `reviewing`
 - `shortlisted`
@@ -71,6 +74,7 @@ Provide authorized recruiters with the ability to advance or reject applications
 - `withdrawn` (Terminal state)
 
 ### Allowed Employer Transitions
+
 - `submitted` → `reviewing`, `rejected`
 - `reviewing` → `shortlisted`, `rejected`
 - `shortlisted` → `interview_scheduled`, `rejected`
@@ -81,10 +85,12 @@ Provide authorized recruiters with the ability to advance or reject applications
 - `withdrawn` → None (terminal)
 
 ### Allowed Candidate Transitions
+
 - Any non-terminal state (`submitted`, `reviewing`, `shortlisted`, `interview_scheduled`, `offer_sent`) → `withdrawn`
 - Terminal states (`hired`, `rejected`, `withdrawn`) → None (cannot withdraw already finalized applications)
 
 ### Concurrency & Stale Update Protection
+
 - The employer transition request includes `current_status`.
 - The update operation acquires a pessimistic row lock (`lockForUpdate()`) within a database transaction.
 - If `$application->status !== $request->current_status`, the transaction aborts with HTTP 409 Conflict ("The application status has changed since you loaded the page. Please refresh and try again.").
@@ -97,23 +103,23 @@ Provide authorized recruiters with the ability to advance or reject applications
 - [ ] **Candidate Withdrawal**: The applying candidate can withdraw their own non-terminal application. Other candidates receive 403 Forbidden.
 - [ ] **Controlled Transitions**: Attempting any transition outside the matrix (e.g. `submitted` → `hired`, or transitioning from `hired`/`rejected`/`withdrawn`) returns 422 Unprocessable Entity.
 - [ ] **Status History Persistence**: Every transition creates an immutable record in `job_application_status_histories` with:
-  - `job_application_id`
-  - `actor_id` (the authenticated user)
-  - `from_status`
-  - `to_status`
-  - `reason` (nullable, sanitized string <= 500 chars)
-  - `created_at` timestamp
+    - `job_application_id`
+    - `actor_id` (the authenticated user)
+    - `from_status`
+    - `to_status`
+    - `reason` (nullable, sanitized string <= 500 chars)
+    - `created_at` timestamp
 - [ ] **Concurrency**: Sending a transition with a stale `current_status` returns 409 Conflict.
 - [ ] **Employer UI**: `/employer/applications/{application}` displays:
-  - Current status badge.
-  - Transition form with dropdown populated only with valid next transitions.
-  - Optional reason input.
-  - Chronological status history timeline showing actor name, transition, date, and reason.
+    - Current status badge.
+    - Transition form with dropdown populated only with valid next transitions.
+    - Optional reason input.
+    - Chronological status history timeline showing actor name, transition, date, and reason.
 - [ ] **Candidate UI**: `/candidate/applications/{application}` displays:
-  - Current status badge.
-  - Status history timeline.
-  - "Withdraw Application" action if status is non-terminal.
-  - Once withdrawn, displays terminal "Withdrawn" status.
+    - Current status badge.
+    - Status history timeline.
+    - "Withdraw Application" action if status is non-terminal.
+    - Once withdrawn, displays terminal "Withdrawn" status.
 - [ ] **Index View Accuracy**: Both `/employer/jobs/{job}/applicants` and `/candidate/applications` reflect the latest status accurately.
 
 ---
@@ -123,6 +129,7 @@ Provide authorized recruiters with the ability to advance or reject applications
 ### Database Migration
 
 Table: `job_application_status_histories`
+
 ```php
 Schema::create('job_application_status_histories', function (Blueprint $table): void {
     $table->id();
@@ -138,7 +145,9 @@ Schema::create('job_application_status_histories', function (Blueprint $table): 
 ```
 
 ### Enum: `App\Enums\JobApplicationStatus`
+
 Cases:
+
 - `Submitted = 'submitted'`
 - `Reviewing = 'reviewing'`
 - `Shortlisted = 'shortlisted'`
@@ -149,23 +158,28 @@ Cases:
 - `Withdrawn = 'withdrawn'`
 
 Methods:
+
 - `label(): string`
 - `allowedEmployerTransitions(): array`
 - `canTransitionTo(JobApplicationStatus $target, bool $isCandidate = false): bool`
 - `isTerminal(): bool`
 
 ### Model: `App\Models\JobApplicationStatusHistory`
+
 - Fillable: `job_application_id`, `actor_id`, `from_status`, `to_status`, `reason`
 - Relationships:
-  - `belongsTo(JobApplication::class, 'job_application_id')`
-  - `belongsTo(User::class, 'actor_id')`
+    - `belongsTo(JobApplication::class, 'job_application_id')`
+    - `belongsTo(User::class, 'actor_id')`
 
 ### Model: `App\Models\JobApplication`
+
 - Casts: `status` => `JobApplicationStatus::class`
 - Relationship: `hasMany(JobApplicationStatusHistory::class)->orderBy('created_at', 'asc')`
 
 ### Service: `App\Services\ApplicationStatusTransitionService`
+
 Handles the transactional state transition:
+
 ```php
 public function transitionAsEmployer(
     JobApplication $application,
@@ -183,21 +197,25 @@ public function withdrawAsCandidate(
 ```
 
 ### Authorization (`JobApplicationPolicy`)
+
 Add:
+
 - `transitionStatus(User $actor, JobApplication $application)`:
   `$actor->isApprovedEmployer() && $application->jobPosting->company !== null && $application->jobPosting->company->owner_user_id === $actor->id`
 - `withdraw(User $actor, JobApplication $application)`:
   `$actor->is($application->user)`
 
 ### Form Requests
+
 1. `App\Http\Requests\Employer\TransitionApplicationStatusRequest`:
-   - `current_status`: `['required', 'string', Rule::enum(JobApplicationStatus::class)]`
-   - `new_status`: `['required', 'string', Rule::enum(JobApplicationStatus::class)]`
-   - `reason`: `['nullable', 'string', 'max:500']`
+    - `current_status`: `['required', 'string', Rule::enum(JobApplicationStatus::class)]`
+    - `new_status`: `['required', 'string', Rule::enum(JobApplicationStatus::class)]`
+    - `reason`: `['nullable', 'string', 'max:500']`
 2. `App\Http\Requests\Candidate\WithdrawApplicationRequest`:
-   - `reason`: `['nullable', 'string', 'max:500']`
+    - `reason`: `['nullable', 'string', 'max:500']`
 
 ### Routes (`routes/web.php`)
+
 ```php
 // Employer group
 Route::middleware(['auth', 'role:employer', 'employer.approved'])->prefix('employer')->name('employer.')->group(function () {
@@ -219,21 +237,21 @@ Route::middleware(['auth', 'role:job_seeker'])->prefix('candidate')->name('candi
 ## Tests
 
 1. **Employer Status Transitions**:
-   - Authorized employer can move application through allowed pipeline stages (`submitted` → `reviewing` → `shortlisted` → `interview_scheduled` → `offer_sent` → `hired`).
-   - Authorized employer can reject an application from any non-terminal stage.
-   - Employer cannot transition an application with an invalid next status (422).
-   - Employer cannot transition a terminal application (`hired`, `rejected`, `withdrawn`) (422).
-   - Unrelated employer cannot transition another company's application (403).
-   - Stale update returns 409 Conflict when `current_status` does not match database state.
-   - History entry is created with actor, old status, new status, and optional reason.
+    - Authorized employer can move application through allowed pipeline stages (`submitted` → `reviewing` → `shortlisted` → `interview_scheduled` → `offer_sent` → `hired`).
+    - Authorized employer can reject an application from any non-terminal stage.
+    - Employer cannot transition an application with an invalid next status (422).
+    - Employer cannot transition a terminal application (`hired`, `rejected`, `withdrawn`) (422).
+    - Unrelated employer cannot transition another company's application (403).
+    - Stale update returns 409 Conflict when `current_status` does not match database state.
+    - History entry is created with actor, old status, new status, and optional reason.
 
 2. **Candidate Withdrawal**:
-   - Candidate can withdraw their own non-terminal application.
-   - Candidate cannot withdraw another candidate's application (403).
-   - Candidate cannot withdraw a terminal application (`hired`, `rejected`, `withdrawn`) (422).
-   - History entry records candidate as actor and stores withdrawal reason.
+    - Candidate can withdraw their own non-terminal application.
+    - Candidate cannot withdraw another candidate's application (403).
+    - Candidate cannot withdraw a terminal application (`hired`, `rejected`, `withdrawn`) (422).
+    - History entry records candidate as actor and stores withdrawal reason.
 
 3. **Frontend / Integration**:
-   - `npm run types:check`
-   - `npm run build`
-   - `./vendor/bin/pint --test`
+    - `npm run types:check`
+    - `npm run build`
+    - `./vendor/bin/pint --test`
