@@ -132,7 +132,7 @@ class EmployerJobApplicationController extends Controller
                 'to_status' => $history->to_status->value,
                 'to_status_label' => $history->to_status->label(),
                 'reason' => $history->reason,
-                'actor_name' => $history->actor?->name ?? __('System'),
+                'actor_name' => $history->actor->name ?? __('System'),
                 'created_at' => $history->created_at?->toIso8601String(),
             ])->values()->all(),
             'candidate' => [
