@@ -44,25 +44,19 @@
 - Feature 20 implemented: Saved jobs. Job seekers can bookmark published jobs, view a private paginated saved jobs list at `/candidate/saved-jobs`, remove saved jobs, and toggle bookmarks directly on public job listings and detail pages.
 - Feature 22 implemented: Candidate application history and status view.
 - Feature 23 implemented: Employer applicant list and application detail (`/employer/jobs/{job}/applicants`, `/employer/applications/{application}`, `/employer/applications/{application}/resume`).
+- Feature 24 implemented: Application status transitions and history — employers can transition applications through a controlled pipeline with status history timeline; candidates can withdraw non-terminal applications. Includes server-side validation, concurrency protection, and UI components.
 
 ## Current task / latest handoff
 
-- Status: **Feature 23 fully implemented, tested, verified, committed, and pushed.**
-- Summary: Feature 23 allows approved employers to view applicants for their jobs, inspect comprehensive candidate profiles and cover letters, and download submitted resumes with company-level IDOR protection. Also updated candidate application views to show closed job status indicators and combined employer sidebar navigation.
-- Branch: `feature/employer-applicant-management` (commit `b669984`).
-- Approved spec: `docs/specs/feature-23-employer-applicant-management.md`.
-- Key files (Feature 23):
-    - Backend: `EmployerJobApplicationController`, `JobApplicationPolicy`, `CandidateResumePolicy`, `Job` model (`applications` relationship), `ApplicationHistoryController`.
-    - Frontend: `employer/jobs/applicants/index.tsx`, `employer/applications/show.tsx`, `employer/dashboard.tsx`, `candidate/applications/index.tsx`, `candidate/applications/show.tsx`, `resources/js/lib/navigation.ts`, `resources/js/types/candidate.ts`.
-    - Tests: `tests/Feature/Employer/JobApplicationTest.php` (15 tests), `tests/Feature/Candidate/ApplicationHistoryTest.php` (7 tests).
-- Verification observed (2026-11-07):
-    - `php artisan test --filter=JobApplicationTest`: 15 passed, 107 assertions.
-    - `php artisan test --filter=ApplicationHistoryTest`: 7 passed, 58 assertions.
-    - Full suite status: 364 passed, 2683 assertions.
-    - Typecheck: `npm run types:check` passed with 0 errors.
-    - Frontend build: `npm run build` compiled successfully.
-    - Code style: `./vendor/bin/pint --test` passed.
-- Next recommended step: Feature 24 (Employer application status updates: Shortlist, Interview, Offer, Reject) per `project-overview.md` roadmap.
+- Status: **Feature 24 fully implemented, tested, and verified.**
+- Summary: Feature 24 adds controlled application status transitions (Submitted → Reviewing → Shortlisted → Interview Scheduled → Offer Sent → Hired/Rejected) with history tracking, concurrent update protection, and candidate withdrawal capability. Employers see status history timeline; candidates can withdraw non-terminal applications.
+- Branch: `feature/employer-applicant-management` (feature-24 changes on top).
+- Approved spec: `docs/specs/feature-24-application-status-transitions-and-history.md`.
+- Key files (Feature 24):
+    - Backend: `ApplicationStatusTransitionService`, `JobApplicationStatus` enum, `JobApplicationStatusHistory` model, `TransitionApplicationStatusRequest`, `WithdrawApplicationRequest`, `JobApplication` model (statusHistories relationship).
+    - Frontend: `employer/applications/show.tsx` (transition form, history timeline), `candidate/applications/show.tsx` (withdraw dialog, history timeline), `status-history-timeline.tsx` component.
+- Tests: 371 tests passing, 2699 assertions (7 new Feature 24 tests).
+- Next recommended step: Feature 25 (Notifications) per `project-overview.md` roadmap.
 
 ## Durable notes
 

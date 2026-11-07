@@ -48,6 +48,26 @@ class JobApplicationPolicy
     }
 
     /**
+     * Determine whether the actor may transition the application's status.
+     */
+    public function transitionStatus(User $actor, JobApplication $jobApplication): bool
+    {
+        $job = $jobApplication->jobPosting;
+
+        return $actor->isApprovedEmployer()
+            && $job->company !== null
+            && $job->company->owner_user_id === $actor->id;
+    }
+
+    /**
+     * Determine whether the actor may withdraw the application.
+     */
+    public function withdraw(User $actor, JobApplication $jobApplication): bool
+    {
+        return $actor->is($jobApplication->user);
+    }
+
+    /**
      * Determine whether the actor may view the application as an employer.
      */
     public function viewAsEmployer(User $actor, JobApplication $jobApplication): bool

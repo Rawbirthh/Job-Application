@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\JobApplicationStatus;
 use App\Models\Job as JobPosting;
 use Database\Factories\JobApplicationFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -15,12 +18,13 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int $candidate_resume_id
  * @property string|null $cover_letter
- * @property string $status
+ * @property JobApplicationStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read JobPosting $jobPosting
  * @property-read User $user
  * @property-read CandidateResume|null $candidateResume
+ * @property-read Collection<int, JobApplicationStatusHistory> $statusHistories
  */
 class JobApplication extends Model
 {
@@ -33,6 +37,10 @@ class JobApplication extends Model
         'candidate_resume_id',
         'cover_letter',
         'status',
+    ];
+
+    protected $casts = [
+        'status' => JobApplicationStatus::class,
     ];
 
     /**
@@ -57,5 +65,13 @@ class JobApplication extends Model
     public function candidateResume(): BelongsTo
     {
         return $this->belongsTo(CandidateResume::class);
+    }
+
+    /**
+     * @return HasMany<JobApplicationStatusHistory, $this>
+     */
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(JobApplicationStatusHistory::class, 'job_application_id')->orderBy('created_at', 'asc');
     }
 }

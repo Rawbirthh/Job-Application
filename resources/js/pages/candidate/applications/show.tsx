@@ -1,13 +1,32 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Building, Building2, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import InputError from '@/components/input-error';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    StatusHistoryTimeline,
+    type StatusHistory,
+} from '@/components/status-history-timeline';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import type { Application } from '@/types/candidate';
 
 interface Props {
     application: Application;
+    can_withdraw: boolean;
+    status_histories: StatusHistory[];
     job: {
         id: number;
         title: string;
@@ -38,8 +57,26 @@ interface Props {
     };
 }
 
-export default function CandidateApplicationShow({ application, job }: Props) {
+export default function CandidateApplicationShow({
+    application,
+    can_withdraw,
+    status_histories,
+    job,
+}: Props) {
     useFlashToast();
+    const [withdrawOpen, setWithdrawOpen] = useState(false);
+
+    const { data, setData, post, processing, errors } = useForm({
+        reason: '',
+    });
+
+    const handleWithdraw = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(`/candidate/applications/${application.id}/withdraw`, {
+            preserveScroll: true,
+            onSuccess: () => setWithdrawOpen(false),
+        });
+    };
 
     const statusVariants: Record<
         string,
@@ -52,7 +89,7 @@ export default function CandidateApplicationShow({ application, job }: Props) {
         offer_sent: 'outline',
         hired: 'default',
         rejected: 'destructive',
-        withdrawn: 'default',
+        withdrawn: 'secondary',
     };
 
     const formatStatus = (status: string) => {
@@ -158,6 +195,8 @@ export default function CandidateApplicationShow({ application, job }: Props) {
                         </CardContent>
                     </Card>
 
+                    <StatusHistoryTimeline histories={status_histories} />
+
                     {job.description && (
                         <Card>
                             <CardHeader>
@@ -219,6 +258,76 @@ export default function CandidateApplicationShow({ application, job }: Props) {
                                     View Full Job Details
                                 </Link>
                             </Button>
+
+                            {can_withdraw && (
+                                <Dialog
+                                    open={withdrawOpen}
+                                    onOpenChange={setWithdrawOpen}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button variant="destructive" size="sm">
+                                            Withdraw Application
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Withdraw Application
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                Are you sure you want to
+                                                withdraw your application for{' '}
+                                                {job.title}? This action cannot
+                                                be undone.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <form
+                                            onSubmit={handleWithdraw}
+                                            className="space-y-4"
+                                        >
+                                            <div className="space-y-2">
+                                                <Label htmlFor="withdrawal_reason">
+                                                    Reason (optional)
+                                                </Label>
+                                                <Textarea
+                                                    id="withdrawal_reason"
+                                                    value={data.reason}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'reason',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Provide a reason for withdrawal (optional)"
+                                                />
+                                                <InputError
+                                                    message={errors.reason}
+                                                />
+                                            </div>
+                                            <DialogFooter>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setWithdrawOpen(false)
+                                                    }
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    variant="destructive"
+                                                    disabled={processing}
+                                                >
+                                                    {processing
+                                                        ? 'Withdrawing...'
+                                                        : 'Confirm Withdrawal'}
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+                            )}
                         </CardContent>
                     </Card>
 

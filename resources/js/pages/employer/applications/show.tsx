@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     Briefcase,
@@ -14,7 +14,22 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import InputError from '@/components/input-error';
+import { Label } from '@/components/ui/label';
+import {
+    StatusHistoryTimeline,
+    type StatusHistory,
+} from '@/components/status-history-timeline';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFlashToast } from '@/hooks/use-flash-toast';
 
 interface Experience {
     id: number;
@@ -50,6 +65,8 @@ interface Props {
             size: number;
         } | null;
     };
+    allowed_transitions: { value: string; label: string }[];
+    status_histories: StatusHistory[];
     candidate: {
         id: number;
         name: string;
@@ -75,9 +92,25 @@ interface Props {
 
 export default function EmployerApplicationShow({
     application,
+    allowed_transitions,
+    status_histories,
     candidate,
     job,
 }: Props) {
+    useFlashToast();
+
+    const { data, setData, post, processing, errors } = useForm({
+        current_status: application.status,
+        new_status: '',
+        reason: '',
+    });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(`/employer/applications/${application.id}/status`, {
+            preserveScroll: true,
+        });
+    };
     const formatStatus = (status: string) => {
         const statusMap: Record<string, string> = {
             submitted: 'Submitted',
@@ -190,6 +223,88 @@ export default function EmployerApplicationShow({
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Main Content Area */}
                     <div className="space-y-6 lg:col-span-2">
+                        {/* Status Transition Form */}
+                        {allowed_transitions.length > 0 && (
+                            <Card className="border-border">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg">
+                                        Update Status
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <form
+                                        onSubmit={submit}
+                                        className="space-y-4"
+                                    >
+                                        <div className="space-y-2">
+                                            <Label htmlFor="new_status">
+                                                New Status
+                                            </Label>
+                                            <Select
+                                                value={data.new_status}
+                                                onValueChange={(value) =>
+                                                    setData('new_status', value)
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select new status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {allowed_transitions.map(
+                                                        (t) => (
+                                                            <SelectItem
+                                                                key={t.value}
+                                                                value={t.value}
+                                                            >
+                                                                {t.label}
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                            <InputError
+                                                message={errors.new_status}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="reason">
+                                                Reason (optional)
+                                            </Label>
+                                            <Textarea
+                                                id="reason"
+                                                value={data.reason}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'reason',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Enter reason for status change"
+                                            />
+                                            <InputError
+                                                message={errors.reason}
+                                            />
+                                        </div>
+
+                                        <Button
+                                            type="submit"
+                                            disabled={
+                                                processing || !data.new_status
+                                            }
+                                        >
+                                            {processing
+                                                ? 'Updating...'
+                                                : 'Update Status'}
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Status History Timeline */}
+                        <StatusHistoryTimeline histories={status_histories} />
+
                         {/* Candidate Summary Card */}
                         <Card className="border-border">
                             <CardHeader className="pb-3">

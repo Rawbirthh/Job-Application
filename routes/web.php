@@ -68,6 +68,9 @@ Route::middleware(['auth'])->group(function (): void {
         Route::middleware(['role:employer', 'employer.approved'])->group(function (): void {
             Route::get('applications/{application}', [EmployerJobApplicationController::class, 'show'])
                 ->name('applications.show');
+            Route::post('applications/{application}/status', [EmployerJobApplicationController::class, 'updateStatus'])
+                ->middleware(['throttle:30,1'])
+                ->name('applications.update-status');
             Route::get('applications/{application}/resume', [EmployerJobApplicationController::class, 'downloadResume'])
                 ->name('applications.resume.download');
         });
@@ -103,6 +106,9 @@ Route::middleware(['auth'])->group(function (): void {
         // Feature 22: Candidate application history and status view
         Route::get('applications', [ApplicationHistoryController::class, 'index'])->name('applications.index');
         Route::get('applications/{application}', [ApplicationHistoryController::class, 'show'])->name('applications.show');
+        Route::post('applications/{application}/withdraw', [ApplicationHistoryController::class, 'withdraw'])
+            ->middleware(['throttle:20,1'])
+            ->name('applications.withdraw');
     });
 });
 

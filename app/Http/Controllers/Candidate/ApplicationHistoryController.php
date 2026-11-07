@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Candidate\WithdrawApplicationRequest;
 use App\Models\JobApplication;
+use App\Models\JobApplicationStatusHistory;
 use App\Models\User;
+use App\Services\ApplicationStatusTransitionService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -73,7 +78,7 @@ class ApplicationHistoryController extends Controller
                     'salary_currency' => $job->salary_currency,
                     'salary_negotiable' => $job->salary_negotiable,
                     'application_deadline' => $job->application_deadline?->toDateString(),
-                    'status' => $application->status,
+                    'status' => $application->status->value,
                     'applied_at' => $application->created_at?->toIso8601String(),
                     'cover_letter' => $application->cover_letter,
                 ];
@@ -103,6 +108,7 @@ class ApplicationHistoryController extends Controller
             'jobPosting.experienceLevel',
             'jobPosting.payPeriod',
             'candidateResume',
+            'statusHistories.actor:id,name',
         ]);
 
         $job = $application->jobPosting;
@@ -111,7 +117,7 @@ class ApplicationHistoryController extends Controller
         return Inertia::render('candidate/applications/show', [
             'application' => [
                 'id' => $application->id,
-                'status' => $application->status,
+                'status' => $application->status->value,
                 'applied_at' => $application->created_at?->toIso8601String(),
                 'cover_letter' => $application->cover_letter,
                 'resume' => $application->candidateResume
@@ -123,6 +129,16 @@ class ApplicationHistoryController extends Controller
                     ]
                     : null,
             ],
+            'can_withdraw' => ! $application->status->isTerminal(),
+            'status_histories' => $application->statusHistories->map(fn (JobApplicationStatusHistory $history): array => [
+                'id' => $history->id,
+                'from_status' => $history->from_status->value,
+                'from_status_label' => $history->from_status->label(),
+                'to_status' => $history->to_status->value,
+                'to_status_label' => $history->to_status->label(),
+                'reason' => $history->reason,
+                'created_at' => $history->created_at?->toIso8601String(),
+            ])->values()->all(),
             'job' => [
                 'id' => $job->id,
                 'title' => $job->title,
@@ -152,5 +168,22 @@ class ApplicationHistoryController extends Controller
                 'pay_period' => $job->payPeriod ? ['name' => $job->payPeriod->name] : null,
             ],
         ]);
+    }
+
+    /**
+     * Withdraw an application as the candidate.
+     */
+    public function withdraw(
+        WithdrawApplicationRequest $request,
+        JobApplication $application,
+        ApplicationStatusTransitionService $transitionService
+    ): RedirectResponse {
+        $transitionService->withdrawAsCandidate(
+            $application,
+            $request->user(),
+            $request->validated('reason')
+        );
+
+        return Redirect::back()->with('success', __('Application withdrawn successfully.'));
     }
 }

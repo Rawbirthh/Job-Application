@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers\Employer;
 
+use App\Enums\JobApplicationStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Employer\TransitionApplicationStatusRequest;
 use App\Models\CandidateEducation;
 use App\Models\CandidateExperience;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\JobApplicationStatusHistory;
+use App\Services\ApplicationStatusTransitionService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -56,7 +62,7 @@ class EmployerJobApplicationController extends Controller
 
                 return [
                     'id' => $application->id,
-                    'status' => $application->status,
+                    'status' => $application->status->value,
                     'applied_at' => $application->created_at?->toIso8601String(),
                     'candidate' => [
                         'id' => $user->id,
@@ -92,6 +98,7 @@ class EmployerJobApplicationController extends Controller
             'user.candidateProfile.experiences',
             'user.candidateProfile.educations',
             'candidateResume',
+            'statusHistories.actor:id,name',
         ]);
 
         $job = $application->jobPosting;
@@ -101,7 +108,7 @@ class EmployerJobApplicationController extends Controller
         return Inertia::render('employer/applications/show', [
             'application' => [
                 'id' => $application->id,
-                'status' => $application->status,
+                'status' => $application->status->value,
                 'applied_at' => $application->created_at?->toIso8601String(),
                 'cover_letter' => $application->cover_letter,
                 'resume' => $application->candidateResume ? [
@@ -111,6 +118,23 @@ class EmployerJobApplicationController extends Controller
                     'size' => $application->candidateResume->size,
                 ] : null,
             ],
+            'allowed_transitions' => array_map(
+                fn (JobApplicationStatus $s): array => [
+                    'value' => $s->value,
+                    'label' => $s->label(),
+                ],
+                $application->status->allowedEmployerTransitions()
+            ),
+            'status_histories' => $application->statusHistories->map(fn (JobApplicationStatusHistory $history): array => [
+                'id' => $history->id,
+                'from_status' => $history->from_status->value,
+                'from_status_label' => $history->from_status->label(),
+                'to_status' => $history->to_status->value,
+                'to_status_label' => $history->to_status->label(),
+                'reason' => $history->reason,
+                'actor_name' => $history->actor?->name ?? __('System'),
+                'created_at' => $history->created_at?->toIso8601String(),
+            ])->values()->all(),
             'candidate' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -150,6 +174,25 @@ class EmployerJobApplicationController extends Controller
                 ] : null,
             ],
         ]);
+    }
+
+    /**
+     * Update the status of an application.
+     */
+    public function updateStatus(
+        TransitionApplicationStatusRequest $request,
+        JobApplication $application,
+        ApplicationStatusTransitionService $transitionService
+    ): RedirectResponse {
+        $transitionService->transitionAsEmployer(
+            $application,
+            JobApplicationStatus::from($request->validated('new_status')),
+            $request->validated('current_status'),
+            $request->user(),
+            $request->validated('reason')
+        );
+
+        return Redirect::back()->with('success', __('Application status updated successfully.'));
     }
 
     /**
