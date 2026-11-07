@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Enums\JobApplicationStatus;
-use Database\Factories\JobApplicationStatusHistoryFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -23,9 +21,6 @@ use Illuminate\Support\Carbon;
  */
 class JobApplicationStatusHistory extends Model
 {
-    /** @use HasFactory<JobApplicationStatusHistoryFactory> */
-    use HasFactory;
-
     protected $fillable = [
         'job_application_id',
         'actor_id',
