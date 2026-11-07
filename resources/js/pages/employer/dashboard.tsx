@@ -64,10 +64,15 @@ export default function EmployerDashboard() {
                             <p className="mt-1 text-xs text-muted-foreground">
                                 Create and manage job drafts before submission.
                             </p>
-                            <div className="mt-3">
+                            <div className="mt-3 flex flex-wrap gap-2">
                                 <Button asChild size="sm">
+                                    <Link href={employer.jobs.index()}>
+                                        Manage Jobs
+                                    </Link>
+                                </Button>
+                                <Button asChild size="sm" variant="secondary">
                                     <Link href={jobsCreate()}>
-                                        Create Job Draft
+                                        Create Draft
                                     </Link>
                                 </Button>
                             </div>
@@ -82,11 +87,18 @@ export default function EmployerDashboard() {
                             <Users className="size-4 text-teal-600 dark:text-teal-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">0</div>
+                            <div className="text-2xl font-bold">Review</div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Candidate applications review pipeline unlocks
-                                in upcoming features.
+                                Review candidates who applied to your job
+                                postings.
                             </p>
+                            <div className="mt-3">
+                                <Button asChild size="sm">
+                                    <Link href={employer.jobs.index()}>
+                                        View Job Applicants
+                                    </Link>
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

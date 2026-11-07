@@ -122,4 +122,33 @@ class ApplicationHistoryTest extends TestCase
             ->get(route('candidate.applications.show', $application))
             ->assertForbidden();
     }
+
+    public function test_candidate_sees_closed_job_status_in_applications_and_details(): void
+    {
+        $jobSeeker = User::factory()->jobSeeker()->create();
+        $employer = User::factory()->approvedEmployer()->create();
+        $company = Company::factory()->for($employer, 'owner')->create();
+        $job = Job::factory()->for($company)->create(['status' => 'closed']);
+
+        $application = JobApplication::factory()->create([
+            'user_id' => $jobSeeker->id,
+            'job_posting_id' => $job->id,
+        ]);
+
+        $this->actingAs($jobSeeker)
+            ->get(route('candidate.applications.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('candidate/applications/index')
+                ->where('applications.data.0.job_status', 'closed')
+            );
+
+        $this->actingAs($jobSeeker)
+            ->get(route('candidate.applications.show', $application))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('candidate/applications/show')
+                ->where('job.status', 'closed')
+            );
+    }
 }

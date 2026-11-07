@@ -132,6 +132,7 @@ export type Application = {
     job_id: number;
     company_name: string | null;
     job_title: string;
+    job_status?: string;
     status: ApplicationStatus;
     applied_at: string | null;
     cover_letter?: string | null;
@@ -145,6 +146,7 @@ export type ApplicationIndexFormProps = {
 export type JobDetail = {
     id: number;
     title: string;
+    status: string;
     description: string;
     responsibilities: string | null;
     requirements: string | null;

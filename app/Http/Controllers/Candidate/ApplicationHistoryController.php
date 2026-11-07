@@ -59,6 +59,7 @@ class ApplicationHistoryController extends Controller
                     'id' => $application->id,
                     'job_id' => $job->id,
                     'job_title' => $job->title,
+                    'job_status' => $job->status,
                     'company' => $job->company ? [
                         'id' => $job->company->id,
                         'name' => $job->company->name,
@@ -125,6 +126,7 @@ class ApplicationHistoryController extends Controller
             'job' => [
                 'id' => $job->id,
                 'title' => $job->title,
+                'status' => $job->status,
                 'description' => $job->description,
                 'responsibilities' => $job->responsibilities,
                 'requirements' => $job->requirements,

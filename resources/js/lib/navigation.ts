@@ -32,6 +32,12 @@ export const mainNavConfig: NavItemConfig[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Browse Jobs',
+        href: '/jobs',
+        icon: Bookmark,
+        requiredRoles: ['job_seeker'],
+    },
+    {
         title: 'Saved Jobs',
         href: '/candidate/saved-jobs',
         icon: Bookmark,
@@ -50,7 +56,7 @@ export const mainNavConfig: NavItemConfig[] = [
         requiredRoles: ['employer'],
     },
     {
-        title: 'Job Drafts',
+        title: 'Jobs & Applicants',
         href: employer.jobs.index(),
         icon: Briefcase,
         requiredRoles: ['employer'],

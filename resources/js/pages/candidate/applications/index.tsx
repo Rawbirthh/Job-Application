@@ -101,14 +101,25 @@ export default function CandidateApplicationsIndex({
                         >
                             <CardContent className="flex flex-col gap-4 p-6">
                                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                                    <CardTitle className="text-lg">
-                                        <Link
-                                            href={`/jobs/${application.job_id}`}
-                                            className="text-primary hover:underline"
-                                        >
-                                            {application.job_title}
-                                        </Link>
-                                    </CardTitle>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <CardTitle className="text-lg">
+                                            <Link
+                                                href={`/jobs/${application.job_id}`}
+                                                className="text-primary hover:underline"
+                                            >
+                                                {application.job_title}
+                                            </Link>
+                                        </CardTitle>
+                                        {application.job_status ===
+                                            'closed' && (
+                                            <Badge
+                                                variant="destructive"
+                                                className="text-xs"
+                                            >
+                                                Job Closed
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <Badge
                                         variant={
                                             statusVariants[

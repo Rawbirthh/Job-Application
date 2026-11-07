@@ -11,6 +11,7 @@ interface Props {
     job: {
         id: number;
         title: string;
+        status: string;
         description: string;
         responsibilities: string | null;
         requirements: string | null;
@@ -88,12 +89,17 @@ export default function CandidateApplicationShow({ application, job }: Props) {
                     <h1 className="text-3xl font-bold tracking-tight">
                         {job.title}
                     </h1>
-                    {job.company && (
-                        <p className="mt-1 flex items-center gap-2 text-muted-foreground">
-                            <Building className="h-4 w-4" />
-                            {job.company.name}
-                        </p>
-                    )}
+                    <div className="mt-1 flex flex-wrap items-center gap-3">
+                        {job.company && (
+                            <p className="flex items-center gap-2 text-muted-foreground">
+                                <Building className="h-4 w-4" />
+                                {job.company.name}
+                            </p>
+                        )}
+                        {job.status === 'closed' && (
+                            <Badge variant="destructive">Job Closed</Badge>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -115,6 +121,22 @@ export default function CandidateApplicationShow({ application, job }: Props) {
                                     }
                                 >
                                     {formatStatus(application.status)}
+                                </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-muted-foreground">
+                                    Job Status
+                                </span>
+                                <Badge
+                                    variant={
+                                        job.status === 'closed'
+                                            ? 'destructive'
+                                            : 'outline'
+                                    }
+                                >
+                                    {job.status === 'closed'
+                                        ? 'Closed'
+                                        : 'Active'}
                                 </Badge>
                             </div>
                             <div className="flex items-center justify-between">

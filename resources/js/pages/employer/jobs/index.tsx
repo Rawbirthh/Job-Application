@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Briefcase, Pencil, Plus, Search } from 'lucide-react';
+import { Briefcase, Pencil, Plus, Search, Users } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -264,29 +264,46 @@ export default function EmployerJobsIndex({
                                                         ).toLocaleDateString()}
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
-                                                        {job.status ===
-                                                        'pending_review' ? (
-                                                            <span className="text-xs text-muted-foreground italic">
-                                                                Under review
-                                                            </span>
-                                                        ) : (
+                                                        <div className="flex items-center justify-end gap-1">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 asChild
+                                                                title="View Applicants"
                                                             >
                                                                 <Link
-                                                                    href={jobsEdit.url(
-                                                                        {
-                                                                            job: job.id,
-                                                                        },
-                                                                    )}
+                                                                    href={`/employer/jobs/${job.id}/applicants`}
                                                                 >
-                                                                    <Pencil className="size-4" />
-                                                                    Edit
+                                                                    <Users className="size-4" />
+                                                                    <span className="hidden sm:inline">
+                                                                        Applicants
+                                                                    </span>
                                                                 </Link>
                                                             </Button>
-                                                        )}
+                                                            {job.status ===
+                                                            'pending_review' ? (
+                                                                <span className="px-2 text-xs text-muted-foreground italic">
+                                                                    Under review
+                                                                </span>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    asChild
+                                                                >
+                                                                    <Link
+                                                                        href={jobsEdit.url(
+                                                                            {
+                                                                                job: job.id,
+                                                                            },
+                                                                        )}
+                                                                    >
+                                                                        <Pencil className="size-4" />
+                                                                        Edit
+                                                                    </Link>
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

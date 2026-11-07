@@ -201,4 +201,12 @@ class Job extends Model
     {
         return $this->hasMany(SavedJob::class, 'job_posting_id');
     }
+
+    /**
+     * @return HasMany<JobApplication, $this>
+     */
+    public function applications(): HasMany
+    {
+        return $this->hasMany(JobApplication::class, 'job_posting_id');
+    }
 }

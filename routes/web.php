@@ -9,6 +9,7 @@ use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
+use App\Http\Controllers\Employer\EmployerJobApplicationController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
 use App\Http\Controllers\Employer\JobController;
 use App\Http\Controllers\PublicJobController;
@@ -60,6 +61,15 @@ Route::middleware(['auth'])->group(function (): void {
             Route::post('{job}/close', [JobController::class, 'close'])
                 ->middleware(['throttle:20,1'])
                 ->name('close');
+            Route::get('{job}/applicants', [EmployerJobApplicationController::class, 'index'])
+                ->name('applicants');
+        });
+
+        Route::middleware(['role:employer', 'employer.approved'])->group(function (): void {
+            Route::get('applications/{application}', [EmployerJobApplicationController::class, 'show'])
+                ->name('applications.show');
+            Route::get('applications/{application}/resume', [EmployerJobApplicationController::class, 'downloadResume'])
+                ->name('applications.resume.download');
         });
     });
 
