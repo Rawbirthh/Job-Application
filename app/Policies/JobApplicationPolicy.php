@@ -55,7 +55,6 @@ class JobApplicationPolicy
         $job = $jobApplication->jobPosting;
 
         return $actor->isApprovedEmployer()
-            && $job !== null
             && $job->company !== null
             && $job->company->owner_user_id === $actor->id;
     }

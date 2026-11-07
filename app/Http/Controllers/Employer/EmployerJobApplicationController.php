@@ -64,7 +64,7 @@ class EmployerJobApplicationController extends Controller
                         'headline' => $profile?->headline,
                         'location' => $profile?->location,
                     ],
-                    'has_resume' => $application->candidate_resume_id !== null,
+                    'has_resume' => (bool) $application->candidate_resume_id,
                     'has_cover_letter' => ! empty($application->cover_letter),
                 ];
             }),
@@ -118,7 +118,7 @@ class EmployerJobApplicationController extends Controller
                 'headline' => $profile?->headline,
                 'summary' => $profile?->summary,
                 'location' => $profile?->location,
-                'skills' => $profile?->skills ?? [],
+                'skills' => $profile ? ($profile->skills ?? []) : [],
                 'experiences' => $profile?->experiences->map(fn (CandidateExperience $exp): array => [
                     'id' => $exp->id,
                     'job_title' => $exp->job_title,
