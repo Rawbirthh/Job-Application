@@ -23,6 +23,7 @@ import {
     submit as jobsSubmit,
     close as jobsClose,
 } from '@/routes/employer/jobs';
+import { index as screeningQuestionsIndex } from '@/routes/employer/jobs/screening-questions';
 import { index as companiesIndex } from '@/routes/employer/companies';
 import type { JobForm, JobEditProps, CatalogueOption } from '@/types';
 
@@ -91,6 +92,13 @@ export default function EmployerJobEdit({
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                            <Link
+                                href={screeningQuestionsIndex({ job: job.id })}
+                            >
+                                Screening Questions
+                            </Link>
+                        </Button>
                         {['draft', 'rejected', 'closed'].includes(
                             job.status,
                         ) && (

@@ -7,10 +7,13 @@ use App\Http\Requests\Candidate\StoreJobApplicationRequest;
 use App\Models\CandidateResume;
 use App\Models\Job as JobPosting;
 use App\Models\JobApplication;
+use App\Models\JobApplicationAnswer;
+use App\Models\JobScreeningQuestion;
 use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,6 +56,18 @@ class JobApplicationController extends Controller
             'workplaceArrangement:id,name',
         ]);
 
+        $screeningQuestions = $job->screeningQuestions()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'type', 'label', 'options', 'is_required'])
+            ->map(fn ($q) => [
+                'id' => $q->id,
+                'type' => $q->type->value,
+                'label' => $q->label,
+                'options' => $q->options,
+                'is_required' => $q->is_required,
+            ])->values()->all();
+
         return Inertia::render('candidate/applications/create', [
             'job' => [
                 'id' => $job->id,
@@ -79,6 +94,7 @@ class JobApplicationController extends Controller
                 'created_at' => $r->created_at?->toIso8601String(),
             ]),
             'alreadyApplied' => $alreadyApplied,
+            'screening_questions' => $screeningQuestions,
         ]);
     }
 
@@ -95,13 +111,47 @@ class JobApplicationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $application = JobApplication::create([
-            'job_posting_id' => $job->id,
-            'user_id' => $user->id,
-            'candidate_resume_id' => $request->validated('candidate_resume_id'),
-            'cover_letter' => $request->validated('cover_letter'),
-            'status' => 'submitted',
-        ]);
+        $application = DB::transaction(function () use ($request, $job, $user): JobApplication {
+            $application = JobApplication::create([
+                'job_posting_id' => $job->id,
+                'user_id' => $user->id,
+                'candidate_resume_id' => $request->validated('candidate_resume_id'),
+                'cover_letter' => $request->validated('cover_letter'),
+                'status' => 'submitted',
+            ]);
+
+            foreach ($request->answersData() as $answer) {
+                /** @var JobScreeningQuestion|null $question */
+                $question = JobScreeningQuestion::query()
+                    ->where('job_posting_id', $job->id)
+                    ->where('is_active', true)
+                    ->find($answer['question_id']);
+
+                if (! $question) {
+                    continue;
+                }
+
+                // Only persist if there is some answer content
+                $hasContent = ($answer['answer_text'] !== null && $answer['answer_text'] !== '')
+                    || $answer['answer_boolean'] !== null
+                    || ($answer['selected_option'] !== null && $answer['selected_option'] !== '');
+
+                if (! $hasContent) {
+                    // optional unanswered question: skip row
+                    continue;
+                }
+
+                JobApplicationAnswer::create([
+                    'job_application_id' => $application->id,
+                    'job_screening_question_id' => $question->id,
+                    'answer_text' => $answer['answer_text'],
+                    'answer_boolean' => $answer['answer_boolean'],
+                    'selected_option' => $answer['selected_option'],
+                ]);
+            }
+
+            return $application;
+        });
 
         $notificationService->applicationSubmitted($application);
         $notificationService->newJobApplication($application);

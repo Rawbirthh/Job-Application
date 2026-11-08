@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import { ScreeningQuestionFields } from '@/components/screening/screening-question-fields';
+import type { ScreeningQuestionForApply } from '@/types';
 import { Bookmark, Building, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,12 +38,14 @@ interface Props {
     job: JobDetail;
     resumes: ResumeData[];
     alreadyApplied: boolean;
+    screening_questions?: ScreeningQuestionForApply[];
 }
 
 export default function JobApplicationCreate({
     job,
     resumes,
     alreadyApplied,
+    screening_questions = [],
 }: Props) {
     useFlashToast();
 
@@ -51,11 +55,31 @@ export default function JobApplicationCreate({
     const [coverLetter, setCoverLetter] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [answers, setAnswers] = useState<
+        Record<
+            number,
+            {
+                answer_text?: string | null;
+                answer_boolean?: boolean | null;
+                selected_option?: string | null;
+            }
+        >
+    >({});
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         setErrors({});
+
+        const answerPayload = screening_questions.map((q) => {
+            const val = answers[q.id] ?? {};
+            return {
+                question_id: q.id,
+                answer_text: val.answer_text ?? null,
+                answer_boolean: val.answer_boolean ?? null,
+                selected_option: val.selected_option ?? null,
+            };
+        });
 
         router.post(
             `/candidate/jobs/${job.id}/apply`,
@@ -64,6 +88,7 @@ export default function JobApplicationCreate({
                     ? Number(selectedResumeId)
                     : null,
                 cover_letter: coverLetter,
+                answers: answerPayload,
             },
             {
                 onError: (errs) => {
@@ -247,6 +272,57 @@ export default function JobApplicationCreate({
                                             </p>
                                         )}
                                     </div>
+
+                                    {screening_questions.length > 0 && (
+                                        <div className="space-y-4">
+                                            <h3 className="text-base font-semibold">
+                                                Screening Questions
+                                            </h3>
+                                            {screening_questions.map((q) => {
+                                                return (
+                                                    <ScreeningQuestionFields
+                                                        key={q.id}
+                                                        question={q}
+                                                        value={
+                                                            answers[q.id] ?? {}
+                                                        }
+                                                        onChange={(patch) =>
+                                                            setAnswers(
+                                                                (prev) => ({
+                                                                    ...prev,
+                                                                    [q.id]: {
+                                                                        ...prev[
+                                                                            q.id
+                                                                        ],
+                                                                        ...patch,
+                                                                    },
+                                                                }),
+                                                            )
+                                                        }
+                                                        error={
+                                                            errors[
+                                                                `answers.${screening_questions.indexOf(q)}.answer_text`
+                                                            ] ||
+                                                            errors[
+                                                                `answers.${screening_questions.indexOf(q)}.answer_boolean`
+                                                            ] ||
+                                                            errors[
+                                                                `answers.${screening_questions.indexOf(q)}.selected_option`
+                                                            ] ||
+                                                            errors.answers
+                                                        }
+                                                        disabled={isSubmitting}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {errors.answers && (
+                                        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+                                            {errors.answers}
+                                        </div>
+                                    )}
 
                                     {errors.job_posting_id && (
                                         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">

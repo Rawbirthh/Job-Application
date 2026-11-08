@@ -102,6 +102,7 @@ class EmployerJobApplicationController extends Controller
             'user.candidateProfile.educations',
             'candidateResume',
             'statusHistories.actor:id,name',
+            'screeningAnswers.jobScreeningQuestion',
         ]);
 
         $job = $application->jobPosting;
@@ -155,6 +156,19 @@ class EmployerJobApplicationController extends Controller
             'updated_at' => $interview->updated_at?->toIso8601String(),
             'can_manage' => $interview->status->isActive(),
         ])->all();
+
+        $screeningAnswers = $application->screeningAnswers
+            ->sortBy(fn ($a) => $a->jobScreeningQuestion->sort_order)
+            ->values()
+            ->map(fn ($a): array => [
+                'question_id' => $a->job_screening_question_id,
+                'question_label' => $a->jobScreeningQuestion?->label,
+                'question_type' => $a->jobScreeningQuestion?->type?->value,
+                'options' => $a->jobScreeningQuestion?->options,
+                'answer_text' => $a->answer_text,
+                'answer_boolean' => $a->answer_boolean,
+                'selected_option' => $a->selected_option,
+            ])->all();
 
         return Inertia::render('employer/applications/show', [
             'application' => [
@@ -238,6 +252,7 @@ class EmployerJobApplicationController extends Controller
                 JobApplicationStatus::InterviewScheduled,
             ], true),
             'timezones' => DateTimeZone::listIdentifiers(),
+            'screening_answers' => $screeningAnswers,
         ]);
     }
 

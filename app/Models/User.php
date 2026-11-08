@@ -104,6 +104,22 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasMany<ScreeningQuestion, $this>
+     */
+    public function screeningQuestions(): HasMany
+    {
+        return $this->hasMany(ScreeningQuestion::class, 'owner_user_id');
+    }
+
+    /**
+     * @return HasMany<ScreeningQuestionTemplate, $this>
+     */
+    public function screeningQuestionTemplates(): HasMany
+    {
+        return $this->hasMany(ScreeningQuestionTemplate::class, 'owner_user_id');
+    }
+
+    /**
      * Determine whether the user holds the employer role and is approved.
      */
     public function isApprovedEmployer(): bool

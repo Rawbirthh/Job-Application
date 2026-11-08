@@ -22,8 +22,13 @@ import {
 } from '@/components/status-history-timeline';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { CandidateInterviews } from '@/components/interview/candidate-interviews';
-import type { CandidateInterviewRound, InterviewPagination } from '@/types';
+import type {
+    CandidateInterviewRound,
+    InterviewPagination,
+    ScreeningAnswer,
+} from '@/types';
 import type { Application } from '@/types/candidate';
+import { ScreeningAnswers } from '@/components/screening/screening-answers';
 
 interface Props {
     application: Application;
@@ -60,6 +65,7 @@ interface Props {
     timezones: string[];
     interviews: CandidateInterviewRound[];
     interview_pagination: InterviewPagination;
+    screening_answers?: ScreeningAnswer[];
 }
 
 export default function CandidateApplicationShow({
@@ -70,6 +76,7 @@ export default function CandidateApplicationShow({
     timezones,
     interviews,
     interview_pagination,
+    screening_answers,
 }: Props) {
     useFlashToast();
     const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -204,6 +211,10 @@ export default function CandidateApplicationShow({
                     </Card>
 
                     <StatusHistoryTimeline histories={status_histories} />
+
+                    {screening_answers !== undefined && (
+                        <ScreeningAnswers answers={screening_answers ?? []} />
+                    )}
 
                     <CandidateInterviews
                         timezones={timezones}

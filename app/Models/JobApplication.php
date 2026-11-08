@@ -83,4 +83,12 @@ class JobApplication extends Model
     {
         return $this->hasMany(Interview::class, 'job_application_id');
     }
+
+    /**
+     * @return HasMany<JobApplicationAnswer, $this>
+     */
+    public function screeningAnswers(): HasMany
+    {
+        return $this->hasMany(JobApplicationAnswer::class, 'job_application_id');
+    }
 }

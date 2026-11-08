@@ -30,8 +30,13 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmployerInterviews } from '@/components/interview/employer-interviews';
+import { ScreeningAnswers } from '@/components/screening/screening-answers';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import type { EmployerInterviewRound, InterviewPagination } from '@/types';
+import type {
+    EmployerInterviewRound,
+    InterviewPagination,
+    ScreeningAnswer,
+} from '@/types';
 
 interface Experience {
     id: number;
@@ -94,6 +99,7 @@ interface Props {
     timezones: string[];
     interviews: EmployerInterviewRound[];
     interview_pagination: InterviewPagination;
+    screening_answers?: ScreeningAnswer[];
 }
 
 export default function EmployerApplicationShow({
@@ -106,6 +112,7 @@ export default function EmployerApplicationShow({
     timezones,
     interviews,
     interview_pagination,
+    screening_answers,
 }: Props) {
     useFlashToast();
 
@@ -314,6 +321,12 @@ export default function EmployerApplicationShow({
 
                         {/* Status History Timeline */}
                         <StatusHistoryTimeline histories={status_histories} />
+
+                        {screening_answers !== undefined && (
+                            <ScreeningAnswers
+                                answers={screening_answers ?? []}
+                            />
+                        )}
 
                         {/* Interview Rounds */}
                         <EmployerInterviews

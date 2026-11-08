@@ -114,6 +114,7 @@ class ApplicationHistoryController extends Controller
             'jobPosting.payPeriod',
             'candidateResume',
             'statusHistories.actor:id,name',
+            'screeningAnswers.jobScreeningQuestion',
         ]);
 
         $job = $application->jobPosting;
@@ -164,6 +165,19 @@ class ApplicationHistoryController extends Controller
             'can_respond' => $interview->status === InterviewStatus::Scheduled
                 && $application->status === JobApplicationStatus::InterviewScheduled,
         ])->all();
+
+        $screeningAnswers = $application->screeningAnswers
+            ->sortBy(fn ($a) => $a->jobScreeningQuestion->sort_order)
+            ->values()
+            ->map(fn ($a): array => [
+                'question_id' => $a->job_screening_question_id,
+                'question_label' => $a->jobScreeningQuestion?->label,
+                'question_type' => $a->jobScreeningQuestion?->type?->value,
+                'options' => $a->jobScreeningQuestion?->options,
+                'answer_text' => $a->answer_text,
+                'answer_boolean' => $a->answer_boolean,
+                'selected_option' => $a->selected_option,
+            ])->all();
 
         return Inertia::render('candidate/applications/show', [
             'application' => [
@@ -228,6 +242,7 @@ class ApplicationHistoryController extends Controller
                 'next_page_url' => $interviewPaginator->nextPageUrl(),
             ],
             'timezones' => DateTimeZone::listIdentifiers(),
+            'screening_answers' => $screeningAnswers,
         ]);
     }
 

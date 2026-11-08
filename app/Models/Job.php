@@ -209,4 +209,12 @@ class Job extends Model
     {
         return $this->hasMany(JobApplication::class, 'job_posting_id');
     }
+
+    /**
+     * @return HasMany<JobScreeningQuestion, $this>
+     */
+    public function screeningQuestions(): HasMany
+    {
+        return $this->hasMany(JobScreeningQuestion::class, 'job_posting_id');
+    }
 }

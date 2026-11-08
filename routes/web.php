@@ -14,6 +14,9 @@ use App\Http\Controllers\Employer\EmployerJobApplicationController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\JobController;
+use App\Http\Controllers\Employer\JobScreeningQuestionController;
+use App\Http\Controllers\Employer\ScreeningQuestionController;
+use App\Http\Controllers\Employer\ScreeningTemplateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicJobController;
 use Illuminate\Support\Facades\Route;
@@ -77,9 +80,55 @@ Route::middleware(['auth'])->group(function (): void {
                 ->name('close');
             Route::get('{job}/applicants', [EmployerJobApplicationController::class, 'index'])
                 ->name('applicants');
+
+            Route::get('{job}/screening-questions', [JobScreeningQuestionController::class, 'index'])
+                ->name('screening-questions.index');
+            Route::post('{job}/screening-questions', [JobScreeningQuestionController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.store');
+            Route::post('{job}/screening-questions/apply-template', [JobScreeningQuestionController::class, 'applyTemplate'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.apply-template');
+            Route::post('{job}/screening-questions/reorder', [JobScreeningQuestionController::class, 'reorder'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.reorder');
+            Route::put('screening-questions/{question}', [JobScreeningQuestionController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.update');
+            Route::delete('screening-questions/{question}', [JobScreeningQuestionController::class, 'destroy'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.destroy');
         });
 
         Route::middleware(['role:employer', 'employer.approved'])->group(function (): void {
+            // Feature 27: screening question bank
+            Route::get('screening-questions', [ScreeningQuestionController::class, 'index'])
+                ->name('screening-questions.index');
+            Route::post('screening-questions', [ScreeningQuestionController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.store');
+            Route::put('screening-questions/{question}', [ScreeningQuestionController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.update');
+            Route::delete('screening-questions/{question}', [ScreeningQuestionController::class, 'destroy'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-questions.destroy');
+
+            // Feature 27: screening templates
+            Route::get('screening-templates', [ScreeningTemplateController::class, 'index'])
+                ->name('screening-templates.index');
+            Route::post('screening-templates', [ScreeningTemplateController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-templates.store');
+            Route::get('screening-templates/{template}', [ScreeningTemplateController::class, 'show'])
+                ->name('screening-templates.show');
+            Route::put('screening-templates/{template}', [ScreeningTemplateController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-templates.update');
+            Route::delete('screening-templates/{template}', [ScreeningTemplateController::class, 'destroy'])
+                ->middleware(['throttle:20,1'])
+                ->name('screening-templates.destroy');
+
             Route::get('applications/{application}', [EmployerJobApplicationController::class, 'show'])
                 ->name('applications.show');
             Route::post('applications/{application}/status', [EmployerJobApplicationController::class, 'updateStatus'])

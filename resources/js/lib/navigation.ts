@@ -12,6 +12,8 @@ import {
     Bookmark,
     FileText,
     Bell,
+    ClipboardList,
+    ListChecks,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -65,6 +67,18 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Jobs & Applicants',
         href: employer.jobs.index(),
         icon: Briefcase,
+        requiredRoles: ['employer'],
+    },
+    {
+        title: 'Screening Questions',
+        href: employer.screeningQuestions.index(),
+        icon: ListChecks,
+        requiredRoles: ['employer'],
+    },
+    {
+        title: 'Screening Templates',
+        href: employer.screeningTemplates.index(),
+        icon: ClipboardList,
         requiredRoles: ['employer'],
     },
     {

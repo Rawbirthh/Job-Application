@@ -7,6 +7,8 @@ use App\Models\CandidateResume;
 use App\Models\Company;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\JobApplicationAnswer;
+use App\Models\JobScreeningQuestion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -214,5 +216,98 @@ class JobApplicationTest extends TestCase
         $this->actingAs($employer2)
             ->get(route('employer.applications.resume.download', $application))
             ->assertForbidden();
+    }
+
+    public function test_employer_sees_screening_answers_on_application_detail(): void
+    {
+        $employer = User::factory()->approvedEmployer()->create();
+        $company = Company::factory()->for($employer, 'owner')->create();
+        $job = Job::factory()->for($company)->create();
+
+        $jobSeeker = User::factory()->jobSeeker()->create();
+        $resume = CandidateResume::factory()->for($jobSeeker, 'user')->create();
+
+        $application = JobApplication::factory()
+            ->for($job, 'jobPosting')
+            ->for($jobSeeker, 'user')
+            ->for($resume, 'candidateResume')
+            ->create();
+
+        $question = JobScreeningQuestion::create([
+            'job_posting_id' => $job->id,
+            'type' => 'short_text',
+            'label' => 'Question label',
+            'options' => null,
+            'is_required' => true,
+            'sort_order' => 0,
+            'is_active' => true,
+        ]);
+        JobApplicationAnswer::create([
+            'job_application_id' => $application->id,
+            'job_screening_question_id' => $question->id,
+            'answer_text' => 'Employer visible answer',
+        ]);
+
+        $this->actingAs($employer)
+            ->get(route('employer.applications.show', $application))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('screening_answers', 1)
+                ->where('screening_answers.0.question_label', 'Question label')
+                ->where('screening_answers.0.answer_text', 'Employer visible answer')
+            );
+    }
+
+    public function test_cross_company_employer_cannot_view_application_detail_with_answers(): void
+    {
+        $employer1 = User::factory()->approvedEmployer()->create();
+        $company1 = Company::factory()->for($employer1, 'owner')->create();
+        $job1 = Job::factory()->for($company1)->create();
+
+        $jobSeeker = User::factory()->jobSeeker()->create();
+        $resume = CandidateResume::factory()->for($jobSeeker, 'user')->create();
+        $application = JobApplication::factory()->for($job1, 'jobPosting')->for($jobSeeker, 'user')->for($resume, 'candidateResume')->create();
+
+        $employer2 = User::factory()->approvedEmployer()->create();
+        Company::factory()->for($employer2, 'owner')->create();
+
+        $this->actingAs($employer2)
+            ->get(route('employer.applications.show', $application))
+            ->assertForbidden();
+    }
+
+    public function test_deactivated_job_question_still_readable_on_prior_application(): void
+    {
+        $employer = User::factory()->approvedEmployer()->create();
+        $company = Company::factory()->for($employer, 'owner')->create();
+        $job = Job::factory()->for($company)->create();
+
+        $jobSeeker = User::factory()->jobSeeker()->create();
+        $resume = CandidateResume::factory()->for($jobSeeker, 'user')->create();
+        $application = JobApplication::factory()->for($job, 'jobPosting')->for($jobSeeker, 'user')->for($resume, 'candidateResume')->create();
+
+        $question = JobScreeningQuestion::create([
+            'job_posting_id' => $job->id,
+            'type' => 'short_text',
+            'label' => 'Deactivated question',
+            'options' => null,
+            'is_required' => true,
+            'sort_order' => 0,
+            'is_active' => false,
+        ]);
+        JobApplicationAnswer::create([
+            'job_application_id' => $application->id,
+            'job_screening_question_id' => $question->id,
+            'answer_text' => 'Prior answer',
+        ]);
+
+        $this->actingAs($employer)
+            ->get(route('employer.applications.show', $application))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('screening_answers', 1)
+                ->where('screening_answers.0.question_label', 'Deactivated question')
+                ->where('screening_answers.0.answer_text', 'Prior answer')
+            );
     }
 }
