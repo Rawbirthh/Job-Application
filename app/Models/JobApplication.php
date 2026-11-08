@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property-read User $user
  * @property-read CandidateResume|null $candidateResume
  * @property-read Collection<int, JobApplicationStatusHistory> $statusHistories
+ * @property-read Collection<int, Interview> $interviews
  */
 class JobApplication extends Model
 {
@@ -73,5 +74,13 @@ class JobApplication extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(JobApplicationStatusHistory::class, 'job_application_id')->orderBy('created_at', 'asc');
+    }
+
+    /**
+     * @return HasMany<Interview, $this>
+     */
+    public function interviews(): HasMany
+    {
+        return $this->hasMany(Interview::class, 'job_application_id');
     }
 }

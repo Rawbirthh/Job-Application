@@ -21,6 +21,8 @@ import {
     type StatusHistory,
 } from '@/components/status-history-timeline';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { CandidateInterviews } from '@/components/interview/candidate-interviews';
+import type { CandidateInterviewRound, InterviewPagination } from '@/types';
 import type { Application } from '@/types/candidate';
 
 interface Props {
@@ -55,6 +57,9 @@ interface Props {
         experience_level: { name: string } | null;
         pay_period: { name: string } | null;
     };
+    timezones: string[];
+    interviews: CandidateInterviewRound[];
+    interview_pagination: InterviewPagination;
 }
 
 export default function CandidateApplicationShow({
@@ -62,6 +67,9 @@ export default function CandidateApplicationShow({
     can_withdraw,
     status_histories,
     job,
+    timezones,
+    interviews,
+    interview_pagination,
 }: Props) {
     useFlashToast();
     const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -196,6 +204,12 @@ export default function CandidateApplicationShow({
                     </Card>
 
                     <StatusHistoryTimeline histories={status_histories} />
+
+                    <CandidateInterviews
+                        timezones={timezones}
+                        interviews={interviews}
+                        pagination={interview_pagination}
+                    />
 
                     {job.description && (
                         <Card>

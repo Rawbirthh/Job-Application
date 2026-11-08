@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InterviewStatus;
 use App\Enums\JobApplicationStatus;
 use App\Models\JobApplication;
 use App\Models\User;
@@ -34,6 +35,8 @@ class ApplicationStatusTransitionService
                 ]));
             }
 
+            $priorStatus = $lockedApp->status;
+
             $lockedApp->statusHistories()->create([
                 'actor_id' => $actor->id,
                 'from_status' => $lockedApp->status,
@@ -43,6 +46,22 @@ class ApplicationStatusTransitionService
 
             $lockedApp->status = $newStatus;
             $lockedApp->save();
+
+            if (
+                $priorStatus === JobApplicationStatus::InterviewScheduled
+                && $newStatus !== JobApplicationStatus::InterviewScheduled
+            ) {
+                $timestamp = now();
+
+                $lockedApp->interviews()
+                    ->whereIn('status', InterviewStatus::activeValues())
+                    ->update([
+                        'status' => InterviewStatus::Cancelled->value,
+                        'cancelled_at' => $timestamp,
+                        'cancellation_reason' => 'Application moved to '.$newStatus->label().'.',
+                        'updated_at' => $timestamp,
+                    ]);
+            }
 
             return $lockedApp;
         });
@@ -72,6 +91,58 @@ class ApplicationStatusTransitionService
             ]);
 
             $lockedApp->status = JobApplicationStatus::Withdrawn;
+            $lockedApp->save();
+
+            $timestamp = now();
+
+            $lockedApp->interviews()
+                ->whereIn('status', InterviewStatus::activeValues())
+                ->update([
+                    'status' => InterviewStatus::Cancelled->value,
+                    'cancelled_at' => $timestamp,
+                    'cancellation_reason' => 'Application withdrawn.',
+                    'updated_at' => $timestamp,
+                ]);
+
+            return $lockedApp;
+        });
+    }
+
+    /**
+     * Return the application to shortlisted after its last active interview is cancelled.
+     *
+     * This is a guarded, system-only transition and is intentionally not exposed in
+     * the employer's manual transition list.
+     */
+    public function revertToShortlistedAfterLastInterviewCancellation(
+        JobApplication $application,
+        User $actor,
+        string $reason
+    ): JobApplication {
+        return DB::transaction(function () use ($application, $actor, $reason) {
+            /** @var JobApplication $lockedApp */
+            $lockedApp = JobApplication::where('id', $application->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedApp->status !== JobApplicationStatus::InterviewScheduled) {
+                abort(409, __('The application status has changed since you loaded the page. Please refresh and try again.'));
+            }
+
+            $hasActiveInterviews = $lockedApp->interviews()
+                ->whereIn('status', InterviewStatus::activeValues())
+                ->exists();
+
+            if ($hasActiveInterviews) {
+                abort(422, __('The application still has active interview rounds.'));
+            }
+
+            $lockedApp->statusHistories()->create([
+                'actor_id' => $actor->id,
+                'from_status' => JobApplicationStatus::InterviewScheduled,
+                'to_status' => JobApplicationStatus::Shortlisted,
+                'reason' => trim($reason),
+            ]);
+
+            $lockedApp->status = JobApplicationStatus::Shortlisted;
             $lockedApp->save();
 
             return $lockedApp;

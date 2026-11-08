@@ -29,7 +29,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmployerInterviews } from '@/components/interview/employer-interviews';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import type { EmployerInterviewRound, InterviewPagination } from '@/types';
 
 interface Experience {
     id: number;
@@ -88,6 +90,10 @@ interface Props {
             slug: string;
         } | null;
     };
+    interview_eligible: boolean;
+    timezones: string[];
+    interviews: EmployerInterviewRound[];
+    interview_pagination: InterviewPagination;
 }
 
 export default function EmployerApplicationShow({
@@ -96,6 +102,10 @@ export default function EmployerApplicationShow({
     status_histories,
     candidate,
     job,
+    interview_eligible,
+    timezones,
+    interviews,
+    interview_pagination,
 }: Props) {
     useFlashToast();
 
@@ -304,6 +314,15 @@ export default function EmployerApplicationShow({
 
                         {/* Status History Timeline */}
                         <StatusHistoryTimeline histories={status_histories} />
+
+                        {/* Interview Rounds */}
+                        <EmployerInterviews
+                            applicationId={application.id}
+                            interviewEligible={interview_eligible}
+                            timezones={timezones}
+                            interviews={interviews}
+                            pagination={interview_pagination}
+                        />
 
                         {/* Candidate Summary Card */}
                         <Card className="border-border">

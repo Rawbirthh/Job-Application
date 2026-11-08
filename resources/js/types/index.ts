@@ -6,3 +6,4 @@ export type * from './company';
 export type * from './job';
 export type * from './candidate';
 export type * from './notification';
+export type * from './interview';

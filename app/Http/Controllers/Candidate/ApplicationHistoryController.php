@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Candidate;
 
+use App\Enums\InterviewStatus;
+use App\Enums\JobApplicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Candidate\WithdrawApplicationRequest;
+use App\Models\Interview;
 use App\Models\JobApplication;
 use App\Models\JobApplicationStatusHistory;
 use App\Models\User;
 use App\Services\ApplicationStatusTransitionService;
 use App\Services\NotificationService;
+use DateTimeZone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -115,6 +119,52 @@ class ApplicationHistoryController extends Controller
         $job = $application->jobPosting;
         $company = $job->company;
 
+        $interviewPaginator = $application->interviews()
+            ->select([
+                'id',
+                'job_application_id',
+                'scheduled_at',
+                'duration_minutes',
+                'timezone',
+                'mode',
+                'location_details',
+                'candidate_instructions',
+                'status',
+                'responded_at',
+                'requested_scheduled_at',
+                'requested_timezone',
+                'response_note',
+                'cancelled_at',
+                'cancellation_reason',
+                'created_at',
+                'updated_at',
+            ])
+            ->latest('created_at')
+            ->paginate(10, ['*'], 'interview_page')
+            ->withQueryString();
+
+        $interviews = $interviewPaginator->getCollection()->map(fn (Interview $interview): array => [
+            'id' => $interview->id,
+            'status' => $interview->status->value,
+            'status_label' => $interview->status->label(),
+            'mode' => $interview->mode->value,
+            'mode_label' => $interview->mode->label(),
+            'scheduled_at' => $interview->scheduled_at->toIso8601String(),
+            'timezone' => $interview->timezone,
+            'duration_minutes' => $interview->duration_minutes,
+            'location_details' => $interview->location_details,
+            'candidate_instructions' => $interview->candidate_instructions,
+            'responded_at' => $interview->responded_at?->toIso8601String(),
+            'requested_scheduled_at' => $interview->requested_scheduled_at?->toIso8601String(),
+            'requested_timezone' => $interview->requested_timezone,
+            'response_note' => $interview->response_note,
+            'cancelled_at' => $interview->cancelled_at?->toIso8601String(),
+            'cancellation_reason' => $interview->cancellation_reason,
+            'updated_at' => $interview->updated_at?->toIso8601String(),
+            'can_respond' => $interview->status === InterviewStatus::Scheduled
+                && $application->status === JobApplicationStatus::InterviewScheduled,
+        ])->all();
+
         return Inertia::render('candidate/applications/show', [
             'application' => [
                 'id' => $application->id,
@@ -168,6 +218,16 @@ class ApplicationHistoryController extends Controller
                 'experience_level' => $job->experienceLevel ? ['name' => $job->experienceLevel->name] : null,
                 'pay_period' => $job->payPeriod ? ['name' => $job->payPeriod->name] : null,
             ],
+            'interviews' => $interviews,
+            'interview_pagination' => [
+                'current_page' => $interviewPaginator->currentPage(),
+                'last_page' => $interviewPaginator->lastPage(),
+                'per_page' => $interviewPaginator->perPage(),
+                'total' => $interviewPaginator->total(),
+                'prev_page_url' => $interviewPaginator->previousPageUrl(),
+                'next_page_url' => $interviewPaginator->nextPageUrl(),
+            ],
+            'timezones' => DateTimeZone::listIdentifiers(),
         ]);
     }
 

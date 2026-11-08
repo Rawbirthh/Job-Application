@@ -4,6 +4,7 @@ use App\Http\Controllers\Candidate\ApplicationHistoryController;
 use App\Http\Controllers\Candidate\CandidateDashboardController;
 use App\Http\Controllers\Candidate\CandidateProfileController;
 use App\Http\Controllers\Candidate\CandidateResumeController;
+use App\Http\Controllers\Candidate\InterviewController as CandidateInterviewController;
 use App\Http\Controllers\Candidate\JobApplicationController;
 use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\DashboardController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
 use App\Http\Controllers\Employer\EmployerJobApplicationController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
+use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\JobController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicJobController;
@@ -85,6 +87,17 @@ Route::middleware(['auth'])->group(function (): void {
                 ->name('applications.update-status');
             Route::get('applications/{application}/resume', [EmployerJobApplicationController::class, 'downloadResume'])
                 ->name('applications.resume.download');
+
+            // Feature 26: Interview scheduling
+            Route::post('applications/{application}/interviews', [EmployerInterviewController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('applications.interviews.store');
+            Route::put('interviews/{interview}', [EmployerInterviewController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('interviews.update');
+            Route::post('interviews/{interview}/cancel', [EmployerInterviewController::class, 'cancel'])
+                ->middleware(['throttle:20,1'])
+                ->name('interviews.cancel');
         });
     });
 
@@ -121,6 +134,11 @@ Route::middleware(['auth'])->group(function (): void {
         Route::post('applications/{application}/withdraw', [ApplicationHistoryController::class, 'withdraw'])
             ->middleware(['throttle:20,1'])
             ->name('applications.withdraw');
+
+        // Feature 26: Interview responses
+        Route::post('interviews/{interview}/respond', [CandidateInterviewController::class, 'respond'])
+            ->middleware(['throttle:20,1'])
+            ->name('interviews.respond');
     });
 });
 

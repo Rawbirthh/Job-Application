@@ -6,6 +6,7 @@ use App\Enums\JobApplicationStatus;
 use App\Enums\PermissionSlug;
 use App\Enums\RoleSlug;
 use App\Models\EmployerOnboardingRequest;
+use App\Models\Interview;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\User;
@@ -13,6 +14,11 @@ use App\Notifications\ApplicationStatusChangedNotification;
 use App\Notifications\ApplicationSubmittedNotification;
 use App\Notifications\ApplicationWithdrawnNotification;
 use App\Notifications\EmployerOnboardingSubmittedNotification;
+use App\Notifications\InterviewCancelledNotification;
+use App\Notifications\InterviewRescheduledNotification;
+use App\Notifications\InterviewRescheduleRequestedNotification;
+use App\Notifications\InterviewResponseNotification;
+use App\Notifications\InterviewScheduledNotification;
 use App\Notifications\JobModerationOutcomeNotification;
 use App\Notifications\JobSubmittedForReviewNotification;
 use App\Notifications\NewJobApplicationNotification;
@@ -114,6 +120,58 @@ class NotificationService
 
         foreach ($recipients as $recipient) {
             $this->notify($recipient, new EmployerOnboardingSubmittedNotification($applicant, $request));
+        }
+    }
+
+    public function interviewScheduled(Interview $interview): void
+    {
+        $interview->loadMissing(['jobApplication.user', 'jobApplication.jobPosting']);
+
+        $this->notify(
+            $interview->jobApplication->user,
+            new InterviewScheduledNotification($interview)
+        );
+    }
+
+    public function interviewRescheduled(Interview $interview): void
+    {
+        $interview->loadMissing(['jobApplication.user', 'jobApplication.jobPosting']);
+
+        $this->notify(
+            $interview->jobApplication->user,
+            new InterviewRescheduledNotification($interview)
+        );
+    }
+
+    public function interviewCancelled(Interview $interview, bool $applicationReverted): void
+    {
+        $interview->loadMissing(['jobApplication.user', 'jobApplication.jobPosting']);
+
+        $this->notify(
+            $interview->jobApplication->user,
+            new InterviewCancelledNotification($interview, $applicationReverted)
+        );
+    }
+
+    public function interviewRescheduleRequested(Interview $interview): void
+    {
+        $interview->loadMissing(['jobApplication.jobPosting.company.owner']);
+
+        $recipient = $interview->jobApplication->jobPosting->company?->owner;
+
+        if ($recipient instanceof User) {
+            $this->notify($recipient, new InterviewRescheduleRequestedNotification($interview));
+        }
+    }
+
+    public function interviewResponded(Interview $interview): void
+    {
+        $interview->loadMissing(['jobApplication.jobPosting.company.owner']);
+
+        $recipient = $interview->jobApplication->jobPosting->company?->owner;
+
+        if ($recipient instanceof User) {
+            $this->notify($recipient, new InterviewResponseNotification($interview));
         }
     }
 
