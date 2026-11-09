@@ -84,4 +84,4 @@
 - Feature 6–9 deferred delete protections (employment types, workplace arrangements, experience levels, pay periods, categories) are fully active via `restrictOnDelete` foreign key constraints on `job_postings`.
 - Screening bank questions and templates are owned per employer user; bank question deletion is blocked when referenced by any template or job (deactivate instead).
 - Company members are scoped per company; company-scoped roles never grant platform-admin permissions. Revoked members lose access immediately; last active owner cannot be removed/demoted.
-- Never store `.env` values, credentials, tokens, private keys, or personal data heres.
+- Never store `.env` values, credentials, tokens, private keys, or personal data here.
