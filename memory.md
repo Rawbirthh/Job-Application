@@ -24,17 +24,17 @@
 - Branch: `main` (Feature 29 working-tree changes not yet committed).
 - Spec: `docs/specs/feature-29-saved-searches-and-job-alerts.md` (status IMPLEMENTED).
 - Key files (Feature 29):
-  - Backend: `database/migrations/2026_11_11_000001_create_saved_searches_and_alerts_tables.php`, `app/Enums/AlertFrequency.php`, `app/Models/SavedSearch.php`, `app/Models/SavedSearchAlert.php`, `app/Services/JobSearchService.php`, `app/Policies/SavedSearchPolicy.php`, `app/Http/Controllers/Candidate/SavedSearchController.php`, `app/Http/Requests/Candidate/StoreSavedSearchRequest.php`, `app/Http/Requests/Candidate/UpdateSavedSearchRequest.php`, `app/Notifications/SavedSearchMatchedNotification.php`, `app/Console/Commands/DispatchSavedSearchAlertsCommand.php`, updates to `app/Models/User.php`, `app/Http/Controllers/PublicJobController.php`, `app/Services/NotificationService.php`, `routes/web.php`, `routes/console.php`, `README.md` (scheduler note).
-  - Frontend: `resources/js/types/saved-search.ts`, `resources/js/components/saved-search/save-search-dialog.tsx`, `resources/js/pages/candidate/saved-searches/index.tsx`, updates to `resources/js/pages/jobs/index.tsx` (save button + toast), `resources/js/lib/navigation.ts` (nav item), `resources/js/types/index.ts` (barrel).
-  - Tests: `tests/Feature/Candidate/SavedSearchTest.php` (12 tests), `tests/Feature/Candidate/SavedSearchAlertsTest.php` (9 tests).
+    - Backend: `database/migrations/2026_11_11_000001_create_saved_searches_and_alerts_tables.php`, `app/Enums/AlertFrequency.php`, `app/Models/SavedSearch.php`, `app/Models/SavedSearchAlert.php`, `app/Services/JobSearchService.php`, `app/Policies/SavedSearchPolicy.php`, `app/Http/Controllers/Candidate/SavedSearchController.php`, `app/Http/Requests/Candidate/StoreSavedSearchRequest.php`, `app/Http/Requests/Candidate/UpdateSavedSearchRequest.php`, `app/Notifications/SavedSearchMatchedNotification.php`, `app/Console/Commands/DispatchSavedSearchAlertsCommand.php`, updates to `app/Models/User.php`, `app/Http/Controllers/PublicJobController.php`, `app/Services/NotificationService.php`, `routes/web.php`, `routes/console.php`, `README.md` (scheduler note).
+    - Frontend: `resources/js/types/saved-search.ts`, `resources/js/components/saved-search/save-search-dialog.tsx`, `resources/js/pages/candidate/saved-searches/index.tsx`, updates to `resources/js/pages/jobs/index.tsx` (save button + toast), `resources/js/lib/navigation.ts` (nav item), `resources/js/types/index.ts` (barrel).
+    - Tests: `tests/Feature/Candidate/SavedSearchTest.php` (12 tests), `tests/Feature/Candidate/SavedSearchAlertsTest.php` (9 tests).
 - Tests/checks actually run for Feature 29:
-  - `php artisan test` — **517 passed, 3594 assertions** (full suite, no regressions).
-  - `php artisan test --filter=SavedSearch` — 21 passed (both test files).
-  - `vendor\bin\pint --test` — passed.
-  - `php vendor/bin/phpstan analyse --memory-limit=512M --no-progress` — passed, 0 errors.
-  - `npm run types:check` — passed.
-  - `npm run check` — passed.
-  - `npm run build` — passed.
+    - `php artisan test` — **517 passed, 3594 assertions** (full suite, no regressions).
+    - `php artisan test --filter=SavedSearch` — 21 passed (both test files).
+    - `vendor\bin\pint --test` — passed.
+    - `php vendor/bin/phpstan analyse --memory-limit=512M --no-progress` — passed, 0 errors.
+    - `npm run types:check` — passed.
+    - `npm run check` — passed.
+    - `npm run build` — passed.
 - Local testing notes (not bugs): CORS error when mixing `localhost` vs `127.0.0.1` — `APP_URL` and browser must use the same host; resolved by clearing config cache and using consistent host. UI card padding fixed on saved-searches page (`px-4` on `CardHeader`/`CardFooter`).
 
 ## Durable notes
