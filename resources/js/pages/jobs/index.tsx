@@ -21,6 +21,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { Auth } from '@/types';
+import { useFlashToast } from '@/hooks/use-flash-toast';
+import SaveSearchDialog from '@/components/saved-search/save-search-dialog';
 
 interface Job {
     id: number;
@@ -84,6 +86,10 @@ export default function PublicJobsIndex({
 }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const isJobSeeker = auth.user && auth.roles.includes('job_seeker');
+
+    useFlashToast();
+
+    const [saveSearchOpen, setSaveSearchOpen] = useState(false);
 
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(
@@ -385,16 +391,30 @@ export default function PublicJobsIndex({
                                         <SlidersHorizontal className="size-3.5" />
                                         <span>Filters applied</span>
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleReset}
-                                        className="h-8 px-2 text-xs"
-                                    >
-                                        <X className="mr-1 size-3.5" />
-                                        Reset all filters
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        {isJobSeeker && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSaveSearchOpen(true);
+                                                }}
+                                            >
+                                                <Search className="mr-1.5 size-3.5" />
+                                                Save this search
+                                            </Button>
+                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleReset}
+                                            className="h-8 px-2 text-xs"
+                                        >
+                                            <X className="mr-1 size-3.5" />
+                                            Reset all filters
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </form>
@@ -574,6 +594,18 @@ export default function PublicJobsIndex({
                             />
                         </div>
                     )}
+
+                    <SaveSearchDialog
+                        open={saveSearchOpen}
+                        onOpenChange={setSaveSearchOpen}
+                        mode="create"
+                        filterOptions={{
+                            categories,
+                            employmentTypes,
+                            workplaceArrangements,
+                            experienceLevels,
+                        }}
+                    />
                 </main>
             </div>
         </>

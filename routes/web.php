@@ -7,6 +7,7 @@ use App\Http\Controllers\Candidate\CandidateResumeController;
 use App\Http\Controllers\Candidate\InterviewController as CandidateInterviewController;
 use App\Http\Controllers\Candidate\JobApplicationController;
 use App\Http\Controllers\Candidate\SavedJobController;
+use App\Http\Controllers\Candidate\SavedSearchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\CompanyMemberController;
@@ -183,6 +184,17 @@ Route::middleware(['auth'])->group(function (): void {
             ->name('saved-jobs.store');
         Route::delete('saved-jobs/{jobPosting}', [SavedJobController::class, 'destroy'])
             ->name('saved-jobs.destroy');
+
+        Route::get('saved-searches', [SavedSearchController::class, 'index'])
+            ->name('saved-searches.index');
+        Route::post('saved-searches', [SavedSearchController::class, 'store'])
+            ->middleware(['throttle:20,1'])
+            ->name('saved-searches.store');
+        Route::put('saved-searches/{savedSearch}', [SavedSearchController::class, 'update'])
+            ->middleware(['throttle:20,1'])
+            ->name('saved-searches.update');
+        Route::delete('saved-searches/{savedSearch}', [SavedSearchController::class, 'destroy'])
+            ->name('saved-searches.destroy');
 
         Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])->name('applications.create');
         Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])

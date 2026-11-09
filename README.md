@@ -57,3 +57,12 @@ References: [Laravel 13 testing docs](https://laravel.com/framework/docs/13.x/te
 - `/review` — inspect current changes without editing them.
 - `/remember save` — save the key project/session context before switching sessions.
 - `/remember restore` — restore and verify saved context at the start of a clean session.
+
+## Task scheduling
+
+Feature 29 (saved searches and job alerts) registers two scheduled commands:
+
+- `saved-searches:dispatch-alerts daily` — daily at 07:05
+- `saved-searches:dispatch-alerts weekly` — Mondays at 07:15
+
+These commands require a scheduler runner in every environment: run `php artisan schedule:work` locally, or a cron entry `'* * * * *'` executing `php artisan schedule:run` in production. Without a runner, saved searches still work but never dispatch alerts — the saved-searches page shows "never" as the last alert. This is a graceful no-op.

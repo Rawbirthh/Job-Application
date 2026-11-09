@@ -10,6 +10,7 @@ use App\Models\EmployerOnboardingRequest;
 use App\Models\Interview;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\SavedSearch;
 use App\Models\User;
 use App\Notifications\ApplicationStatusChangedNotification;
 use App\Notifications\ApplicationSubmittedNotification;
@@ -26,6 +27,7 @@ use App\Notifications\InterviewScheduledNotification;
 use App\Notifications\JobModerationOutcomeNotification;
 use App\Notifications\JobSubmittedForReviewNotification;
 use App\Notifications\NewJobApplicationNotification;
+use App\Notifications\SavedSearchMatchedNotification;
 use App\Notifications\UserRegisteredNotification;
 use Illuminate\Support\Facades\Log;
 
@@ -192,6 +194,14 @@ class NotificationService
     public function companyMemberRevoked(User $member, Company $company): void
     {
         $this->notify($member, new CompanyMemberRevokedNotification($company));
+    }
+
+    /**
+     * @param  array<int, array{id: int, title: string, company: string|null}>  $jobs
+     */
+    public function savedSearchMatched(SavedSearch $search, array $jobs): void
+    {
+        $this->notify($search->user, new SavedSearchMatchedNotification($search, $jobs));
     }
 
     private function notify(User $notifiable, object $notification): void

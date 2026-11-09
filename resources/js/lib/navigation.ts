@@ -14,6 +14,7 @@ import {
     Bell,
     ClipboardList,
     ListChecks,
+    Search,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -44,6 +45,12 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Saved Jobs',
         href: '/candidate/saved-jobs',
         icon: Bookmark,
+        requiredRoles: ['job_seeker'],
+    },
+    {
+        title: 'Saved Searches',
+        href: '/candidate/saved-searches',
+        icon: Search,
         requiredRoles: ['job_seeker'],
     },
     {

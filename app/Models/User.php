@@ -114,6 +114,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasMany<SavedSearch, $this>
+     */
+    public function savedSearches(): HasMany
+    {
+        return $this->hasMany(SavedSearch::class);
+    }
+
+    /**
      * @return HasMany<ScreeningQuestion, $this>
      */
     public function screeningQuestions(): HasMany
