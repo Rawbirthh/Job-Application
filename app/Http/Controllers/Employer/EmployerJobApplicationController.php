@@ -11,6 +11,7 @@ use App\Models\Interview;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobApplicationStatusHistory;
+use App\Models\User;
 use App\Services\ApplicationStatusTransitionService;
 use App\Services\NotificationService;
 use DateTimeZone;
@@ -96,7 +97,7 @@ class EmployerJobApplicationController extends Controller
         $this->authorize('viewAsEmployer', $application);
 
         $application->load([
-            'jobPosting.company:id,name,slug,logo_path',
+            'jobPosting.company:id,name,slug,logo_path,owner_user_id',
             'user:id,name,email',
             'user.candidateProfile.experiences',
             'user.candidateProfile.educations',
@@ -108,6 +109,11 @@ class EmployerJobApplicationController extends Controller
         $job = $application->jobPosting;
         $user = $application->user;
         $profile = $user->candidateProfile;
+
+        $actor = request()->user();
+        $canManageApplicants = $job->company !== null
+            && $actor instanceof User
+            && $actor->hasCompanyPermission($job->company, 'applicants.manage');
 
         $interviewPaginator = $application->interviews()
             ->select([
@@ -154,7 +160,7 @@ class EmployerJobApplicationController extends Controller
             'cancelled_at' => $interview->cancelled_at?->toIso8601String(),
             'cancellation_reason' => $interview->cancellation_reason,
             'updated_at' => $interview->updated_at?->toIso8601String(),
-            'can_manage' => $interview->status->isActive(),
+            'can_manage' => $interview->status->isActive() && $canManageApplicants,
         ])->all();
 
         $screeningAnswers = $application->screeningAnswers
@@ -183,13 +189,15 @@ class EmployerJobApplicationController extends Controller
                     'size' => $application->candidateResume->size,
                 ] : null,
             ],
-            'allowed_transitions' => array_map(
-                fn (JobApplicationStatus $s): array => [
-                    'value' => $s->value,
-                    'label' => $s->label(),
-                ],
-                $application->status->allowedEmployerTransitions()
-            ),
+            'allowed_transitions' => $canManageApplicants
+                ? array_map(
+                    fn (JobApplicationStatus $s): array => [
+                        'value' => $s->value,
+                        'label' => $s->label(),
+                    ],
+                    $application->status->allowedEmployerTransitions()
+                )
+                : [],
             'status_histories' => $application->statusHistories->map(fn (JobApplicationStatusHistory $history): array => [
                 'id' => $history->id,
                 'from_status' => $history->from_status->value,
@@ -250,7 +258,9 @@ class EmployerJobApplicationController extends Controller
             'interview_eligible' => in_array($application->status, [
                 JobApplicationStatus::Shortlisted,
                 JobApplicationStatus::InterviewScheduled,
-            ], true),
+            ], true) && $canManageApplicants,
+            'can_update_status' => $canManageApplicants,
+            'can_schedule_interview' => $canManageApplicants,
             'timezones' => DateTimeZone::listIdentifiers(),
             'screening_answers' => $screeningAnswers,
         ]);

@@ -7,35 +7,33 @@ use App\Models\User;
 
 class CompanyPolicy
 {
-    /**
-     * Determine whether the actor may view any companies.
-     */
     public function viewAny(User $actor): bool
     {
         return $actor->isApprovedEmployer();
     }
 
-    /**
-     * Determine whether the actor may view the company.
-     */
     public function view(User $actor, Company $company): bool
     {
-        return $actor->isApprovedEmployer() && $actor->id === $company->owner_user_id;
+        return $actor->isApprovedEmployer() && $actor->companyRole($company) !== null;
     }
 
-    /**
-     * Determine whether the actor may create a company.
-     */
     public function create(User $actor): bool
     {
         return $actor->isApprovedEmployer();
     }
 
-    /**
-     * Determine whether the actor may update the company.
-     */
     public function update(User $actor, Company $company): bool
     {
-        return $actor->isApprovedEmployer() && $actor->id === $company->owner_user_id;
+        return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'company.update');
+    }
+
+    public function viewMembers(User $actor, Company $company): bool
+    {
+        return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'members.manage');
+    }
+
+    public function manageMembers(User $actor, Company $company): bool
+    {
+        return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'members.manage');
     }
 }

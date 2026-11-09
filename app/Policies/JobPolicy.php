@@ -3,44 +3,42 @@
 namespace App\Policies;
 
 use App\Enums\PermissionSlug;
+use App\Models\Company;
 use App\Models\Job;
 use App\Models\User;
 
 class JobPolicy
 {
-    /**
-     * Determine whether the actor may view any jobs for moderation.
-     */
     public function viewAny(User $actor): bool
     {
         return $actor->hasPermission(PermissionSlug::JobsModerate);
     }
 
-    /**
-     * Determine whether the actor may update the job.
-     */
+    public function create(User $actor, Company $company): bool
+    {
+        return $actor->isApprovedEmployer()
+            && $company->is_active
+            && $actor->hasCompanyPermission($company, 'jobs.create');
+    }
+
     public function update(User $actor, Job $job): bool
     {
         return $actor->isApprovedEmployer()
+            && $job->company !== null
             && $job->company->is_active
-            && $job->company->owner_user_id === $actor->id
+            && $actor->hasCompanyPermission($job->company, 'jobs.update')
             && in_array($job->status, ['draft', 'rejected', 'closed', 'published'], true);
     }
 
-    /**
-     * Determine whether the actor may submit the job for review.
-     */
     public function submit(User $actor, Job $job): bool
     {
         return $actor->isApprovedEmployer()
+            && $job->company !== null
             && $job->company->is_active
-            && $job->company->owner_user_id === $actor->id
+            && $actor->hasCompanyPermission($job->company, 'jobs.submit')
             && in_array($job->status, ['draft', 'rejected', 'closed'], true);
     }
 
-    /**
-     * Determine whether the actor may close the job.
-     */
     public function close(User $actor, Job $job): bool
     {
         if ($actor->hasPermission(PermissionSlug::JobsModerate) || $actor->hasPermission(PermissionSlug::AdminAccess)) {
@@ -48,14 +46,12 @@ class JobPolicy
         }
 
         return $actor->isApprovedEmployer()
+            && $job->company !== null
             && $job->company->is_active
-            && $job->company->owner_user_id === $actor->id
+            && $actor->hasCompanyPermission($job->company, 'jobs.close')
             && in_array($job->status, ['draft', 'rejected', 'pending_review', 'published'], true);
     }
 
-    /**
-     * Determine whether the actor may moderate jobs.
-     */
     public function moderate(User $actor, Job $job): bool
     {
         return $actor->hasPermission(PermissionSlug::JobsModerate);

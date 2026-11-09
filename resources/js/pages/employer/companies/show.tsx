@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Building2, Pencil } from 'lucide-react';
+import { ArrowLeft, Building2, Pencil, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +7,15 @@ import {
     edit as companiesEdit,
     index as companiesIndex,
 } from '@/routes/employer/companies';
+import { index as companyMembersIndex } from '@/routes/employer/companies/members';
 import type { CompanyShowProps } from '@/types';
 
-export default function EmployerCompanyShow({ company }: CompanyShowProps) {
+export default function EmployerCompanyShow({
+    company,
+    isOwner,
+    canManageMembers,
+}: CompanyShowProps) {
+    const canManageTeam = canManageMembers ?? isOwner ?? false;
     return (
         <>
             <Head title={company.name} />
@@ -62,12 +68,22 @@ export default function EmployerCompanyShow({ company }: CompanyShowProps) {
                                 Inactive
                             </Badge>
                         )}
-                        <Button asChild>
-                            <Link href={companiesEdit(company.id)}>
-                                <Pencil className="size-4" />
-                                Edit
-                            </Link>
-                        </Button>
+                        {(isOwner ?? true) && (
+                            <Button asChild>
+                                <Link href={companiesEdit(company.id)}>
+                                    <Pencil className="size-4" />
+                                    Edit
+                                </Link>
+                            </Button>
+                        )}
+                        {canManageTeam && (
+                            <Button variant="outline" asChild>
+                                <Link href={companyMembersIndex(company.id)}>
+                                    <Users className="size-4" />
+                                    Manage team
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 

@@ -140,6 +140,17 @@ class Job extends Model
     }
 
     /**
+     * Scope a query to jobs whose company is managed by the given user.
+     *
+     * @param  Builder<Job>  $query
+     * @return Builder<Job>
+     */
+    public function scopeForManagingUser(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('company', fn (Builder $q) => $q->forManagingUser($user));
+    }
+
+    /**
      * Scope a query to only draft jobs.
      *
      * @param  Builder<Job>  $query

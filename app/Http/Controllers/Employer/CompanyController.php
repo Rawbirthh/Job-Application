@@ -23,7 +23,7 @@ class CompanyController extends Controller
         $user = request()->user();
 
         $companies = Company::query()
-            ->forOwner($user)
+            ->forManagingUser($user)
             ->select(['id', 'name', 'slug', 'is_active', 'logo_path', 'created_at', 'updated_at'])
             ->orderBy('name')
             ->orderBy('id')
@@ -90,9 +90,13 @@ class CompanyController extends Controller
     {
         $this->authorize('view', $company);
 
+        /** @var User $user */
+        $user = request()->user();
+
         return Inertia::render('employer/companies/show', [
             'company' => $this->companyPayload($company),
-            'isOwner' => true,
+            'isOwner' => (int) $company->owner_user_id === (int) $user->id,
+            'canManageMembers' => $user->hasCompanyPermission($company, 'members.manage'),
         ]);
     }
 

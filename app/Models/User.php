@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CompanyMemberRole;
+use App\Enums\CompanyMemberStatus;
 use App\Enums\EmployerStatus;
 use App\Enums\RoleSlug;
 use App\Models\Concerns\HasRolesAndPermissions;
@@ -96,6 +98,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasMany<CompanyMember, $this>
+     */
+    public function companyMemberships(): HasMany
+    {
+        return $this->hasMany(CompanyMember::class, 'user_id');
+    }
+
+    /**
      * @return HasMany<SavedJob, $this>
      */
     public function savedJobs(): HasMany
@@ -126,6 +136,49 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->status === EmployerStatus::Approved
             && $this->hasRole(RoleSlug::Employer);
+    }
+
+    /**
+     * Resolve the user's company-scoped role for the given company.
+     */
+    public function companyRole(?Company $company): ?string
+    {
+        if ($company === null) {
+            return null;
+        }
+
+        if ((int) $company->owner_user_id === (int) $this->id) {
+            return CompanyMemberRole::Owner->value;
+        }
+
+        $membership = $this->companyMemberships()
+            ->where('company_id', $company->id)
+            ->where('status', CompanyMemberStatus::Active->value)
+            ->first(['company_role']);
+
+        $role = $membership?->company_role;
+
+        return $role?->value;
+    }
+
+    /**
+     * Determine whether the user has the given company-scoped permission.
+     */
+    public function hasCompanyPermission(Company $company, string $permission): bool
+    {
+        $role = $this->companyRole($company);
+
+        if ($role === null) {
+            return false;
+        }
+
+        $enum = CompanyMemberRole::tryFrom($role);
+
+        if ($enum === null) {
+            return false;
+        }
+
+        return in_array($permission, $enum->permissions(), true);
     }
 
     /**

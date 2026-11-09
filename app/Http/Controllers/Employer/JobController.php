@@ -28,7 +28,7 @@ class JobController extends Controller
         $user = request()->user();
 
         $companies = Company::query()
-            ->forOwner($user)
+            ->forManagingUser($user)
             ->select(['id', 'name', 'slug'])
             ->orderBy('name')
             ->get();
@@ -38,7 +38,7 @@ class JobController extends Controller
         $search = request()->string('search')->toString();
 
         $query = Job::query()
-            ->forOwner($user)
+            ->forManagingUser($user)
             ->with([
                 'company:id,name,slug',
                 'category:id,name,slug',
@@ -83,7 +83,7 @@ class JobController extends Controller
         $user = request()->user();
 
         $companies = Company::query()
-            ->forOwner($user)
+            ->forManagingUser($user)
             ->select(['id', 'name', 'slug'])
             ->orderBy('name')
             ->get()
@@ -105,18 +105,18 @@ class JobController extends Controller
 
     public function store(StoreJobRequest $request): RedirectResponse
     {
-        $this->authorize('create', Company::class);
-
         /** @var User $user */
         $user = $request->user();
 
         $validated = $request->jobData();
 
-        // Resolve company through owned scope to prevent IDOR
+        // Resolve company through managed scope to prevent IDOR
         /** @var Company $company */
         $company = Company::query()
-            ->forOwner($user)
+            ->forManagingUser($user)
             ->findOrFail($validated['company_id']);
+
+        $this->authorize('create', [Job::class, $company]);
 
         $job = new Job($validated);
         $job->company_id = $company->id;
@@ -148,7 +148,7 @@ class JobController extends Controller
         $user = request()->user();
 
         $companies = Company::query()
-            ->forOwner($user)
+            ->forManagingUser($user)
             ->select(['id', 'name', 'slug'])
             ->orderBy('name')
             ->get()

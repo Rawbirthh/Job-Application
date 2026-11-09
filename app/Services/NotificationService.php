@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\JobApplicationStatus;
 use App\Enums\PermissionSlug;
 use App\Enums\RoleSlug;
+use App\Models\Company;
 use App\Models\EmployerOnboardingRequest;
 use App\Models\Interview;
 use App\Models\Job;
@@ -13,6 +14,9 @@ use App\Models\User;
 use App\Notifications\ApplicationStatusChangedNotification;
 use App\Notifications\ApplicationSubmittedNotification;
 use App\Notifications\ApplicationWithdrawnNotification;
+use App\Notifications\CompanyMemberAddedNotification;
+use App\Notifications\CompanyMemberRevokedNotification;
+use App\Notifications\CompanyMemberRoleChangedNotification;
 use App\Notifications\EmployerOnboardingSubmittedNotification;
 use App\Notifications\InterviewCancelledNotification;
 use App\Notifications\InterviewRescheduledNotification;
@@ -173,6 +177,21 @@ class NotificationService
         if ($recipient instanceof User) {
             $this->notify($recipient, new InterviewResponseNotification($interview));
         }
+    }
+
+    public function companyMemberAdded(User $member, Company $company, string $role): void
+    {
+        $this->notify($member, new CompanyMemberAddedNotification($company, $role));
+    }
+
+    public function companyMemberRoleChanged(User $member, Company $company, string $oldRole, string $newRole): void
+    {
+        $this->notify($member, new CompanyMemberRoleChangedNotification($company, $oldRole, $newRole));
+    }
+
+    public function companyMemberRevoked(User $member, Company $company): void
+    {
+        $this->notify($member, new CompanyMemberRevokedNotification($company));
     }
 
     private function notify(User $notifiable, object $notification): void

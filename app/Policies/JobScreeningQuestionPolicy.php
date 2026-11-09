@@ -12,7 +12,7 @@ class JobScreeningQuestionPolicy
     {
         return $actor->isApprovedEmployer()
             && $job->company !== null
-            && $job->company->owner_user_id === $actor->id
+            && $actor->hasCompanyPermission($job->company, 'screening.manage')
             && in_array($job->status, ['draft', 'rejected', 'pending_review', 'published'], true);
     }
 

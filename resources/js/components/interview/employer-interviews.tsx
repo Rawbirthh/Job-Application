@@ -15,6 +15,7 @@ import { ScheduleInterviewDialog } from './schedule-interview-dialog';
 type Props = {
     applicationId: number;
     interviewEligible: boolean;
+    canScheduleInterview?: boolean;
     timezones: string[];
     interviews: EmployerInterviewRound[];
     pagination: InterviewPagination;
@@ -23,10 +24,12 @@ type Props = {
 export function EmployerInterviews({
     applicationId,
     interviewEligible,
+    canScheduleInterview = true,
     timezones,
     interviews,
     pagination,
 }: Props) {
+    const canSchedule = interviewEligible && canScheduleInterview;
     const hasInterviews = interviews.length > 0;
 
     return (
@@ -43,7 +46,7 @@ export function EmployerInterviews({
                     </CardDescription>
                 </div>
 
-                {interviewEligible && (
+                {canSchedule && (
                     <ScheduleInterviewDialog
                         applicationId={applicationId}
                         timezones={timezones}
@@ -66,11 +69,11 @@ export function EmployerInterviews({
                             No interview rounds scheduled yet.
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            {interviewEligible
+                            {canSchedule
                                 ? 'Use “Schedule interview” to set up the first round for this candidate.'
                                 : 'Interviews can be scheduled once the application is shortlisted or already in interview scheduling.'}
                         </p>
-                        {interviewEligible && (
+                        {canSchedule && (
                             <ScheduleInterviewDialog
                                 applicationId={applicationId}
                                 timezones={timezones}
@@ -87,7 +90,7 @@ export function EmployerInterviews({
                     </div>
                 ) : (
                     <>
-                        {!interviewEligible && (
+                        {(!interviewEligible || !canSchedule) && (
                             <p className="rounded-md border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
                                 New rounds cannot be scheduled while the
                                 application is outside the shortlisted or

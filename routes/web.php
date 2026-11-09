@@ -9,6 +9,7 @@ use App\Http\Controllers\Candidate\JobApplicationController;
 use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\CompanyController;
+use App\Http\Controllers\Employer\CompanyMemberController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
 use App\Http\Controllers\Employer\EmployerJobApplicationController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
@@ -60,6 +61,17 @@ Route::middleware(['auth'])->group(function (): void {
             Route::get('{company}', [CompanyController::class, 'show'])->name('show');
             Route::get('{company}/edit', [CompanyController::class, 'edit'])->name('edit');
             Route::put('{company}', [CompanyController::class, 'update'])->name('update');
+
+            Route::get('{company}/members', [CompanyMemberController::class, 'index'])->name('members.index');
+            Route::post('{company}/members', [CompanyMemberController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('members.store');
+            Route::patch('{company}/members/{member}', [CompanyMemberController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('members.update');
+            Route::delete('{company}/members/{member}', [CompanyMemberController::class, 'destroy'])
+                ->middleware(['throttle:20,1'])
+                ->name('members.destroy');
         });
 
         Route::prefix('jobs')->name('jobs.')->middleware(['role:employer', 'employer.approved'])->group(function (): void {

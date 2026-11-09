@@ -45,5 +45,29 @@ export type CompanyIndexProps = {
     canCreate: boolean;
 };
 
-export type CompanyShowProps = { company: Company; isOwner?: boolean };
+export type CompanyMemberRole = 'owner' | 'recruiter' | 'reviewer';
+export type CompanyMemberStatus = 'active' | 'pending' | 'revoked';
+
+export type CompanyMember = {
+    id: number;
+    user_id: number;
+    name: string | null;
+    email: string | null;
+    company_role: CompanyMemberRole;
+    status: CompanyMemberStatus;
+    created_at: string | null;
+};
+
+export type CompanyMembersIndexProps = {
+    company: Pick<Company, 'id' | 'name'>;
+    members: PaginatedData<CompanyMember>;
+    canManage: boolean;
+    roles: CompanyMemberRole[];
+};
+
+export type CompanyShowProps = {
+    company: Company;
+    isOwner?: boolean;
+    canManageMembers?: boolean;
+};
 export type CompanyEditProps = { company: Company };

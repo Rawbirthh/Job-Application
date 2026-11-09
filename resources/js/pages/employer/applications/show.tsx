@@ -96,6 +96,8 @@ interface Props {
         } | null;
     };
     interview_eligible: boolean;
+    can_update_status?: boolean;
+    can_schedule_interview?: boolean;
     timezones: string[];
     interviews: EmployerInterviewRound[];
     interview_pagination: InterviewPagination;
@@ -109,6 +111,8 @@ export default function EmployerApplicationShow({
     candidate,
     job,
     interview_eligible,
+    can_update_status = true,
+    can_schedule_interview = true,
     timezones,
     interviews,
     interview_pagination,
@@ -241,7 +245,8 @@ export default function EmployerApplicationShow({
                     {/* Main Content Area */}
                     <div className="space-y-6 lg:col-span-2">
                         {/* Status Transition Form */}
-                        {allowed_transitions.length > 0 && (
+                        {(allowed_transitions.length > 0 ||
+                            !can_update_status) && (
                             <Card className="border-border">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-lg">
@@ -262,6 +267,7 @@ export default function EmployerApplicationShow({
                                                 onValueChange={(value) =>
                                                     setData('new_status', value)
                                                 }
+                                                disabled={!can_update_status}
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select new status" />
@@ -298,6 +304,7 @@ export default function EmployerApplicationShow({
                                                     )
                                                 }
                                                 placeholder="Enter reason for status change"
+                                                disabled={!can_update_status}
                                             />
                                             <InputError
                                                 message={errors.reason}
@@ -307,7 +314,9 @@ export default function EmployerApplicationShow({
                                         <Button
                                             type="submit"
                                             disabled={
-                                                processing || !data.new_status
+                                                processing ||
+                                                !data.new_status ||
+                                                !can_update_status
                                             }
                                         >
                                             {processing
@@ -332,6 +341,7 @@ export default function EmployerApplicationShow({
                         <EmployerInterviews
                             applicationId={application.id}
                             interviewEligible={interview_eligible}
+                            canScheduleInterview={can_schedule_interview}
                             timezones={timezones}
                             interviews={interviews}
                             pagination={interview_pagination}

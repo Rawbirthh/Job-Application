@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Company extends Model
@@ -42,6 +43,22 @@ class Company extends Model
     }
 
     /**
+     * @return HasMany<CompanyMember, $this>
+     */
+    public function members(): HasMany
+    {
+        return $this->hasMany(CompanyMember::class);
+    }
+
+    /**
+     * @return HasMany<CompanyMember, $this>
+     */
+    public function activeMembers(): HasMany
+    {
+        return $this->hasMany(CompanyMember::class)->where('status', 'active');
+    }
+
+    /**
      * Scope a query to companies owned by the given user.
      *
      * @param  Builder<Company>  $query
@@ -50,6 +67,23 @@ class Company extends Model
     public function scopeForOwner(Builder $query, User $owner): Builder
     {
         return $query->where('owner_user_id', $owner->id);
+    }
+
+    /**
+     * Scope a query to companies managed by the given user (owned or active member).
+     *
+     * @param  Builder<Company>  $query
+     * @return Builder<Company>
+     */
+    public function scopeForManagingUser(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $query) use ($user): void {
+            $query->where('owner_user_id', $user->id)
+                ->orWhereHas('members', function (Builder $query) use ($user): void {
+                    $query->where('user_id', $user->id)
+                        ->where('status', 'active');
+                });
+        });
     }
 
     /**
