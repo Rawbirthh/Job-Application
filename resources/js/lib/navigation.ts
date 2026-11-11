@@ -13,6 +13,7 @@ import {
     FileText,
     Bell,
     ClipboardList,
+    Flag,
     ListChecks,
     Search,
     type LucideIcon,
@@ -153,6 +154,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.jobs.index(),
         icon: Briefcase,
         requiredPermissions: ['admin.access', 'jobs.moderate'],
+    },
+    {
+        title: 'Reports',
+        href: admin.reports.index(),
+        icon: Flag,
+        requiredPermissions: ['admin.access', 'reports.moderate'],
     },
 ];
 

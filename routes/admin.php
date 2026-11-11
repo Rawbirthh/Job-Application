@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\JobCategoryController;
 use App\Http\Controllers\Admin\JobModerationController;
 use App\Http\Controllers\Admin\PayPeriodController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SalaryBandController;
 use App\Http\Controllers\Admin\UserRoleController;
@@ -171,5 +172,28 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
         Route::post('{job}/approve', [JobModerationController::class, 'approve'])->name('approve');
         Route::post('{job}/reject', [JobModerationController::class, 'reject'])->name('reject');
         Route::post('{job}/close', [JobModerationController::class, 'close'])->name('close');
+    });
+
+    // Report moderation
+    Route::prefix('reports')->name('reports.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [ReportController::class, 'index'])
+            ->middleware(['permission:reports.moderate'])
+            ->name('index');
+
+        Route::get('{report}', [ReportController::class, 'show'])
+            ->middleware(['permission:reports.moderate'])
+            ->name('show');
+
+        Route::post('{report}/investigate', [ReportController::class, 'investigate'])
+            ->middleware(['permission:reports.moderate'])
+            ->name('investigate');
+
+        Route::post('{report}/resolve', [ReportController::class, 'resolve'])
+            ->middleware(['permission:reports.moderate'])
+            ->name('resolve');
+
+        Route::post('{report}/dismiss', [ReportController::class, 'dismiss'])
+            ->middleware(['permission:reports.moderate'])
+            ->name('dismiss');
     });
 });

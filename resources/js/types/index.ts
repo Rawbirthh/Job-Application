@@ -9,3 +9,4 @@ export type * from './notification';
 export type * from './interview';
 export type * from './screening';
 export type * from './saved-search';
+export type * from './report';

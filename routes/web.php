@@ -21,6 +21,7 @@ use App\Http\Controllers\Employer\ScreeningQuestionController;
 use App\Http\Controllers\Employer\ScreeningTemplateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicJobController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'home')->name('home');
@@ -38,6 +39,10 @@ Route::middleware(['auth'])->group(function (): void {
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
         ->middleware(['throttle:30,1'])
         ->name('notifications.read');
+
+    Route::post('reports', [ReportController::class, 'store'])
+        ->middleware(['throttle:10,1'])
+        ->name('reports.store');
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 

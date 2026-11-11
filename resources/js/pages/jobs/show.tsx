@@ -20,6 +20,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import ReportDialog from '@/components/report/report-dialog';
 import type { Auth } from '@/types';
 
 interface JobDetail {
@@ -114,43 +115,49 @@ export default function PublicJobShow({ job }: Props) {
                             </Link>
                         </Button>
 
-                        {isJobSeeker && (
-                            <Button
-                                variant={job.is_saved ? 'secondary' : 'outline'}
-                                size="sm"
-                                onClick={() => {
-                                    if (job.is_saved) {
-                                        router.delete(
-                                            `/candidate/saved-jobs/${job.id}`,
-                                            {
-                                                preserveScroll: true,
-                                                onSuccess: () => {
-                                                    // Assuming a state-based update would be handled by props
-                                                    // or full page reload by inertia on success for simplicity
-                                                    router.reload();
-                                                },
-                                            },
-                                        );
-                                    } else {
-                                        router.post(
-                                            '/candidate/saved-jobs',
-                                            { job_posting_id: job.id },
-                                            {
-                                                preserveScroll: true,
-                                                onSuccess: () => {
-                                                    router.reload();
-                                                },
-                                            },
-                                        );
+                        <div className="flex items-center gap-2">
+                            {isJobSeeker && (
+                                <Button
+                                    variant={
+                                        job.is_saved ? 'secondary' : 'outline'
                                     }
-                                }}
-                            >
-                                <Bookmark
-                                    className={`mr-2 size-4 ${job.is_saved ? 'fill-current' : ''}`}
-                                />
-                                {job.is_saved ? 'Saved' : 'Save Job'}
-                            </Button>
-                        )}
+                                    size="sm"
+                                    onClick={() => {
+                                        if (job.is_saved) {
+                                            router.delete(
+                                                `/candidate/saved-jobs/${job.id}`,
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () => {
+                                                        // Assuming a state-based update would be handled by props
+                                                        // or full page reload by inertia on success for simplicity
+                                                        router.reload();
+                                                    },
+                                                },
+                                            );
+                                        } else {
+                                            router.post(
+                                                '/candidate/saved-jobs',
+                                                { job_posting_id: job.id },
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () => {
+                                                        router.reload();
+                                                    },
+                                                },
+                                            );
+                                        }
+                                    }}
+                                >
+                                    <Bookmark
+                                        className={`mr-2 size-4 ${job.is_saved ? 'fill-current' : ''}`}
+                                    />
+                                    {job.is_saved ? 'Saved' : 'Save Job'}
+                                </Button>
+                            )}
+
+                            <ReportDialog job={job} />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

@@ -10,6 +10,7 @@ use App\Models\EmployerOnboardingRequest;
 use App\Models\Interview;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\Report;
 use App\Models\SavedSearch;
 use App\Models\User;
 use App\Notifications\ApplicationStatusChangedNotification;
@@ -27,6 +28,8 @@ use App\Notifications\InterviewScheduledNotification;
 use App\Notifications\JobModerationOutcomeNotification;
 use App\Notifications\JobSubmittedForReviewNotification;
 use App\Notifications\NewJobApplicationNotification;
+use App\Notifications\ReportOutcomeNotification;
+use App\Notifications\ReportSubmittedNotification;
 use App\Notifications\SavedSearchMatchedNotification;
 use App\Notifications\UserRegisteredNotification;
 use Illuminate\Support\Facades\Log;
@@ -97,6 +100,31 @@ class NotificationService
         foreach ($recipients as $recipient) {
             $this->notify($recipient, new JobSubmittedForReviewNotification($job));
         }
+    }
+
+    public function reportSubmitted(Report $report): void
+    {
+        $recipients = User::query()
+            ->whereHas('roles.permissions', function ($query): void {
+                $query->where('permissions.slug', PermissionSlug::AdminAccess->value);
+            })
+            ->whereHas('roles.permissions', function ($query): void {
+                $query->where('permissions.slug', PermissionSlug::ReportsModerate->value);
+            })
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            $this->notify($recipient, new ReportSubmittedNotification($report));
+        }
+    }
+
+    public function reportOutcome(Report $report): void
+    {
+        $report->loadMissing('reporter');
+
+        $recipient = $report->reporter;
+
+        $this->notify($recipient, new ReportOutcomeNotification($report, $report->resolution_message));
     }
 
     public function userRegistered(User $user): void
