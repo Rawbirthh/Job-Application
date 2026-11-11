@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AuditAction;
 use App\Enums\ReportReason;
 use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
@@ -9,6 +10,7 @@ use App\Http\Requests\Admin\DismissReportRequest;
 use App\Http\Requests\Admin\ResolveReportRequest;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,10 @@ use Inertia\Response;
 
 class ReportController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Report::class);
@@ -167,8 +173,16 @@ class ReportController extends Controller
             return back()->with('error', __('This report is already under investigation.'));
         }
 
-        $report->status = ReportStatus::Investigating;
-        $report->save();
+        DB::transaction(function () use ($report): void {
+            $previousStatus = $report->status->value;
+
+            $report->status = ReportStatus::Investigating;
+            $report->save();
+
+            $this->auditLogService->record(AuditAction::ReportInvestigated, $report, [
+                'previous_status' => $previousStatus,
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -190,6 +204,8 @@ class ReportController extends Controller
         $user = $request->user();
 
         $report = DB::transaction(function () use ($request, $report, $user): Report {
+            $previousStatus = $report->status->value;
+
             $report->status = ReportStatus::Resolved;
             $report->resolution_action = $request->validated('resolution_action');
             $report->resolution_message = $request->validated('resolution_message');
@@ -198,6 +214,11 @@ class ReportController extends Controller
             $report->resolved_at = now();
             $report->open_marker = null;
             $report->save();
+
+            $this->auditLogService->record(AuditAction::ReportResolved, $report, [
+                'previous_status' => $previousStatus,
+                'resolution_action' => $request->validated('resolution_action'),
+            ]);
 
             return $report;
         });
@@ -224,12 +245,18 @@ class ReportController extends Controller
         $user = $request->user();
 
         $report = DB::transaction(function () use ($request, $report, $user): Report {
+            $previousStatus = $report->status->value;
+
             $report->status = ReportStatus::Dismissed;
             $report->internal_note = $request->validated('internal_note');
             $report->resolved_by_id = $user->id;
             $report->resolved_at = now();
             $report->open_marker = null;
             $report->save();
+
+            $this->auditLogService->record(AuditAction::ReportDismissed, $report, [
+                'previous_status' => $previousStatus,
+            ]);
 
             return $report;
         });

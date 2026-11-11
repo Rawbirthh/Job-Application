@@ -2,20 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AuditAction;
 use App\Enums\PermissionSlug;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePermissionRequest;
 use App\Http\Requests\Admin\UpdatePermissionRequest;
 use App\Models\Permission;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PermissionController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display the paginated permissions list.
      */
@@ -69,7 +76,13 @@ class PermissionController extends Controller
     {
         $this->authorize('create', Permission::class);
 
-        Permission::create($request->permissionData());
+        DB::transaction(function () use ($request): void {
+            $permission = Permission::create($request->permissionData());
+
+            $this->auditLogService->record(AuditAction::PermissionCreated, $permission, [
+                'slug' => $permission->slug,
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -109,7 +122,13 @@ class PermissionController extends Controller
 
         $this->authorize('update', $permission);
 
-        $permission->update($request->permissionData());
+        DB::transaction(function () use ($permission, $request): void {
+            $permission->update($request->permissionData());
+
+            $this->auditLogService->record(AuditAction::PermissionUpdated, $permission, [
+                'slug' => $permission->slug,
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -128,10 +147,16 @@ class PermissionController extends Controller
 
         $this->authorize('delete', $permission);
 
-        // Detach from all roles before deletion
-        $permission->roles()->detach();
+        DB::transaction(function () use ($permission): void {
+            // Detach from all roles before deletion
+            $permission->roles()->detach();
 
-        $permission->delete();
+            $permission->delete();
+
+            $this->auditLogService->record(AuditAction::PermissionDeleted, $permission, [
+                'slug' => $permission->slug,
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',

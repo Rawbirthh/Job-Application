@@ -16,6 +16,7 @@ import {
     Flag,
     ListChecks,
     Search,
+    ScrollText,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -160,6 +161,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.reports.index(),
         icon: Flag,
         requiredPermissions: ['admin.access', 'reports.moderate'],
+    },
+    {
+        title: 'Audit Log',
+        href: admin.auditLogs.index(),
+        icon: ScrollText,
+        requiredPermissions: ['admin.access', 'audit_logs.view'],
     },
 ];
 

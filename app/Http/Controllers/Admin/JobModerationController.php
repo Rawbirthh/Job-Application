@@ -2,17 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AuditAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectJobRequest;
 use App\Models\Job;
+use App\Services\Audit\AuditLogService;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class JobModerationController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Job::class);
@@ -115,9 +122,17 @@ class JobModerationController extends Controller
             return back()->with('error', __('Only jobs pending review can be approved.'));
         }
 
-        $job->status = 'published';
-        $job->rejection_reason = null;
-        $job->save();
+        DB::transaction(function () use ($job): void {
+            $previousStatus = $job->status;
+
+            $job->status = 'published';
+            $job->rejection_reason = null;
+            $job->save();
+
+            $this->auditLogService->record(AuditAction::JobApproved, $job, [
+                'previous_status' => $previousStatus,
+            ]);
+        });
 
         $notificationService->jobModerationOutcome($job, true);
 
@@ -139,9 +154,18 @@ class JobModerationController extends Controller
 
         $reason = $request->validated('rejection_reason');
 
-        $job->status = 'rejected';
-        $job->rejection_reason = $reason;
-        $job->save();
+        DB::transaction(function () use ($job, $reason): void {
+            $previousStatus = $job->status;
+
+            $job->status = 'rejected';
+            $job->rejection_reason = $reason;
+            $job->save();
+
+            $this->auditLogService->record(AuditAction::JobRejected, $job, [
+                'previous_status' => $previousStatus,
+                'rejection_reason' => $reason,
+            ]);
+        });
 
         $notificationService->jobModerationOutcome($job, false, $reason);
 
@@ -157,8 +181,16 @@ class JobModerationController extends Controller
     {
         $this->authorize('close', $job);
 
-        $job->status = 'closed';
-        $job->save();
+        DB::transaction(function () use ($job): void {
+            $previousStatus = $job->status;
+
+            $job->status = 'closed';
+            $job->save();
+
+            $this->auditLogService->record(AuditAction::JobClosed, $job, [
+                'previous_status' => $previousStatus,
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',

@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AuditAction;
 use App\Enums\PermissionSlug;
 use App\Exceptions\LastAdministratorException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRolesRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\Authorization\RoleAssignmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,6 +23,7 @@ class UserRoleController extends Controller
 {
     public function __construct(
         private readonly RoleAssignmentService $roleAssignmentService,
+        private readonly AuditLogService $auditLogService,
     ) {}
 
     /**
@@ -101,15 +105,28 @@ class UserRoleController extends Controller
 
         $this->authorize('updateRoles', $target);
 
+        $actor = $request->user();
+
         try {
-            $this->roleAssignmentService->syncRoles($target, $request->roleIds());
+            // The outer transaction makes the role sync and its audit entry atomic;
+            // the service opens a nested transaction (savepoint) of its own.
+            DB::transaction(function () use ($target, $request, $actor): void {
+                $rolesBefore = $target->roleSlugs();
+
+                $this->roleAssignmentService->syncRoles($target, $request->roleIds());
+
+                $rolesAfter = $target->roleSlugs();
+
+                $this->auditLogService->record(AuditAction::UserRolesUpdated, $target, [
+                    'roles_added' => array_values(array_diff($rolesAfter, $rolesBefore)),
+                    'roles_removed' => array_values(array_diff($rolesBefore, $rolesAfter)),
+                ], $actor instanceof User ? $actor : null);
+            });
         } catch (LastAdministratorException) {
             throw ValidationException::withMessages([
                 'roles' => __('At least one platform administrator must remain.'),
             ]);
         }
-
-        $actor = $request->user();
 
         // The service clears the target instance; the authenticated actor can be a
         // separate instance when the actor updates their own roles.

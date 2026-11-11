@@ -2,10 +2,12 @@
 
 namespace App\Services\Employer;
 
+use App\Enums\AuditAction;
 use App\Enums\EmployerStatus;
 use App\Enums\RoleSlug;
 use App\Models\EmployerOnboardingRequest;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\Authorization\RoleAssignmentService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +16,7 @@ class EmployerOnboardingService
 {
     public function __construct(
         private readonly RoleAssignmentService $roleAssignmentService,
+        private readonly AuditLogService $auditLogService,
     ) {}
 
     /**
@@ -63,6 +66,8 @@ class EmployerOnboardingService
                 ]);
             }
 
+            $previousStatus = $locked->status->value;
+
             $locked->status = EmployerStatus::Approved;
             $locked->suspension_reason = null;
             $locked->save();
@@ -80,6 +85,11 @@ class EmployerOnboardingService
             }
 
             $this->roleAssignmentService->assignRoleBySlug($locked, RoleSlug::Employer);
+
+            $this->auditLogService->record(AuditAction::EmployerApproved, $locked, [
+                'previous_status' => $previousStatus,
+                'granted_role' => RoleSlug::Employer->value,
+            ], $admin);
         });
     }
 
@@ -104,6 +114,8 @@ class EmployerOnboardingService
                 ]);
             }
 
+            $previousStatus = $locked->status->value;
+
             $locked->status = EmployerStatus::Rejected;
             $locked->suspension_reason = null;
             $locked->save();
@@ -113,12 +125,17 @@ class EmployerOnboardingService
                 'reviewed_by_id' => $admin->id,
                 'review_note' => $reason,
             ]);
+
+            $this->auditLogService->record(AuditAction::EmployerRejected, $locked, [
+                'previous_status' => $previousStatus,
+                'reason' => $reason,
+            ], $admin);
         });
     }
 
     public function suspend(User $admin, User $applicant, string $reason): void
     {
-        DB::transaction(function () use ($applicant, $reason): void {
+        DB::transaction(function () use ($admin, $applicant, $reason): void {
             $locked = $this->lockApplicant($applicant);
 
             if ($locked->status !== EmployerStatus::Approved) {
@@ -127,15 +144,22 @@ class EmployerOnboardingService
                 ]);
             }
 
+            $previousStatus = $locked->status->value;
+
             $locked->status = EmployerStatus::Suspended;
             $locked->suspension_reason = $reason;
             $locked->save();
+
+            $this->auditLogService->record(AuditAction::EmployerSuspended, $locked, [
+                'previous_status' => $previousStatus,
+                'reason' => $reason,
+            ], $admin);
         });
     }
 
     public function reactivate(User $admin, User $applicant): void
     {
-        DB::transaction(function () use ($applicant): void {
+        DB::transaction(function () use ($admin, $applicant): void {
             $locked = $this->lockApplicant($applicant);
 
             if ($locked->status !== EmployerStatus::Suspended) {
@@ -144,11 +168,17 @@ class EmployerOnboardingService
                 ]);
             }
 
+            $previousStatus = $locked->status->value;
+
             $locked->status = EmployerStatus::Approved;
             $locked->suspension_reason = null;
             $locked->save();
 
             $this->roleAssignmentService->assignRoleBySlug($locked, RoleSlug::Employer);
+
+            $this->auditLogService->record(AuditAction::EmployerReactivated, $locked, [
+                'previous_status' => $previousStatus,
+            ], $admin);
         });
     }
 

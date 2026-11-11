@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Employer;
 
+use App\Enums\AuditAction;
+use App\Enums\AuditTargetType;
 use App\Enums\CompanyMemberRole;
 use App\Enums\CompanyMemberStatus;
 use App\Http\Controllers\Controller;
@@ -10,6 +12,7 @@ use App\Http\Requests\Employer\UpdateCompanyMemberRequest;
 use App\Models\Company;
 use App\Models\CompanyMember;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\NotificationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +23,10 @@ use Inertia\Response;
 
 class CompanyMemberController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     public function index(Company $company): Response
     {
         $this->authorize('viewMembers', $company);
@@ -86,8 +93,10 @@ class CompanyMemberController extends Controller
                         'revoked_at' => null,
                     ]);
                     $existing->save();
+
+                    $member = $existing;
                 } else {
-                    CompanyMember::create([
+                    $member = CompanyMember::create([
                         'company_id' => $company->id,
                         'user_id' => $target->id,
                         'company_role' => CompanyMemberRole::from($validated['company_role']),
@@ -97,6 +106,20 @@ class CompanyMemberController extends Controller
                         'accepted_at' => now(),
                     ]);
                 }
+
+                $this->auditLogService->recordWithoutModel(
+                    AuditAction::CompanyMemberAdded,
+                    AuditTargetType::CompanyMember->value,
+                    (int) $member->getKey(),
+                    $company->name,
+                    [
+                        'company_id' => (int) $company->getKey(),
+                        'company_name' => $company->name,
+                        'member_user_id' => (int) $target->getKey(),
+                        'company_role' => $validated['company_role'],
+                    ],
+                    $actor,
+                );
             });
         } catch (QueryException $exception) {
             throw ValidationException::withMessages([
@@ -125,7 +148,7 @@ class CompanyMemberController extends Controller
         $newRole = $request->validated()['company_role'];
         $oldRole = $member->company_role->value;
 
-        DB::transaction(function () use ($company, $member, $newRole): void {
+        DB::transaction(function () use ($company, $member, $newRole, $oldRole): void {
             $locked = CompanyMember::query()
                 ->where('id', $member->id)
                 ->lockForUpdate()
@@ -164,6 +187,18 @@ class CompanyMemberController extends Controller
 
             $locked->company_role = CompanyMemberRole::from($newRole);
             $locked->save();
+
+            $this->auditLogService->recordWithoutModel(
+                AuditAction::CompanyMemberRoleChanged,
+                AuditTargetType::CompanyMember->value,
+                (int) $member->getKey(),
+                $company->name,
+                [
+                    'company_id' => (int) $company->getKey(),
+                    'old_role' => $oldRole,
+                    'new_role' => $newRole,
+                ],
+            );
         });
 
         if ($oldRole !== $newRole) {
@@ -189,7 +224,10 @@ class CompanyMemberController extends Controller
 
         $memberUser = $member->user;
 
-        DB::transaction(function () use ($company, $member): void {
+        // The member row is revoked, not deleted, so its identifier is stable.
+        $memberId = (int) $member->getKey();
+
+        DB::transaction(function () use ($company, $member, $memberId): void {
             $locked = CompanyMember::query()
                 ->where('id', $member->id)
                 ->lockForUpdate()
@@ -223,6 +261,17 @@ class CompanyMemberController extends Controller
             $locked->status = CompanyMemberStatus::Revoked;
             $locked->revoked_at = now();
             $locked->save();
+
+            $this->auditLogService->recordWithoutModel(
+                AuditAction::CompanyMemberRevoked,
+                AuditTargetType::CompanyMember->value,
+                $memberId,
+                $company->name,
+                [
+                    'company_id' => (int) $company->getKey(),
+                    'company_role' => $currentRole,
+                ],
+            );
         });
 
         if ($memberUser instanceof User) {

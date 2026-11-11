@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AuditAction;
 use App\Enums\PermissionSlug;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreRoleRequest;
@@ -9,10 +10,12 @@ use App\Http\Requests\Admin\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\Authorization\RoleAssignmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +23,7 @@ class RoleController extends Controller
 {
     public function __construct(
         private readonly RoleAssignmentService $roleAssignmentService,
+        private readonly AuditLogService $auditLogService,
     ) {}
 
     /**
@@ -89,13 +93,23 @@ class RoleController extends Controller
     {
         $this->authorize('create', Role::class);
 
-        $role = Role::create($request->roleData());
-
-        // Sync permissions if provided
         $permissionIds = $request->permissionIds();
-        if (! empty($permissionIds)) {
-            $this->roleAssignmentService->syncPermissionsToRole($role, $permissionIds);
-        }
+
+        $role = DB::transaction(function () use ($request, $permissionIds): Role {
+            $role = Role::create($request->roleData());
+
+            // Sync permissions if provided
+            if (! empty($permissionIds)) {
+                $this->roleAssignmentService->syncPermissionsToRole($role, $permissionIds);
+            }
+
+            $this->auditLogService->record(AuditAction::RoleCreated, $role, [
+                'slug' => $role->slug,
+                'permissions' => $this->permissionSlugs($permissionIds),
+            ]);
+
+            return $role;
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -126,11 +140,23 @@ class RoleController extends Controller
 
         $this->authorize('update', $role);
 
-        $role->update($request->roleData());
-
-        // Sync permissions
         $permissionIds = $request->permissionIds();
-        $this->roleAssignmentService->syncPermissionsToRole($role, $permissionIds);
+
+        DB::transaction(function () use ($role, $request, $permissionIds): void {
+            $permissionsBefore = $this->permissionSlugs($role->permissions()->pluck('permissions.id')->all());
+
+            $role->update($request->roleData());
+
+            // Sync permissions
+            $this->roleAssignmentService->syncPermissionsToRole($role, $permissionIds);
+
+            $permissionsAfter = $this->permissionSlugs($role->permissions()->pluck('permissions.id')->all());
+
+            $this->auditLogService->record(AuditAction::RoleUpdated, $role, [
+                'permissions_added' => array_values(array_diff($permissionsAfter, $permissionsBefore)),
+                'permissions_removed' => array_values(array_diff($permissionsBefore, $permissionsAfter)),
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -149,7 +175,13 @@ class RoleController extends Controller
 
         $this->authorize('delete', $role);
 
-        $role->delete();
+        DB::transaction(function () use ($role): void {
+            $role->delete();
+
+            $this->auditLogService->record(AuditAction::RoleDeleted, $role, [
+                'slug' => $role->slug,
+            ]);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -157,6 +189,25 @@ class RoleController extends Controller
         ]);
 
         return to_route('admin.roles.index');
+    }
+
+    /**
+     * Resolve the permission slugs for the given permission IDs.
+     *
+     * @param  array<int, int|string>  $permissionIds
+     * @return array<int, string>
+     */
+    private function permissionSlugs(array $permissionIds): array
+    {
+        if ($permissionIds === []) {
+            return [];
+        }
+
+        return Permission::query()
+            ->whereIn('id', $permissionIds)
+            ->orderBy('slug')
+            ->pluck('slug')
+            ->all();
     }
 
     /**

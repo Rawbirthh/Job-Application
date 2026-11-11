@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\AuditAction;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\Authorization\RoleAssignmentService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -29,7 +31,7 @@ class AssignRoleCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(RoleAssignmentService $roleAssignmentService): int
+    public function handle(RoleAssignmentService $roleAssignmentService, AuditLogService $auditLogService): int
     {
         $email = Str::lower(trim((string) $this->argument('email')));
         $slug = trim((string) $this->argument('role'));
@@ -58,7 +60,16 @@ class AssignRoleCommand extends Command
             return self::FAILURE;
         }
 
+        $rolesBefore = $user->roleSlugs();
+
         $roleAssignmentService->assignRoleBySlug($user, $slug);
+
+        $rolesAfter = $user->roleSlugs();
+
+        $auditLogService->record(AuditAction::UserRolesUpdated, $user, [
+            'source' => 'console',
+            'roles_added' => array_values(array_diff($rolesAfter, $rolesBefore)),
+        ]);
 
         $this->components->info("Assigned role [{$slug}] to [{$user->email}].");
 

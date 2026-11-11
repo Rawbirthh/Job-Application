@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Enums\AuditAction;
 use App\Exceptions\LastAdministratorException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\Authorization\RoleAssignmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +19,10 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Show the user's profile settings page.
      */
@@ -61,6 +67,13 @@ class ProfileController extends Controller
         try {
             DB::transaction(function () use ($user, $roleAssignmentService): void {
                 $roleAssignmentService->assertUserCanBeDeleted($user);
+
+                // The audit entry is written before the deletion so the actor
+                // snapshot survives the foreign key nulling out.
+                $this->auditLogService->record(AuditAction::AccountDeleted, $user, [
+                    'self_service' => true,
+                ], $user);
+
                 $user->delete();
             });
         } catch (LastAdministratorException) {

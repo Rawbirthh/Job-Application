@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\EmployerController;
 use App\Http\Controllers\Admin\EmploymentTypeController;
 use App\Http\Controllers\Admin\ExperienceLevelController;
@@ -195,5 +196,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
         Route::post('{report}/dismiss', [ReportController::class, 'dismiss'])
             ->middleware(['permission:reports.moderate'])
             ->name('dismiss');
+    });
+
+    // Administrative audit log (read-only; the trail is append-only)
+    Route::prefix('audit-logs')->name('audit-logs.')->middleware(['permission:admin.access'])->group(function (): void {
+        Route::get('/', [AuditLogController::class, 'index'])
+            ->middleware(['permission:audit_logs.view'])
+            ->name('index');
+
+        Route::get('{auditLog}', [AuditLogController::class, 'show'])
+            ->middleware(['permission:audit_logs.view'])
+            ->name('show');
     });
 });
