@@ -6,7 +6,7 @@ compatibility: opencode
 
 ## Inspect first
 
-Read `AGENTS.md`; inspect actual versions and folder conventions under `resources/js`, shared `types`, layouts, shared pagination, `package.json`, Tailwind config, shadcn components, and any existing page/form examples.
+Use the root `AGENTS.md` already supplied in project context; inspect actual versions and folder conventions under `resources/js`, shared `types`, layouts, shared pagination, `package.json`, Tailwind config, shadcn components, and any existing page/form examples.
 
 ## Data and navigation
 

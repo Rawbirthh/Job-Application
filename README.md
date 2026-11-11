@@ -17,7 +17,7 @@ A provider-neutral OpenCode setup inspired by the workflow in [jsmastery-pro/jsm
 1. Unzip this bundle.
 2. Copy `opencode.json`, `AGENTS.md`, `memory.md`, the entire `.opencode/` directory, and `docs/ui-registry.md` into your Laravel project root.
 3. If your project already has an `opencode.json`, `AGENTS.md`, `.opencode/`, or `memory.md`, back it up and merge the contents rather than blindly overwriting existing configuration or rules.
-4. From the Laravel repository root, run `opencode debug config` and `opencode agent list`. Confirm `backend-engineer`, `frontend-engineer`, `test-engineer`, and `code-reviewer` appear. You can call one directly with `@backend-engineer` (or another name), but normal `/develop`, `/test`, `/recover`, and `/review` workflows should route to specialists when their scope applies. If names are missing, ensure the hidden `.opencode/` directory was copied completely, then restart OpenCode.
+4. From the Laravel repository root, run `opencode debug config` and `opencode agent list`. Confirm `backend-engineer`, `frontend-engineer`, `test-engineer`, and `code-reviewer` appear. The normal `/develop` and `/recover` workflows use adaptive delegation; `/review` is the explicit independent-review command. If names are missing, ensure the hidden `.opencode/` directory was copied completely, then restart OpenCode.
 5. Run `/audit` first so the agent records the actual Laravel/PHP/Node versions, starter kit, current test runner, auth setup, custom role architecture, and repository conventions before feature work.
 
 No provider or model is pinned; configure your preferred provider through OpenCode's usual authentication/configuration process. No API keys or secrets are included.
@@ -26,8 +26,8 @@ No provider or model is pinned; configure your preferred provider through OpenCo
 
 1. `/architect <feature>` — inspect the codebase and requirements, write a feature spec/plan, identify routes, authorization, validation, data shape, migrations/indexes, tests, risks, and acceptance criteria. This command must stop and wait for your approval before changing application code.
 2. Approve or amend the spec in the conversation.
-3. `/develop <feature or approved spec>` — implement the approved feature, add/update tests, execute relevant checks, fix failures caused by the change, and inspect the final diff. Specialist routing is explicit: backend slices go to `backend-engineer`, frontend slices to `frontend-engineer`, meaningful/critical tests and bug regressions to `test-engineer`, and `/review` always invokes the read-only `code-reviewer`. The primary Build agent coordinates and verifies all returned work. For trivial tasks, irrelevant specialists are skipped.
-4. `/review` — read-only independent review for plan alignment, security, performance, data integrity, UI states, and test coverage.
+3. `/develop <feature or approved spec>` — implement the approved feature, add/update tests, execute relevant checks, fix failures caused by the change, and inspect the final diff. The primary Build agent implements directly by default. It delegates substantial independent backend/frontend slices, complex test design, or critical/high-risk independent review only when doing so adds value. Backend/frontend work may run in parallel only with clear interfaces and non-overlapping file ownership. The primary agent remains responsible for integration and one final verification pass.
+4. `/review` — explicit read-only independent review for plan alignment, security, performance, data integrity, UI states, and test coverage. `/develop` invokes the independent reviewer automatically only for critical/high-risk changes.
 5. `/imprint` after notable UI components — capture existing layout, spacing, typography, tokens, and shadcn conventions in `docs/ui-registry.md`.
 6. `/remember save` before starting a clean session. Start a new session and run `/remember restore` to restore the saved project/work handoff.
 7. `/recover` when a change is going in circles or the root cause is unclear.
@@ -46,7 +46,7 @@ References: [Laravel 13 testing docs](https://laravel.com/framework/docs/13.x/te
 
 - Slash commands are invoked by entering the command at the OpenCode prompt, such as `/architect Build a subscription module`. Mentioning `/architect` in ordinary prose is not guaranteed to invoke the slash command.
 - `/remember save` writes a durable summary to the repository's `memory.md`; `/remember restore` reads it, checks relevant repository evidence, summarizes it, and pauses for your next instruction. It does not resurrect the full deleted transcript or hidden reasoning. Keep the file free of secrets and verify it before relying on it.
-- The testing gate is enforced through shared instructions, the development/test commands, and review workflow. As with any model-driven setup, prompts alone are not a hard guarantee. For a true merge gate, also configure CI to fail when tests/static checks fail.
+- The testing gate applies regardless of whether a test specialist is delegated: the primary agent must add/update meaningful tests, run targeted checks, fix change-caused failures, and inspect the final diff. Delegation is an execution optimization, not a quality exemption. As with any model-driven setup, prompts alone are not a hard guarantee. For a true merge gate, also configure CI to fail when tests/static checks fail.
 - `opencode.json` is a starter baseline. If the installed OpenCode version changes config schemas or your team needs tighter command-specific policies, verify the resolved config before relying on it.
 
 ## Initial optional commands
@@ -57,12 +57,3 @@ References: [Laravel 13 testing docs](https://laravel.com/framework/docs/13.x/te
 - `/review` — inspect current changes without editing them.
 - `/remember save` — save the key project/session context before switching sessions.
 - `/remember restore` — restore and verify saved context at the start of a clean session.
-
-## Task scheduling
-
-Feature 29 (saved searches and job alerts) registers two scheduled commands:
-
-- `saved-searches:dispatch-alerts daily` — daily at 07:05
-- `saved-searches:dispatch-alerts weekly` — Mondays at 07:15
-
-These commands require a scheduler runner in every environment: run `php artisan schedule:work` locally, or a cron entry `'* * * * *'` executing `php artisan schedule:run` in production. Without a runner, saved searches still work but never dispatch alerts — the saved-searches page shows "never" as the last alert. This is a graceful no-op.

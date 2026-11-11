@@ -6,7 +6,7 @@ compatibility: opencode
 
 ## Before coding
 
-Read `AGENTS.md`; inspect the installed Laravel/PHP versions, Composer dependencies, provider registration conventions, existing domain models, routes and middleware, test style, and any custom role/permission implementation. Never assume a package, role name, table schema, or `hasRole()` method.
+Use the root `AGENTS.md` already supplied in project context; inspect the installed Laravel/PHP versions, Composer dependencies, provider registration conventions, existing domain models, routes and middleware, test style, and any custom role/permission implementation. Never assume a package, role name, table schema, or `hasRole()` method.
 
 ## Request lifecycle
 

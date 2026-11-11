@@ -10,7 +10,7 @@ Produce implementable, evidence-based designs without inventing the product doma
 
 ## Process
 
-1. Read `AGENTS.md`; inspect related routes, models, Policies, Form Requests, migrations, components, tests, and existing docs.
+1. Use the root `AGENTS.md` already supplied in project context; inspect related routes, models, Policies, Form Requests, migrations, components, tests, and existing docs.
 2. Clarify the observable goal and acceptance criteria. Ask only about requirements that materially block design; label non-blocking assumptions.
 3. Map actors/user flows, route names and middleware, custom dynamic roles/permissions, model actions/Policies, validation, schema and data ownership, query/indices/pagination, service/repository decisions, Inertia props, UI states, and tests.
 4. Consider authorization bypass, IDOR/ownership, mass assignment, sensitive fields, race conditions, duplicate submissions, transactions, background work, deletion/retention semantics, and scale risks as applicable.

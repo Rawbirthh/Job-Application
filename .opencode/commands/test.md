@@ -1,12 +1,14 @@
 ---
-description: Add and run tests with the configured testing specialist
+description: Create and run focused tests for a feature, bug fix, or current diff
 agent: build
 ---
 
-Load the `feature-testing` skill. Test target: $ARGUMENTS
+Test target: $ARGUMENTS
 
-MANDATORY: invoke `test-engineer` for the test-design/implementation pass. The primary agent must verify the proposed tests and run the relevant checks. If the specialist cannot be invoked, explain why and complete the task directly if safe.
+Use the root `AGENTS.md` testing gate. Load `feature-testing` only when its detailed test-design guidance is useful. Inspect the configured test runner and a small number of representative tests before writing anything.
 
-Inspect existing test conventions and available commands before acting. If target is omitted, use the current diff and latest feature. Write or update meaningful tests that would fail on a regression. Cover success behavior, validation, persistence, and relevant authorization/role/ownership/guest cases; include a regression test for bug fixes. Do not assume every feature has an admin role or owner concept. Prefer Pest-style tests for a new project if Pest is installed and compatible; otherwise follow existing PHPUnit/Pest conventions. Do not install dependencies without approval.
+The primary agent handles ordinary focused tests directly. Delegate to `test-engineer` only when the behavior has a complex edge-case matrix, substantial authorization/security boundaries, or a broad regression suite that benefits from independent test design. Do not invoke a subagent just to run a few straightforward assertions.
 
-Run the targeted test(s) and, where time and project setup allow, the broader suite. Report exact commands, passed/failed counts or output summaries, and blockers. Fix failing tests only when the test failure is caused by the target implementation; never weaken a meaningful test to hide a defect. Do not claim success if the command was not run.
+If no target is supplied, use the current diff and latest feature. Write/update tests that would fail if observable behavior regressed. Cover success, validation, persistence, and applicable authorization/guest/role/ownership cases; include a regression test for bug fixes. Do not assume every feature has an admin role or owner concept. Prefer Pest only if installed and compatible; otherwise follow the existing PHPUnit/Pest convention. Do not install dependencies without approval.
+
+Run targeted tests first and broader relevant checks when practical. Fix implementation defects rather than weakening tests. Report exact commands, outcomes, and blockers. Never claim a check passed unless it was run.
