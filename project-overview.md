@@ -4,7 +4,7 @@
 
 ## How to reference a feature in OpenCode
 
-Features use simple, global numbers from **Feature 1** through **Feature 34**. Each feature has its own objective, dependencies, scope, rules, acceptance criteria, and test expectations.
+Features use simple, global numbers from **Feature 1** through **Feature 37**. Each feature has its own objective, dependencies, scope, rules, acceptance criteria, and test expectations. Features marked **deferred** are retained for future reference but are not part of the active portfolio implementation scope.
 
 Architect one feature without coding:
 
@@ -33,7 +33,7 @@ Build a web-based job portal and recruitment platform with three primary audienc
 - **Employers:** Create and manage a company profile, publish approved job listings, and review candidates who apply to their company's jobs.
 - **Job seekers:** Discover jobs, maintain a candidate profile and resume, save opportunities, apply, and track application status.
 
-Build progressively. The first usable release should deliver secure authentication, authorization, job configuration, employer/company setup, job publication, public search, and job applications. Recruitment workflow, notifications, interviews, analytics, and monetization come later.
+Build progressively. The first usable release should deliver secure authentication, authorization, job configuration, employer/company setup, job publication, public search, and job applications. Recruitment workflow, notifications, interviews, analytics, rule-based recommendations, messaging, and recruiter productivity features follow later. Payment-based monetization is optional and deferred; it is not required to complete the portfolio project.
 
 ## Shared product and business rules
 
@@ -84,6 +84,8 @@ Possible terminal/alternate states: `rejected`, `withdrawn`. The implementation 
 - Candidate resumes and application details are private personal information.
 - Public job details must not expose internal moderation notes, private employer details, candidate data, or internal application counts unless the product explicitly approves a public field.
 - Notification messages should avoid disclosing sensitive information unnecessarily. In-app notifications are the first planned channel; email delivery can be added where configured.
+- Application conversations, candidate resumes, recruiter notes, and evaluations are private. They must be visible only to the candidate and currently authorized employer/company participants for the relevant application.
+- Real-time events must not expose message bodies or private application data to public channels. Authorize private channels on the server and re-check access when a participant is removed or their company permission changes.
 
 ---
 
@@ -139,9 +141,15 @@ Implement the features in dependency order. The phases group related capabilitie
 - **Feature 29 — Saved searches and job alerts**
 - **Feature 30 — Report a job or employer**
 - **Feature 31 — Administrative audit log**
-- **Feature 32 — Employer and platform analytics**
-- **Feature 33 — Employer plans, payments, and promoted jobs**
-- **Feature 34 — Job recommendations and optional AI assistance**
+- **Feature 32 — Employer and platform analytics** (completed)
+- **Feature 33 — Employer plans, payments, and promoted jobs** (deferred; not required for the portfolio scope)
+- **Feature 34 — Rule-based job recommendations** (no AI or external AI provider)
+
+### Phase 6 — Communication and recruiter productivity
+
+- **Feature 35 — Application-based real-time messaging**
+- **Feature 36 — Recruiter notes and candidate evaluation**
+- **Feature 37 — Visual recruitment pipeline**
 
 ## Detailed feature specifications
 
@@ -464,13 +472,13 @@ Implement the features in dependency order. The phases group related capabilitie
 
 **Dependencies:** Feature 18.
 
-**In scope:** Private file storage, file validation, metadata, replace/delete flow, and authorized download. Define allowed formats (recommended starting point: PDF only unless other formats are explicitly required), max size, and storage disk based on environment.
+**In scope:** Private file storage, file validation, metadata, resume versioning, replace/delete flow, and authorized download. Define allowed formats (recommended starting point: PDF only unless other formats are explicitly required), maximum size, and storage disk based on the environment. Each uploaded resume should create a new immutable file version or resume record rather than overwriting the file already referenced by an application.
 
-**Rules:** Do not store uploaded files in a publicly guessable path. Validate MIME/content and size server-side. A private file must be streamed/downloaded through an authorization-checked route. Do not trust original filenames or path inputs. Preserve existing application snapshots/attachments if product rules require them; define that behavior before allowing replacement/deletion.
+**Rules:** Do not store uploaded files in a publicly guessable path. Validate MIME/content and size server-side. A private file must be streamed/downloaded through an authorization-checked route. Do not trust original filenames or path inputs. Replacing or removing the candidate's current resume must not invalidate the resume version attached to an existing application. Define the retention and deletion behavior for resume versions referenced by applications before implementation.
 
-**Acceptance criteria:** Valid file uploads securely; invalid files are rejected; resume can be replaced/removed according to rules; only the owner and specifically authorized recruiters for a relevant application can access it; no public URL leaks the document.
+**Acceptance criteria:** A valid resume uploads securely; invalid files are rejected; candidates can identify and manage their current resume; replacing or removing the current resume does not change or break a previously submitted application; only the owner and specifically authorized recruiters for a relevant application can access each permitted version; no public URL leaks the document.
 
-**Tests:** Valid/invalid uploads, size/type limits, unauthorized download, path tampering, replacement, removal, and storage failure handling.
+**Tests:** Valid/invalid uploads, size/type limits, unauthorized download, path tampering, version creation, replacement without altering an application-attached version, removal behavior, retention of referenced versions, and storage failure handling.
 
 ## Feature 20 — Saved jobs
 
@@ -492,13 +500,13 @@ Implement the features in dependency order. The phases group related capabilitie
 
 **Dependencies:** Feature 17, Feature 18, Feature 19.
 
-**In scope:** Apply action and form; validate that the job is still accepting applications; select/use an eligible resume; optional cover letter or supporting fields only if specified; persist applicant, job, resume/reference, and submission timestamp; show success/failure feedback.
+**In scope:** Apply action and form; validate that the job is still accepting applications; select/use an eligible resume version; optional cover letter or supporting fields only if specified; persist applicant, job, immutable resume-version reference or equivalent protected snapshot, the approved application-time candidate details needed for employer review, and submission timestamp; show success/failure feedback.
 
-**Rules:** Enforce one active application per candidate/job unless product requirements explicitly allow reapplication. Never trust applicant user ID, company ID, job status, or application status from the client. Use a unique constraint or equivalent concurrency-safe protection for duplicates. Validate deadline/status at submission time. Use a transaction for related writes where needed.
+**Rules:** Enforce one active application per candidate/job unless product requirements explicitly allow reapplication. Never trust applicant user ID, company ID, job status, application status, or resume ownership from the client. Use a unique constraint or equivalent concurrency-safe protection for duplicates. Validate deadline/status and resume ownership at submission time. Use a transaction for related writes where needed. Define the minimal candidate details that should be snapshotted; do not copy unnecessary personal data. Later profile edits or resume replacement must not silently rewrite the historical application submission.
 
-**Acceptance criteria:** Eligible candidate can submit an application; duplicate and closed-job applications are rejected clearly; the application is associated with the signed-in user and correct job; employer/candidate identity cannot be forged; submission confirmation is shown; candidate resume/document access remains private.
+**Acceptance criteria:** An eligible candidate can submit an application; duplicate and closed-job applications are rejected clearly; the application is associated with the signed-in user and correct job; the submitted resume version and approved application-time details remain stable after profile edits or resume replacement; employer/candidate identity cannot be forged; submission confirmation is shown; candidate resume/document access remains private.
 
-**Tests:** Successful apply, guest restriction, invalid/closed job, duplicate/concurrent duplicate protection, missing resume/profile behavior according to the approved rule, identity tampering, and cross-company data access.
+**Tests:** Successful apply, guest restriction, invalid/closed job, duplicate/concurrent duplicate protection, missing resume/profile behavior according to the approved rule, resume-version ownership and snapshot integrity, profile-edit-after-submission behavior, identity tampering, and cross-company data access.
 
 ## Feature 22 — Candidate application history and status view
 
@@ -592,11 +600,11 @@ Implement the features in dependency order. The phases group related capabilitie
 
 **In scope:** Company membership records, invite/accept or other approved membership flow, membership status, company-scoped roles/permissions (for example owner, recruiter, read-only reviewer), revocation, and Policy integration.
 
-**Rules:** Company permissions must be scoped to the specific company. A company role must never grant platform-admin permissions. Prevent removal/demotion of the last company owner unless an ownership-transfer process is completed. Define who may invite and what a revoked member can still access historically.
+**Rules:** Company permissions must be scoped to the specific company. A company role must never grant platform-admin permissions. Prevent removal/demotion of the last company owner unless an ownership-transfer process is completed. Define who may invite and what a revoked member can still access historically. Features 35 and 36 must use these company-scoped permissions when hiring-team members are enabled; a company membership must never grant access to another company's conversations, notes, or evaluations.
 
-**Acceptance criteria:** Owner can add/revoke allowed members; members can only perform assigned actions within that company; guessed company/job/application IDs do not cross tenant boundaries; role changes take effect server-side.
+**Acceptance criteria:** Owner can add/revoke allowed members; members can only perform assigned actions within that company; guessed company/job/application IDs do not cross tenant boundaries; role changes take effect server-side and revoked members immediately lose access to protected hiring data.
 
-**Tests:** Invitation/membership flow, each relevant permission, cross-company denial, revocation, owner protection, and platform privilege isolation.
+**Tests:** Invitation/membership flow, each relevant permission, cross-company denial, revocation, owner protection, and platform privilege isolation, including access to application conversations and recruiter notes where those features are implemented.
 
 ## Feature 29 — Saved searches and job alerts
 
@@ -640,7 +648,7 @@ Implement the features in dependency order. The phases group related capabilitie
 
 **Tests:** Event creation, tamper/access denial, filtering/pagination, and redaction.
 
-## Feature 32 — Employer and platform analytics
+## Feature 32 — Employer and platform analytics (completed)
 
 **Objective:** Show useful, privacy-conscious metrics for employer and platform decision-making.
 
@@ -654,39 +662,105 @@ Implement the features in dependency order. The phases group related capabilitie
 
 **Tests:** Company data isolation, known-fixture calculations, date-range filters, and query performance for representative data.
 
-## Feature 33 — Employer plans, payments, and promoted jobs
+## Feature 33 — Employer plans, payments, and promoted jobs (deferred)
 
-**Objective:** Add optional monetization after the core job application workflow is reliable.
+**Status:** Deferred. This feature is not part of the current portfolio implementation scope.
 
-**Dependencies:** Feature 14, Feature 23; payment provider decision required.
+**Objective:** Reserve a future place for optional monetization if the project later becomes a commercial job platform. Paid plans, payment processing, and promoted listings are not required for the portfolio project.
 
-**In scope:** Approved plan definitions, subscription status, posting limits or promotion entitlements, payment status handling, and provider webhook processing only after a provider is chosen.
+**Dependencies:** Feature 14, Feature 23. A payment provider, supported currency, tax/commercial rules, and the product's monetization policy would need to be decided before this feature is reopened.
 
-**Rules:** Never store raw payment-card details. Verify webhook signatures, make handlers idempotent, and do not grant entitlements from an unverified client redirect. Define refunds, cancellations, failed payments, and plan expiry before launch. Do not begin this feature until payment provider, currency, taxes, and legal/commercial rules are decided.
+**In scope (future consideration only):** Employer plan definitions, subscription entitlements, posting limits, promoted-job entitlements, payment status, and verified provider webhook processing may be considered in a future approved revision.
 
-**Acceptance criteria:** Entitlements are derived from verified server-side payment/subscription state; replayed webhooks do not duplicate effects; expired/unpaid plans follow documented restrictions; sensitive payment data is not stored locally.
+**Out of scope for the current project:** Payment gateway integration, subscription checkout, card handling, provider webhooks, billing portals, refunds, taxes, paid posting limits, and paid job promotion.
 
-**Tests:** Entitlement rules, verified/unverified webhook behavior, replay/idempotency, failed payment, expiry, and authorization.
+**Rules:** Do not implement this feature, add payment dependencies, or make core job posting/application workflows depend on a subscription. Never store raw payment-card details if monetization is approved in the future. Any future implementation must derive entitlements from verified server-side payment state and define webhook signature verification, idempotency, refunds, cancellations, failed payments, expiry, currency, and legal/commercial requirements before coding.
 
-## Feature 34 — Job recommendations and optional AI assistance
+**Acceptance criteria:** The backlog clearly identifies this feature as deferred; no payment provider or subscription dependency is introduced into the current portfolio scope; all existing free job discovery, posting, and application workflows remain usable without payment.
 
-**Objective:** Help candidates discover relevant jobs without replacing their control over applications or employer decisions.
+**Tests/checks:** No payment-feature implementation tests are required while this feature remains deferred. Verify that no active feature depends on payment plans, paid entitlements, or a payment provider.
 
-**Dependencies:** Feature 16, Feature 18, Feature 21; privacy and provider decisions required.
+**Deliverables:** No code deliverable while deferred. Reopen this feature only through an explicit product-scope decision.
 
-**In scope:** Start with transparent rule-based matching by skills, category, location/work arrangement, and experience level. AI-based matching or content assistance is optional and must be a separate approved increment.
+## Feature 34 — Rule-based job recommendations
 
-**Rules:** Do not automatically reject or rank people for consequential employment decisions without a separately reviewed fairness, privacy, transparency, and human-oversight plan. Do not send resumes or personal data to an external AI provider without explicit product/privacy approval. Recommendations must not change application data or permission checks.
+**Objective:** Help job seekers discover relevant published jobs through transparent, deterministic matching without requiring AI, an external AI provider, a subscription, or local AI hardware.
 
-**Acceptance criteria:** Recommendations use documented input signals, allow candidates to inspect relevant jobs, handle missing profile data gracefully, and preserve normal search/application functionality.
+**Dependencies:** Feature 16, Feature 18. Reuse existing job configuration and candidate profile data; inspect how skills and experience are currently represented before defining the matching implementation.
 
-**Tests:** Matching inputs, no-profile behavior, privacy boundaries, and stable output for known fixtures. For AI additions, add provider-failure, data-minimization, and human-review tests appropriate to the design.
+**In scope:** Provide a personalized job recommendation section for signed-in candidates using documented rule-based signals such as normalized skill overlap, job category, experience level, location, and workplace arrangement. Show understandable reasons for each recommendation (for example, matching skills or remote-work preference). Allow candidates to open the job detail page and continue through the existing application flow. Provide a useful fallback, such as recent eligible jobs, when profile information is missing.
+
+**Out of scope:** Large language models, generative AI, machine-learning model training, embeddings/vector databases, external AI APIs, AI-written resumes or cover letters, automated candidate screening, employer-facing candidate scoring, and automatic rejection or hiring decisions.
+
+**Rules:** Matching must be deterministic, explainable, and based only on approved profile/job fields. Do not infer sensitive personal attributes. Do not expose private candidate profile data to employers or other candidates through recommendation results. Recommendations must include only jobs that are currently publicly visible and accepting applications. Do not compare salary values across different currencies or pay periods without an approved normalization rule. Recommendations must not modify applications, bypass authorization, or replace normal search/filter functionality. Do not label a heuristic match as an AI result or imply a level of accuracy that the rules cannot support.
+
+**Acceptance criteria:** Signed-in candidates receive recommendations based on the documented matching rules; each recommendation can show the relevant matching reasons; unpublished, closed, expired, or otherwise ineligible jobs are excluded; missing or incomplete profiles produce a useful fallback state; candidates can inspect and apply through the existing job workflow; recommendation queries respect privacy, authorization, and pagination/performance requirements; no AI service, paid provider, or incompatible local model is required.
+
+**Tests:** Matching behavior for known candidate/job fixtures; matching and non-matching skills; category, experience, location, and workplace-arrangement rules; exclusion of non-public/ineligible jobs; no-profile and partial-profile behavior; explanation accuracy; privacy boundaries; stable deterministic output; and query performance for representative data.
+
+## Feature 35 — Application-based real-time messaging
+
+**Objective:** Allow a job seeker and an authorized employer to communicate about an existing job application through a private, persistent messaging interface with real-time message delivery.
+
+**Dependencies:** Feature 21, Feature 23, Feature 25. Feature 28 is required only if the product enables additional company hiring-team members to participate; otherwise, follow the existing company-owner/authorized-employer access model.
+
+**In scope:** Create or open one application-specific conversation; show a paginated conversation list with the related job and company; show paginated message history, sender, and timestamp; send and persist text messages; deliver new messages in real time without requiring a page refresh; show the latest-message preview and unread count; track read/unread state per participant; and create an in-app notification for the recipient using Feature 25. Use the existing Laravel broadcasting stack where available. Evaluate Laravel Reverb as the self-hosted WebSocket server and Laravel Echo as the frontend listener after inspecting the installed Laravel version and existing setup. Use MySQL as the persistent source of truth for conversations and messages.
+
+**Out of scope:** File attachments, image uploads, voice messages, audio/video calls, group chats, public chat rooms, typing indicators, presence indicators, message reactions, and integration with paid third-party messaging services.
+
+**Rules:** A conversation must belong to exactly one existing application and must not become unrestricted user-to-user messaging. Only the candidate associated with the application and currently authorized employer/company participants may view or send messages. Scope every conversation and message query through the related application, job, company, and participant authorization; never trust sender, candidate, company, or application IDs from the client. Authorize private broadcast channels server-side and revoke access when a participant loses the relevant company permission. Persist a message successfully before broadcasting it, and broadcast only after the database transaction commits. Keep message content plain text or safely escaped; do not render user-submitted HTML. Validate message length, rate-limit sending, and prevent empty messages. Store read state per participant so unread state is reliable across sessions and devices. Preserve conversation history when an application or job becomes closed; define whether new messages remain allowed for rejected, withdrawn, hired, or archived applications before implementation. Do not expose private message content through public channels, logs, or unrelated notifications. Queued broadcasting requires a functioning queue worker; the feature must document its local development requirements. Do not install or depend on a paid hosted WebSocket provider.
+
+**Acceptance criteria:** Candidate and authorized employer can open the conversation for the correct application; unrelated candidates and employers cannot view it even when they guess IDs or channel names; a sent message is saved and remains available after refresh/relogin; the recipient receives the message in real time when connected and can retrieve it later when disconnected; conversation list previews, timestamps, unread counts, and read state stay consistent; new-message notifications are delivered to the correct recipient through Feature 25; private channel authorization is enforced; the feature works with the approved local Reverb/Echo configuration or the project's verified equivalent; and message history is paginated.
+
+**Tests:** Conversation creation/uniqueness per application; candidate ownership; employer/company scoping; unauthorized and revoked participant access; forged sender/application/company IDs; empty/oversized message validation; rate limiting; persistence and retrieval; broadcast only after commit; private channel authorization; unread/read state per participant; notification recipient and duplicate handling; disconnected-recipient retrieval; and real-time broadcast behavior using the project's supported testing approach.
+
+**Deliverables:** Application-specific conversation and message workflow, secured persistence and private broadcasting, responsive messaging UI, integration with in-app notifications, required local Reverb/queue setup documentation, and backend/frontend tests.
+
+## Feature 36 — Recruiter notes and candidate evaluation
+
+**Objective:** Let authorized employers keep private application-specific notes and record a consistent, human-controlled evaluation of candidates during recruitment.
+
+**Dependencies:** Feature 23, Feature 24. Feature 26 may be integrated for interview-specific feedback. Feature 28 is required only when company hiring-team members need shared or role-restricted access to notes and evaluations.
+
+**In scope:** Add, view, and edit private notes associated with an application; identify the author and timestamps; provide a simple evaluation scorecard with an approved set of criteria (for example relevant experience, technical skills, communication, and interview performance); allow authorized reviewers to record ratings and supporting comments; and show the evaluation history or latest assessment to permitted company reviewers. Keep notes and evaluations within the existing employer application detail workflow.
+
+**Out of scope:** Candidate-visible feedback, public reviews, AI-generated evaluations, automated candidate ranking, automatic rejection/hiring decisions, personality inference, and complex configurable assessment forms unless separately approved.
+
+**Rules:** Notes and evaluations are private recruitment data and must never be returned to the candidate or an unrelated company. Every read and write must be scoped to the application and the user's current company permissions. Record the author and timestamps for accountability. Define whether notes can be edited/deleted and how the history is retained before implementation. Use a documented, consistent rating scale if ratings are included; do not present a score as an objective or automated hiring decision. Do not allow notes or evaluations to change application status automatically; status changes must continue through Feature 24. If Feature 28 is enabled, enforce the relevant company-scoped permissions for viewing, creating, editing, and deleting notes/evaluations.
+
+**Acceptance criteria:** An authorized employer can create and manage private notes for an application; permitted reviewers can record and view the defined evaluation criteria; candidates and unrelated employers cannot access the notes or evaluation; each entry identifies its author and timestamps; evaluation data does not change application status; and the existing applicant workflow remains usable when no evaluation has been recorded.
+
+**Tests:** Authorized note/evaluation creation and retrieval; unauthorized candidate access; cross-company and guessed-ID denial; permission changes/revocation; validation of ratings and comments; author/timestamp persistence; edit/delete/history behavior according to the approved policy; protection against status changes through evaluation input; and privacy of Inertia props/responses.
+
+**Deliverables:** Private application notes, a simple recruiter evaluation scorecard, integration with employer application details, authorization rules, and backend/frontend tests.
+
+## Feature 37 — Visual recruitment pipeline
+
+**Objective:** Give employers a visual overview of their applications by displaying candidates in columns based on the existing application statuses.
+
+**Dependencies:** Feature 23, Feature 24. Feature 28 is required only if company hiring-team members will use the board with scoped permissions.
+
+**In scope:** Provide a Kanban-style board for an authorized company; display application cards grouped by the statuses already defined in Feature 24; show only necessary candidate/job summary information; support filtering by job and other approved criteria; show counts per status; and allow an authorized user to move an application to another status through the existing Feature 24 transition workflow. Provide an accessible alternative to drag-and-drop (such as a status action menu) and useful empty/loading states.
+
+**Out of scope:** New application statuses, a separate status engine, automatic candidate ranking, AI-based prioritization, bulk status changes, and cross-company or global recruiter boards.
+
+**Rules:** Feature 24 remains the single source of truth for allowed status transitions and status history. A drag-and-drop action must call the same authorized server-side transition process as any other status update; never update a status directly from the client. Every board query must be scoped to the current user's authorized company and permitted jobs. Do not expose private notes, evaluations, resumes, or message content on application cards. Keep the board bounded through server-side filtering and pagination or an equivalent controlled loading strategy; do not load every application into the browser. Preserve keyboard accessibility and a non-drag interaction. If Feature 28 is enabled, honor the member's company-scoped permissions for viewing and moving applications.
+
+**Acceptance criteria:** Authorized employers can view their company's applications grouped by the existing statuses; filters and counts reflect the server-side result; applications from other companies are never exposed; moving a card succeeds only when Feature 24 permits the transition; every successful move records the existing status history and updates the board; invalid/stale transitions return a useful error and do not corrupt the board; and all board actions are usable without drag-and-drop.
+
+**Tests:** Company/application scoping; pagination or bounded loading; filters and status counts; valid and invalid status transitions; authorization denial; stale/double transition handling; status-history integrity; keyboard/status-menu operation; and ensuring private notes, evaluations, resumes, and messages are not exposed in board payloads.
+
+**Deliverables:** Responsive Kanban-style recruitment board, server-driven filters/counts, integration with Feature 24 transitions, accessible status controls, and backend/frontend tests.
 
 ---
 
 ## Later capabilities and product boundaries
 
-- Do not introduce AI candidate scoring or automated employment decisions as part of ordinary job posting/application features. Feature 34 covers optional recommendations and requires separate privacy, fairness, transparency, and human-oversight decisions for any AI-based expansion.
-- Payments, subscriptions, paid job promotions, external calendar integrations, SSO/social login, real-time chat, and video interviews are separate capabilities. Do not add them to an earlier feature unless the roadmap is explicitly revised.
-- Company hiring-team membership and company-scoped roles belong to Feature 28; do not treat an employer account as an implicit member of every company.
+- Feature 33 (employer plans, payments, and promoted jobs) is deferred and is not required for the portfolio project. Do not install a payment provider, add subscription enforcement, or make job posting/application depend on payment unless the product scope is explicitly changed.
+- Feature 34 is rule-based job recommendation only. Do not add AI models, LLM APIs, embeddings, or automated employment decisions as part of this feature. Any future AI capability must be proposed and approved as a separate scope with privacy, fairness, transparency, and human-oversight requirements.
+- Feature 35 adds application-based real-time messaging. It does not authorize unrestricted direct messages, public chat, file attachments, audio/video calls, or paid third-party messaging services.
+- Feature 36 contains private recruiter notes and human-controlled evaluations. Do not expose internal notes or scorecards to candidates or use them to automate hiring decisions.
+- Feature 37 is a visual interface over the existing Feature 24 application-status workflow. Do not introduce a second transition engine or bypass the existing transition rules/history.
+- External calendar integrations, SSO/social login, video interviews, and other integrations remain separate capabilities unless the roadmap is explicitly revised.
+- Company hiring-team membership and company-scoped roles belong to Feature 28; do not treat an employer account as an implicit member of every company. Features 35 and 36 must respect Feature 28 if hiring-team access is enabled.
 - Prefer a working, verifiable vertical slice per feature over implementing the entire roadmap in one prompt.
