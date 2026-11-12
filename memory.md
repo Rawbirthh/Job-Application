@@ -38,8 +38,8 @@
     - Migration applied → rolled back → re-applied cleanly on **both** SQLite and MySQL; final index inventory verified on MySQL with `php artisan db:table`.
     - `EXPLAIN` on a seeded SQLite dataset (500 users / 200 companies / 5 000 jobs / 50 000 applications) confirmed every new index is used by the planner.
 - User-reported manual verification: **none reported for this feature.** No browser QA of the two analytics pages was performed by the agent or reported by the user.
-- Blockers: none. Unverified: live-browser UX of the two analytics pages (type/lint/build level only); MySQL `EXPLAIN` was measured on a tiny local dataset (19 jobs / 9 applications) so it confirms index *usability* but not index *selection at scale* — the scale figures are SQLite; MySQL plans should be re-measured in the deploy environment.
-- Open product decisions left at their spec defaults (not blocking): no job-view/impression tracking (needs product rules first); no pre-aggregation rollup (trigger is measured evidence); conversion uses *current* status, so an application shortlisted then later rejected counts in the denominator only; no `published_at` column, so "published jobs" is a cohort not a publication rate; `docs/authorization.md` still lists only 4 of the 25 seeded platform permissions.
+- Blockers: none. Unverified: live-browser UX of the two analytics pages (type/lint/build level only); MySQL `EXPLAIN` was measured on a tiny local dataset (19 jobs / 9 applications) so it confirms index _usability_ but not index _selection at scale_ — the scale figures are SQLite; MySQL plans should be re-measured in the deploy environment.
+- Open product decisions left at their spec defaults (not blocking): no job-view/impression tracking (needs product rules first); no pre-aggregation rollup (trigger is measured evidence); conversion uses _current_ status, so an application shortlisted then later rejected counts in the denominator only; no `published_at` column, so "published jobs" is a cohort not a publication rate; `docs/authorization.md` still lists only 4 of the 25 seeded platform permissions.
 - Flagged for the user (needs a decision): `App\Http\Controllers\Employer\JobController::jobPayload()` returns a hard-coded `'applications_count' => 0` (a pre-existing Feature 15 defect). The Feature 32 per-job table shows real counts, so the two employer screens disagree. Deliberately **not** fixed in Feature 32.
 
 ## Durable notes
@@ -56,6 +56,7 @@
 - Report moderation never auto-removes content; actual removal goes through job moderation (`jobs.moderate`) / employer suspension (`employers.manage`).
 - Audit trail (Feature 31): append-only, admin-only, no write routes; audit writes inside business transactions are fail-closed, while auth events and read-path writes (audit-log reads, analytics reads) are fail-soft.
 - Never store `.env` values, credentials, tokens, private keys, or personal data here.
+- `memory.md` is a formatted file: `npm run check` (prettier via vp) checks it in CI, so always run `npx vp check --fix memory.md` after editing it by hand, before committing.
 
 ## Environment notes (not bugs)
 
