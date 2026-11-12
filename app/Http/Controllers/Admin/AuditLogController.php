@@ -206,6 +206,10 @@ class AuditLogController extends Controller
      */
     private function metadataValue(mixed $value): string
     {
+        if ($value === null) {
+            return 'null';
+        }
+
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }

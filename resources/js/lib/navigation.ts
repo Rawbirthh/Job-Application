@@ -17,6 +17,7 @@ import {
     ListChecks,
     Search,
     ScrollText,
+    BarChart3,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -88,6 +89,12 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Screening Templates',
         href: employer.screeningTemplates.index(),
         icon: ClipboardList,
+        requiredRoles: ['employer'],
+    },
+    {
+        title: 'Analytics',
+        href: employer.analytics.index(),
+        icon: BarChart3,
         requiredRoles: ['employer'],
     },
     {
@@ -167,6 +174,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: admin.auditLogs.index(),
         icon: ScrollText,
         requiredPermissions: ['admin.access', 'audit_logs.view'],
+    },
+    {
+        title: 'Platform Analytics',
+        href: admin.analytics.index(),
+        icon: BarChart3,
+        requiredPermissions: ['admin.access', 'platform_analytics.view'],
     },
 ];
 

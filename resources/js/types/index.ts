@@ -11,3 +11,4 @@ export type * from './screening';
 export type * from './saved-search';
 export type * from './report';
 export type * from './audit-log';
+export type * from './analytics';

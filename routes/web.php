@@ -9,6 +9,7 @@ use App\Http\Controllers\Candidate\JobApplicationController;
 use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\Candidate\SavedSearchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Employer\AnalyticsController as EmployerAnalyticsController;
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\CompanyMemberController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
@@ -57,6 +58,11 @@ Route::middleware(['auth'])->group(function (): void {
         Route::get('dashboard', EmployerDashboardController::class)
             ->middleware(['role:employer', 'employer.approved'])
             ->name('dashboard');
+
+        // Feature 32: employer-scoped analytics
+        Route::get('analytics', [EmployerAnalyticsController::class, 'index'])
+            ->middleware(['role:employer', 'employer.approved'])
+            ->name('analytics.index');
 
         Route::prefix('companies')->name('companies.')->middleware(['role:employer', 'employer.approved'])->group(function (): void {
             Route::get('/', [CompanyController::class, 'index'])->name('index');

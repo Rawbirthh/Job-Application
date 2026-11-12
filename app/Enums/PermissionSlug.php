@@ -28,4 +28,5 @@ enum PermissionSlug: string
     case JobsModerate = 'jobs.moderate';
     case ReportsModerate = 'reports.moderate';
     case AuditLogsView = 'audit_logs.view';
+    case PlatformAnalyticsView = 'platform_analytics.view';
 }

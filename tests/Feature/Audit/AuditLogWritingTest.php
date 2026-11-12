@@ -662,6 +662,24 @@ class AuditLogWritingTest extends TestCase
 
     // ---------------------------------------------------- transaction integrity
 
+    public function test_metadata_accepts_null_values_without_dropping_the_entry(): void
+    {
+        $service = app(AuditLogService::class);
+
+        $entry = $service->record(AuditAction::JobApproved, $this->pendingJob(), [
+            'from' => null,
+            'to' => null,
+            'scope' => 'employer',
+        ]);
+
+        $metadata = $entry->fresh()->metadata;
+
+        $this->assertIsArray($metadata);
+        $this->assertNull($metadata['from']);
+        $this->assertNull($metadata['to']);
+        $this->assertSame('employer', $metadata['scope']);
+    }
+
     public function test_an_audit_entry_written_inside_a_failed_transaction_leaves_no_orphan_row(): void
     {
         $service = app(AuditLogService::class);

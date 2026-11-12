@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\EmployerController;
 use App\Http\Controllers\Admin\EmploymentTypeController;
@@ -197,6 +198,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
             ->middleware(['permission:reports.moderate'])
             ->name('dismiss');
     });
+
+    // Platform analytics (read-only aggregates)
+    Route::get('analytics', [AnalyticsController::class, 'index'])
+        ->middleware(['permission:admin.access', 'permission:platform_analytics.view'])
+        ->name('analytics.index');
 
     // Administrative audit log (read-only; the trail is append-only)
     Route::prefix('audit-logs')->name('audit-logs.')->middleware(['permission:admin.access'])->group(function (): void {

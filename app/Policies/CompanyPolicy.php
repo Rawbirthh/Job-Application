@@ -36,4 +36,15 @@ class CompanyPolicy
     {
         return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'members.manage');
     }
+
+    /**
+     * Determine whether the actor may read the analytics of the given company.
+     *
+     * Company analytics are aggregate-only and are scoped to a single company,
+     * so the check mirrors the other company-scoped policy methods.
+     */
+    public function viewAnalytics(User $actor, Company $company): bool
+    {
+        return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'analytics.view');
+    }
 }

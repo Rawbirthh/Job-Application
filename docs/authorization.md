@@ -12,12 +12,13 @@ Roles are global and a user may hold more than one. Effective permissions are th
 | `employer`       | Employer               | None yet                                           |
 | `job_seeker`     | Job Seeker             | None yet                                           |
 
-| Permission slug      | Display name          | Purpose                                         |
-| -------------------- | --------------------- | ----------------------------------------------- |
-| `admin.access`       | Access administration | Enter the `/admin` route boundary               |
-| `users.view`         | View users            | Read the paginated admin user directory         |
-| `users.roles.manage` | Manage user roles     | View and update global role assignments         |
-| `audit_logs.view`    | View audit logs       | Read the append-only administrative audit trail |
+| Permission slug           | Display name            | Purpose                                         |
+| ------------------------- | ----------------------- | ----------------------------------------------- |
+| `admin.access`            | Access administration   | Enter the `/admin` route boundary               |
+| `users.view`              | View users              | Read the paginated admin user directory         |
+| `users.roles.manage`      | Manage user roles       | View and update global role assignments         |
+| `audit_logs.view`         | View audit logs         | Read the append-only administrative audit trail |
+| `platform_analytics.view` | View platform analytics | Read the platform-wide aggregate metrics        |
 
 Permissions are granted through roles only. There is no `permission_user` table, which keeps grants explicit and auditable. System code uses `App\Enums\RoleSlug` and `App\Enums\PermissionSlug`; custom definitions added later may use plain slug strings.
 

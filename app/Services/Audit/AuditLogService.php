@@ -261,6 +261,10 @@ class AuditLogService
      */
     private function sanitizeValue(mixed $value, int $depth): mixed
     {
+        if ($value === null) {
+            return null;
+        }
+
         if (is_string($value)) {
             return mb_substr($value, 0, self::MAX_STRING_LENGTH);
         }

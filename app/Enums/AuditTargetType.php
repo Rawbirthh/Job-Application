@@ -12,6 +12,7 @@ enum AuditTargetType: string
     case CompanyMember = 'company_member';
     case Report = 'report';
     case AuditLog = 'audit_log';
+    case Analytics = 'analytics';
 
     /**
      * Get the human-readable label for the audit target type.
@@ -27,6 +28,7 @@ enum AuditTargetType: string
             self::CompanyMember => 'Company member',
             self::Report => 'Report',
             self::AuditLog => 'Audit log',
+            self::Analytics => 'Analytics',
         };
     }
 
@@ -46,6 +48,7 @@ enum AuditTargetType: string
             self::CompanyMember->value,
             self::Report->value,
             self::AuditLog->value,
+            self::Analytics->value,
         ];
     }
 }

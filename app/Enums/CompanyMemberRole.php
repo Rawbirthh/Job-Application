@@ -29,6 +29,7 @@ enum CompanyMemberRole: string
                 'screening.manage',
                 'members.manage',
                 'resumes.download',
+                'analytics.view',
             ],
             self::Recruiter => [
                 'company.view',
@@ -41,12 +42,14 @@ enum CompanyMemberRole: string
                 'applicants.manage',
                 'screening.manage',
                 'resumes.download',
+                'analytics.view',
             ],
             self::Reviewer => [
                 'company.view',
                 'jobs.view',
                 'applicants.view',
                 'resumes.download',
+                'analytics.view',
             ],
         };
     }

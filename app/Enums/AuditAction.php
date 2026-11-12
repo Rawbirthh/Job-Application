@@ -29,6 +29,7 @@ enum AuditAction: string
     case AuthLoggedOut = 'auth.logged_out';
     case AuthPasswordReset = 'auth.password_reset';
     case AuditLogViewed = 'audit_log.viewed';
+    case AnalyticsViewed = 'analytics.viewed';
 
     /**
      * Get the human-readable label for the audit action.
@@ -61,6 +62,7 @@ enum AuditAction: string
             self::AuthLoggedOut => 'Logged out',
             self::AuthPasswordReset => 'Password reset',
             self::AuditLogViewed => 'Audit log viewed',
+            self::AnalyticsViewed => 'Analytics viewed',
         };
     }
 
@@ -97,6 +99,7 @@ enum AuditAction: string
             self::AuthLoggedOut->value,
             self::AuthPasswordReset->value,
             self::AuditLogViewed->value,
+            self::AnalyticsViewed->value,
         ];
     }
 }

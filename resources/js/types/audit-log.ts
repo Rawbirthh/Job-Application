@@ -33,6 +33,7 @@ export const AUDIT_ACTIONS = [
     { value: 'auth.logged_out', label: 'Logged out' },
     { value: 'auth.password_reset', label: 'Password reset' },
     { value: 'audit_log.viewed', label: 'Audit log viewed' },
+    { value: 'analytics.viewed', label: 'Analytics viewed' },
 ] as const;
 
 /**
@@ -48,6 +49,7 @@ export const AUDIT_TARGET_TYPES = [
     { value: 'company_member', label: 'Company member' },
     { value: 'report', label: 'Report' },
     { value: 'audit_log', label: 'Audit log' },
+    { value: 'analytics', label: 'Analytics' },
 ] as const;
 
 export type AuditActionSlug = (typeof AUDIT_ACTIONS)[number]['value'];
