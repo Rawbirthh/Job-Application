@@ -6,6 +6,7 @@ use App\Http\Controllers\Candidate\CandidateProfileController;
 use App\Http\Controllers\Candidate\CandidateResumeController;
 use App\Http\Controllers\Candidate\InterviewController as CandidateInterviewController;
 use App\Http\Controllers\Candidate\JobApplicationController;
+use App\Http\Controllers\Candidate\RecommendationController;
 use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\Candidate\SavedSearchController;
 use App\Http\Controllers\DashboardController;
@@ -188,6 +189,9 @@ Route::middleware(['auth'])->group(function (): void {
             ->name('resume.download');
         Route::delete('profile/resume/{resume}', [CandidateResumeController::class, 'delete'])
             ->name('resumes.delete');
+
+        Route::get('recommendations', [RecommendationController::class, 'index'])
+            ->name('recommendations.index');
 
         Route::get('saved-jobs', [SavedJobController::class, 'index'])->name('saved-jobs.index');
         Route::post('saved-jobs', [SavedJobController::class, 'store'])

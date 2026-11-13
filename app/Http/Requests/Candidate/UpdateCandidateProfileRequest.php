@@ -2,6 +2,11 @@
 
 namespace App\Http\Requests\Candidate;
 
+use App\Models\CandidateProfile;
+use App\Models\ExperienceLevel;
+use App\Models\JobCategory;
+use App\Models\User;
+use App\Models\WorkplaceArrangement;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -41,6 +46,15 @@ class UpdateCandidateProfileRequest extends FormRequest
             $merged['skills'] = $normalizedSkills;
         } else {
             $merged['skills'] = $skills;
+        }
+
+        foreach (['preferred_category_id', 'preferred_experience_level_id', 'preferred_workplace_arrangement_id'] as $field) {
+            $value = $this->input($field);
+            if (is_string($value)) {
+                $value = trim($value);
+                $value = $value === '' ? null : $value;
+            }
+            $merged[$field] = $value;
         }
 
         foreach (['educations', 'experiences'] as $collection) {
@@ -102,6 +116,9 @@ class UpdateCandidateProfileRequest extends FormRequest
             'location' => ['nullable', 'string', 'max:255'],
             'skills' => ['nullable', 'array', 'max:30'],
             'skills.*' => ['string', 'max:50'],
+            'preferred_category_id' => ['nullable', 'integer', 'exists:job_categories,id'],
+            'preferred_experience_level_id' => ['nullable', 'integer', 'exists:experience_levels,id'],
+            'preferred_workplace_arrangement_id' => ['nullable', 'integer', 'exists:workplace_arrangements,id'],
             'educations' => ['nullable', 'array', 'max:20'],
             'educations.*.institution' => ['required_with:educations', 'string', 'max:150'],
             'educations.*.degree' => ['nullable', 'string', 'max:100'],
@@ -124,6 +141,7 @@ class UpdateCandidateProfileRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $experiences = $this->input('experiences', []);
+
             if (! is_array($experiences)) {
                 return;
             }
@@ -132,10 +150,8 @@ class UpdateCandidateProfileRequest extends FormRequest
                 if (! is_array($experience)) {
                     continue;
                 }
-
                 $isCurrent = (bool) ($experience['is_current'] ?? false);
                 $endDate = $experience['end_date'] ?? null;
-
                 if ($isCurrent && $endDate !== null && $endDate !== '') {
                     $validator->errors()->add(
                         "experiences.{$index}.end_date",
@@ -144,6 +160,60 @@ class UpdateCandidateProfileRequest extends FormRequest
                 }
             }
         });
+
+        $validator->after(function (Validator $validator): void {
+            $this->validatePreferenceOptions($validator);
+        });
+    }
+
+    /**
+     * Reject deactivated configuration options that the candidate does not
+     * already hold.
+     *
+     * A deactivated option the candidate already selected stays submittable so
+     * that editing an unrelated field never silently clears a preference they
+     * can still see.
+     */
+    private function validatePreferenceOptions(Validator $validator): void
+    {
+        $user = $this->user();
+
+        if (! $user instanceof User) {
+            return;
+        }
+
+        $held = CandidateProfile::query()
+            ->where('user_id', $user->id)
+            ->first();
+
+        $options = [
+            'preferred_category_id' => [JobCategory::class, 'is_active'],
+            'preferred_experience_level_id' => [ExperienceLevel::class, 'is_active'],
+            'preferred_workplace_arrangement_id' => [WorkplaceArrangement::class, 'is_active'],
+        ];
+
+        foreach ($options as $field => [$model, $activeColumn]) {
+            $value = $this->input($field);
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $isActive = $model::query()
+                ->whereKey((int) $value)
+                ->where($activeColumn, true)
+                ->exists();
+
+            if ($isActive) {
+                continue;
+            }
+
+            if ($held !== null && (int) $held->{$field} === (int) $value) {
+                continue;
+            }
+
+            $validator->errors()->add($field, __('The selected option is no longer available.'));
+        }
     }
 
     /**
@@ -184,6 +254,9 @@ class UpdateCandidateProfileRequest extends FormRequest
             'summary' => $validated['summary'] ?? null,
             'location' => $validated['location'] ?? null,
             'skills' => array_values($validated['skills'] ?? []),
+            'preferred_category_id' => $validated['preferred_category_id'] ?? null,
+            'preferred_experience_level_id' => $validated['preferred_experience_level_id'] ?? null,
+            'preferred_workplace_arrangement_id' => $validated['preferred_workplace_arrangement_id'] ?? null,
             'educations' => $educations,
             'experiences' => $experiences,
         ];

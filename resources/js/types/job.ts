@@ -15,6 +15,7 @@ export type Job = {
     salary_negotiable: boolean;
     pay_period_id: number | null;
     location: string | null;
+    skills?: string[];
     application_deadline: string | null;
     status: string;
     rejection_reason: string | null;
@@ -42,6 +43,7 @@ export type JobForm = {
     salary_negotiable: boolean;
     pay_period_id: number | null;
     location: string;
+    skills: string[];
     application_deadline: string;
 };
 

@@ -32,6 +32,9 @@ class CandidateProfileService
                 'summary' => $data['summary'] ?? null,
                 'location' => $data['location'] ?? null,
                 'skills' => $data['skills'] ?? [],
+                'preferred_category_id' => $data['preferred_category_id'] ?? null,
+                'preferred_experience_level_id' => $data['preferred_experience_level_id'] ?? null,
+                'preferred_workplace_arrangement_id' => $data['preferred_workplace_arrangement_id'] ?? null,
             ]);
             $profile->save();
 

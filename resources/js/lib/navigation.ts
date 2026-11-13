@@ -17,6 +17,7 @@ import {
     ListChecks,
     Search,
     ScrollText,
+    Sparkles,
     BarChart3,
     type LucideIcon,
 } from 'lucide-react';
@@ -42,6 +43,12 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Browse Jobs',
         href: '/jobs',
         icon: Bookmark,
+        requiredRoles: ['job_seeker'],
+    },
+    {
+        title: 'Recommended Jobs',
+        href: '/candidate/recommendations',
+        icon: Sparkles,
         requiredRoles: ['job_seeker'],
     },
     {

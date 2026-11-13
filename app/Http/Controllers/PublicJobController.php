@@ -152,6 +152,7 @@ class PublicJobController extends Controller
                 'responsibilities' => $job->responsibilities,
                 'requirements' => $job->requirements,
                 'location' => $job->location,
+                'skills' => $job->skills ?? [],
                 'salary_min' => $job->salary_min,
                 'salary_max' => $job->salary_max,
                 'salary_currency' => $job->salary_currency,

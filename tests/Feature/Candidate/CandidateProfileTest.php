@@ -372,7 +372,18 @@ class CandidateProfileTest extends TestCase
 
                 $profile = $page->toArray()['props']['profile'];
                 $this->assertSame(
-                    ['headline', 'summary', 'location', 'skills', 'educations', 'experiences', 'updated_at'],
+                    [
+                        'headline',
+                        'summary',
+                        'location',
+                        'skills',
+                        'preferred_category_id',
+                        'preferred_experience_level_id',
+                        'preferred_workplace_arrangement_id',
+                        'educations',
+                        'experiences',
+                        'updated_at',
+                    ],
                     array_keys($profile)
                 );
 

@@ -24,6 +24,9 @@ export type CandidateProfile = {
     summary: string | null;
     location: string | null;
     skills: string[];
+    preferred_category_id: number | null;
+    preferred_experience_level_id: number | null;
+    preferred_workplace_arrangement_id: number | null;
     educations: CandidateEducation[];
     experiences: CandidateExperience[];
     updated_at: string | null;
@@ -34,12 +37,27 @@ export type CandidateProfileForm = {
     summary: string | null;
     location: string | null;
     skills: string[];
+    preferred_category_id: number | null;
+    preferred_experience_level_id: number | null;
+    preferred_workplace_arrangement_id: number | null;
     educations: CandidateEducation[];
     experiences: CandidateExperience[];
 };
 
+export type CandidateProfileOption = {
+    id: number;
+    name: string;
+};
+
+export type CandidateProfileOptions = {
+    categories: CandidateProfileOption[];
+    experienceLevels: CandidateProfileOption[];
+    workplaceArrangements: CandidateProfileOption[];
+};
+
 export type CandidateProfileEditProps = {
     profile: CandidateProfile;
+    options: CandidateProfileOptions;
 };
 
 export type CandidateResumeData = {

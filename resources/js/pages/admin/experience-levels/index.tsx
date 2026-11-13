@@ -21,6 +21,7 @@ export type ExperienceLevel = {
     slug: string;
     description: string | null;
     sort_order: number;
+    min_years: number | null;
     is_active: boolean;
 };
 
@@ -47,12 +48,14 @@ export default function AdminExperienceLevelsIndex({
         slug: string;
         description: string;
         sort_order: number;
+        min_years: number | null;
         is_active: boolean;
     }>({
         name: '',
         slug: '',
         description: '',
         sort_order: 0,
+        min_years: null,
         is_active: true,
     });
 
@@ -80,6 +83,7 @@ export default function AdminExperienceLevelsIndex({
             slug: experienceLevel.slug,
             description: experienceLevel.description || '',
             sort_order: experienceLevel.sort_order,
+            min_years: experienceLevel.min_years,
             is_active: experienceLevel.is_active,
         });
     };
@@ -202,6 +206,33 @@ export default function AdminExperienceLevelsIndex({
                 <InputError message={form.errors.sort_order} />
             </div>
 
+            <div className="space-y-2">
+                <Label htmlFor="experience-level-min-years">
+                    Minimum years of experience
+                </Label>
+                <Input
+                    id="experience-level-min-years"
+                    type="number"
+                    min={0}
+                    max={60}
+                    value={form.data.min_years ?? ''}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        form.setData(
+                            'min_years',
+                            value === '' ? null : Number(value),
+                        );
+                    }}
+                    disabled={form.processing}
+                />
+                <p className="text-sm text-muted-foreground">
+                    Used to work out which level a candidate's experience falls
+                    into when matching recommended jobs. Leave empty to skip
+                    this level.
+                </p>
+                <InputError message={form.errors.min_years} />
+            </div>
+
             <div className="flex items-center space-x-2 pt-2">
                 <Checkbox
                     id="experience-level-is-active"
@@ -306,6 +337,9 @@ export default function AdminExperienceLevelsIndex({
                                     Order
                                 </th>
                                 <th scope="col" className="px-4 py-3">
+                                    Min years
+                                </th>
+                                <th scope="col" className="px-4 py-3">
                                     Status
                                 </th>
                                 <th
@@ -337,6 +371,9 @@ export default function AdminExperienceLevelsIndex({
                                     </td>
                                     <td className="px-4 py-3 text-muted-foreground">
                                         {experienceLevel.sort_order}
+                                    </td>
+                                    <td className="px-4 py-3 text-muted-foreground">
+                                        {experienceLevel.min_years ?? '—'}
                                     </td>
                                     <td className="px-4 py-3">
                                         {experienceLevel.is_active ? (

@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\Recommendation\SkillIndexService;
+use App\Support\LocationNormalizer;
 use Database\Factories\JobFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +30,8 @@ use Illuminate\Support\Carbon;
  * @property bool $salary_negotiable
  * @property int|null $pay_period_id
  * @property string|null $location
+ * @property string|null $location_city
+ * @property array<int, string>|null $skills
  * @property Carbon|null $application_deadline
  * @property string $status
  * @property Carbon|null $created_at
@@ -55,6 +60,7 @@ class Job extends Model
         'salary_negotiable',
         'pay_period_id',
         'location',
+        'skills',
         'application_deadline',
         'rejection_reason',
     ];
@@ -66,7 +72,51 @@ class Job extends Model
             'salary_max' => 'decimal:2',
             'salary_negotiable' => 'boolean',
             'application_deadline' => 'date',
+            'skills' => 'array',
         ];
+    }
+
+    /**
+     * Keep the derived skill index in step with the job's skill list.
+     *
+     * `created` and `updated` are used rather than `saved` because Laravel
+     * only records the changed attributes for an update, so `wasChanged()` is
+     * never true for a freshly inserted model.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (self $job): void {
+            // A new job has no indexed rows yet, so an empty skill list needs
+            // no work at all.
+            if ($job->skills) {
+                app(SkillIndexService::class)->syncJob($job);
+            }
+        });
+
+        static::updated(function (self $job): void {
+            if ($job->wasChanged('skills')) {
+                app(SkillIndexService::class)->syncJob($job);
+            }
+        });
+    }
+
+    /**
+     * Derive the comparable city token whenever the location is written.
+     *
+     * `location_city` is intentionally absent from `$fillable`, so it can only
+     * ever be written through this mutator.
+     *
+     * @return Attribute<string|null, array<string, mixed>>
+     */
+    protected function location(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => $value,
+            set: fn (?string $value): array => [
+                'location' => $value,
+                'location_city' => LocationNormalizer::city($value),
+            ],
+        );
     }
 
     /**
@@ -227,5 +277,17 @@ class Job extends Model
     public function screeningQuestions(): HasMany
     {
         return $this->hasMany(JobScreeningQuestion::class, 'job_posting_id');
+    }
+
+    /**
+     * The canonical skill index for this job.
+     *
+     * Named `skillTags` because `skills` is already the JSON attribute.
+     *
+     * @return HasMany<JobSkill, $this>
+     */
+    public function skillTags(): HasMany
+    {
+        return $this->hasMany(JobSkill::class, 'job_posting_id');
     }
 }

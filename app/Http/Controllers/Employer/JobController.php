@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\WorkplaceArrangement;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -118,10 +119,14 @@ class JobController extends Controller
 
         $this->authorize('create', [Job::class, $company]);
 
-        $job = new Job($validated);
-        $job->company_id = $company->id;
-        $job->status = 'draft';
-        $job->save();
+        $job = DB::transaction(function () use ($validated, $company): Job {
+            $job = new Job($validated);
+            $job->company_id = $company->id;
+            $job->status = 'draft';
+            $job->save();
+
+            return $job;
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -173,11 +178,13 @@ class JobController extends Controller
     {
         $this->authorize('update', $job);
 
-        $job->fill($request->jobData());
-        if ($job->status === 'published') {
-            $job->status = 'draft';
-        }
-        $job->save();
+        DB::transaction(function () use ($job, $request): void {
+            $job->fill($request->jobData());
+            if ($job->status === 'published') {
+                $job->status = 'draft';
+            }
+            $job->save();
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -336,6 +343,7 @@ class JobController extends Controller
             'salary_negotiable' => $job->salary_negotiable,
             'pay_period_id' => $job->pay_period_id,
             'location' => $job->location,
+            'skills' => $job->skills ?? [],
             'application_deadline' => $job->application_deadline?->toIso8601String(),
             'status' => $job->status,
             'rejection_reason' => $job->rejection_reason,

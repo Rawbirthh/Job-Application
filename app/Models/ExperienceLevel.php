@@ -17,6 +17,7 @@ class ExperienceLevel extends Model
         'slug',
         'description',
         'sort_order',
+        'min_years',
         'is_active',
     ];
 
@@ -25,6 +26,7 @@ class ExperienceLevel extends Model
         return [
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'min_years' => 'integer',
         ];
     }
 

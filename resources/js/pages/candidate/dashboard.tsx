@@ -6,6 +6,7 @@ import {
     FileText,
     Search,
     ShieldAlert,
+    Sparkles,
     UserCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -213,6 +214,31 @@ export default function CandidateDashboard() {
                                 <Button asChild size="sm">
                                     <Link href={candidate.profile.edit()}>
                                         Edit profile
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Recommended Jobs
+                            </CardTitle>
+                            <Sparkles className="size-4 text-teal-600 dark:text-teal-400" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                Matched to your profile
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Published jobs ranked against your skills,
+                                preferences and experience.
+                            </p>
+                            <div className="mt-3">
+                                <Button asChild size="sm">
+                                    <Link href="/candidate/recommendations">
+                                        See recommendations
                                     </Link>
                                 </Button>
                             </div>

@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useFlashToast } from '@/hooks/use-flash-toast';
@@ -47,7 +54,7 @@ function isBlankExperience(row: CandidateExperience): boolean {
     );
 }
 
-export default function CandidateProfileEdit({ profile }: Props) {
+export default function CandidateProfileEdit({ profile, options }: Props) {
     useFlashToast();
 
     const form = useForm<CandidateProfileForm>({
@@ -55,6 +62,10 @@ export default function CandidateProfileEdit({ profile }: Props) {
         summary: profile.summary,
         location: profile.location,
         skills: profile.skills ?? [],
+        preferred_category_id: profile.preferred_category_id,
+        preferred_experience_level_id: profile.preferred_experience_level_id,
+        preferred_workplace_arrangement_id:
+            profile.preferred_workplace_arrangement_id,
         educations: (profile.educations ?? []).map((education) => ({
             id: education.id,
             institution: education.institution ?? '',
@@ -396,6 +407,167 @@ export default function CandidateProfileEdit({ profile }: Props) {
                                     message={errors[`skills.${index}`]}
                                 />
                             ))}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border">
+                        <CardHeader>
+                            <CardTitle className="text-lg">
+                                Job preferences
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                These optional preferences are used to rank
+                                recommended jobs. Leave one empty to ignore that
+                                signal.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="preferred_category_id">
+                                    Preferred job category
+                                </Label>
+                                <Select
+                                    value={
+                                        form.data.preferred_category_id
+                                            ? String(
+                                                  form.data
+                                                      .preferred_category_id,
+                                              )
+                                            : 'none'
+                                    }
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            'preferred_category_id',
+                                            value === 'none'
+                                                ? null
+                                                : Number(value),
+                                        )
+                                    }
+                                    disabled={form.processing}
+                                >
+                                    <SelectTrigger id="preferred_category_id">
+                                        <SelectValue placeholder="No preference" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            No preference
+                                        </SelectItem>
+                                        {options.categories.map((option) => (
+                                            <SelectItem
+                                                key={option.id}
+                                                value={String(option.id)}
+                                            >
+                                                {option.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError
+                                    id="preferred_category_id-error"
+                                    message={errors.preferred_category_id}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="preferred_experience_level_id">
+                                    Preferred experience level
+                                </Label>
+                                <Select
+                                    value={
+                                        form.data.preferred_experience_level_id
+                                            ? String(
+                                                  form.data
+                                                      .preferred_experience_level_id,
+                                              )
+                                            : 'none'
+                                    }
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            'preferred_experience_level_id',
+                                            value === 'none'
+                                                ? null
+                                                : Number(value),
+                                        )
+                                    }
+                                    disabled={form.processing}
+                                >
+                                    <SelectTrigger id="preferred_experience_level_id">
+                                        <SelectValue placeholder="No preference" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            No preference
+                                        </SelectItem>
+                                        {options.experienceLevels.map(
+                                            (option) => (
+                                                <SelectItem
+                                                    key={option.id}
+                                                    value={String(option.id)}
+                                                >
+                                                    {option.name}
+                                                </SelectItem>
+                                            ),
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                                <InputError
+                                    id="preferred_experience_level_id-error"
+                                    message={
+                                        errors.preferred_experience_level_id
+                                    }
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="preferred_workplace_arrangement_id">
+                                    Preferred work arrangement
+                                </Label>
+                                <Select
+                                    value={
+                                        form.data
+                                            .preferred_workplace_arrangement_id
+                                            ? String(
+                                                  form.data
+                                                      .preferred_workplace_arrangement_id,
+                                              )
+                                            : 'none'
+                                    }
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            'preferred_workplace_arrangement_id',
+                                            value === 'none'
+                                                ? null
+                                                : Number(value),
+                                        )
+                                    }
+                                    disabled={form.processing}
+                                >
+                                    <SelectTrigger id="preferred_workplace_arrangement_id">
+                                        <SelectValue placeholder="No preference" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            No preference
+                                        </SelectItem>
+                                        {options.workplaceArrangements.map(
+                                            (option) => (
+                                                <SelectItem
+                                                    key={option.id}
+                                                    value={String(option.id)}
+                                                >
+                                                    {option.name}
+                                                </SelectItem>
+                                            ),
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                                <InputError
+                                    id="preferred_workplace_arrangement_id-error"
+                                    message={
+                                        errors.preferred_workplace_arrangement_id
+                                    }
+                                />
+                            </div>
                         </CardContent>
                     </Card>
 

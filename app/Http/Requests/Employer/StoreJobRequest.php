@@ -28,7 +28,37 @@ class StoreJobRequest extends FormRequest
             $merged[$field] = $value;
         }
 
+        $merged['skills'] = $this->normalizeSkills($this->input('skills'));
+
         $this->merge($merged);
+    }
+
+    /**
+     * Trim the submitted skill list and drop empty entries.
+     *
+     * @return array<int, string>
+     */
+    protected function normalizeSkills(mixed $skills): array
+    {
+        if (! is_array($skills)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($skills as $skill) {
+            if (! is_string($skill)) {
+                continue;
+            }
+
+            $skill = trim($skill);
+
+            if ($skill !== '') {
+                $normalized[] = $skill;
+            }
+        }
+
+        return $normalized;
     }
 
     /**
@@ -52,6 +82,8 @@ class StoreJobRequest extends FormRequest
             'salary_negotiable' => ['boolean'],
             'pay_period_id' => ['nullable', 'exists:pay_periods,id,is_active,1'],
             'location' => ['nullable', 'string', 'max:255'],
+            'skills' => ['nullable', 'array', 'max:30'],
+            'skills.*' => ['string', 'max:50'],
             'application_deadline' => ['nullable', 'date'],
         ];
     }
@@ -113,6 +145,7 @@ class StoreJobRequest extends FormRequest
             'salary_negotiable' => $this->boolean('salary_negotiable'),
             'pay_period_id' => $validated['pay_period_id'] ?? null,
             'location' => $validated['location'] ?? null,
+            'skills' => array_values($validated['skills'] ?? []),
             'application_deadline' => $validated['application_deadline'] ?? null,
         ];
     }

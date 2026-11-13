@@ -30,6 +30,7 @@ interface JobDetail {
     responsibilities: string | null;
     requirements: string | null;
     location: string | null;
+    skills: string[];
     salary_min: string | null;
     salary_max: string | null;
     salary_currency: string | null;
@@ -218,6 +219,18 @@ export default function PublicJobShow({ job }: Props) {
                                         <Badge variant="outline">
                                             {job.experience_level.name}
                                         </Badge>
+                                    )}
+                                    {job.skills && job.skills.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {job.skills.map((skill, index) => (
+                                                <Badge
+                                                    key={`${skill}-${index}`}
+                                                    variant="outline"
+                                                >
+                                                    {skill}
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     )}
                                     {job.location && (
                                         <Badge variant="outline">

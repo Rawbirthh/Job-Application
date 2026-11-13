@@ -51,6 +51,7 @@ class ExperienceLevelController extends Controller
             'slug' => $experienceLevel->slug,
             'description' => $experienceLevel->description,
             'sort_order' => $experienceLevel->sort_order,
+            'min_years' => $experienceLevel->min_years,
             'is_active' => $experienceLevel->is_active,
         ]);
 

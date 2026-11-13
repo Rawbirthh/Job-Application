@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useForm } from '@inertiajs/react';
 import InputError from '@/components/input-error';
+import JobSkillsInput from '@/components/job/job-skills-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,6 +49,7 @@ export default function EmployerJobCreate({
         salary_negotiable: false,
         pay_period_id: null,
         location: '',
+        skills: [],
         application_deadline: '',
     });
 
@@ -292,6 +294,18 @@ export default function EmployerJobCreate({
                                     message={form.errors.requirements}
                                 />
                             </div>
+
+                            {/* Skills */}
+                            <JobSkillsInput
+                                id="skills"
+                                value={form.data.skills}
+                                onChange={(value) =>
+                                    form.setData('skills', value)
+                                }
+                                disabled={form.processing}
+                                error={form.errors.skills}
+                                description="List the skills this role needs so candidates who match them see the job in their recommendations."
+                            />
 
                             {/* Category */}
                             <div className="space-y-2">
