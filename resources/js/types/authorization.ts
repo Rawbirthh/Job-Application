@@ -49,8 +49,10 @@ export type AdminUserRow = {
 
 export type AdminUserIndexProps = {
     users: PaginatedData<AdminUserRow>;
+    roles: RoleSummary[];
     filters: {
         search: string;
+        role: number | null;
     };
     canManageRoles: boolean;
 };

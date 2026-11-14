@@ -13,6 +13,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             notifications_unread_count?: number;
+            notifications_recent?: import('@/types').NotificationItem[];
             [key: string]: unknown;
         };
     }

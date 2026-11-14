@@ -13,8 +13,12 @@ use App\Models\User;
 use App\Services\ApplicationStatusTransitionService;
 use App\Services\NotificationService;
 use DateTimeZone;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,13 +27,24 @@ class ApplicationHistoryController extends Controller
     /**
      * Display a paginated listing of the candidate's applications.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         /** @var User $user */
         $user = request()->user();
 
+        $validated = $request->validate([
+            'status' => ['nullable', 'string', Rule::enum(JobApplicationStatus::class)],
+        ]);
+
+        $status = isset($validated['status'])
+            ? JobApplicationStatus::from($validated['status'])
+            : null;
+
         $applications = JobApplication::query()
             ->where('user_id', $user->id)
+            ->when($status !== null, function (Builder $query) use ($status): void {
+                $query->where('status', $status->value);
+            })
             ->with([
                 'jobPosting' => function ($query): void {
                     $query->select([
@@ -61,6 +76,14 @@ class ApplicationHistoryController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $statusCounts = JobApplication::query()
+            ->where('user_id', $user->id)
+            ->select('status', DB::raw('count(*) as aggregate'))
+            ->groupBy('status')
+            ->pluck('aggregate', 'status')
+            ->map(fn ($count): int => (int) $count)
+            ->all();
+
         return Inertia::render('candidate/applications/index', [
             'applications' => $applications->through(function (JobApplication $application): array {
                 $job = $application->jobPosting;
@@ -88,6 +111,8 @@ class ApplicationHistoryController extends Controller
                     'cover_letter' => $application->cover_letter,
                 ];
             }),
+            'filters' => ['status' => $status?->value],
+            'statusCounts' => $statusCounts,
             'pagination' => [
                 'current_page' => $applications->currentPage(),
                 'last_page' => $applications->lastPage(),

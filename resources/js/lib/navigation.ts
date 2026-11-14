@@ -11,7 +11,6 @@ import {
     Building2,
     Bookmark,
     FileText,
-    Bell,
     MessageSquare,
     ClipboardList,
     Flag,
@@ -75,11 +74,6 @@ export const mainNavConfig: NavItemConfig[] = [
         href: '/messages',
         icon: MessageSquare,
         requiredRoles: ['job_seeker', 'employer'],
-    },
-    {
-        title: 'Notifications',
-        href: '/notifications',
-        icon: Bell,
     },
     {
         title: 'Company Profiles',

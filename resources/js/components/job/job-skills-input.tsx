@@ -30,6 +30,7 @@ export default function JobSkillsInput({
     description,
 }: Props) {
     const [input, setInput] = useState('');
+    const [inputError, setInputError] = useState<string | null>(null);
 
     const addSkill = () => {
         const skill = input.trim();
@@ -38,18 +39,23 @@ export default function JobSkillsInput({
             return;
         }
 
+        if (value.length >= 30) {
+            setInputError('You can add up to 30 skills.');
+            return;
+        }
+
         const exists = value.some(
             (entry) => entry.toLowerCase() === skill.toLowerCase(),
         );
 
         if (exists) {
-            setInput('');
-
+            setInputError(`“${skill}” is already listed.`);
             return;
         }
 
         onChange([...value, skill]);
         setInput('');
+        setInputError(null);
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -70,12 +76,20 @@ export default function JobSkillsInput({
                 <Input
                     id={id}
                     value={input}
-                    onChange={(event) => setInput(event.target.value)}
+                    onChange={(event) => {
+                        setInput(event.target.value);
+                        if (inputError) {
+                            setInputError(null);
+                        }
+                    }}
                     onKeyDown={handleKeyDown}
                     maxLength={50}
                     disabled={disabled}
                     placeholder="Type a skill and press Enter"
                     aria-label="Add skill"
+                    aria-invalid={inputError ? true : undefined}
+                    aria-describedby={`${id}-input-error`}
+                    className="sm:max-w-xs"
                 />
                 <Button
                     type="button"
@@ -87,6 +101,10 @@ export default function JobSkillsInput({
                     Add
                 </Button>
             </div>
+            <InputError
+                id={`${id}-input-error`}
+                message={inputError ?? undefined}
+            />
             {description && (
                 <p className="text-sm text-muted-foreground">{description}</p>
             )}

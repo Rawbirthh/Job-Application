@@ -1,6 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Pagination from '@/components/pagination';
+import ReportStatusBadge from '@/components/reports/report-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,6 @@ import type {
 } from '@/types';
 import {
     reportReasonLabel,
-    reportStatusLabel,
     reportSubjectLabel,
     REPORT_REASONS,
     REPORT_STATUSES,
@@ -190,11 +190,9 @@ export default function AdminReportsIndex({
                                             {reportReasonLabel(report.reason)}
                                         </td>
                                         <td className="p-4">
-                                            <Badge variant="outline">
-                                                {reportStatusLabel(
-                                                    report.status,
-                                                )}
-                                            </Badge>
+                                            <ReportStatusBadge
+                                                status={report.status}
+                                            />
                                         </td>
                                         <td className="p-4 text-muted-foreground">
                                             {report.reporter?.name || '—'}

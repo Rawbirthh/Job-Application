@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import candidate from '@/routes/candidate';
+import { cn } from '@/lib/utils';
 import type {
     RecommendationIndexProps,
     RecommendedJob,
@@ -43,37 +44,97 @@ function formatSalary(job: RecommendedJob): string | null {
     return null;
 }
 
+function matchScoreClasses(score: number): string {
+    if (score >= 70) {
+        return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+    }
+
+    if (score >= 40) {
+        return 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+    }
+
+    return 'border-border bg-muted text-muted-foreground';
+}
+
+function matchScoreLabel(score: number): string {
+    if (score >= 70) {
+        return 'Strong match';
+    }
+
+    if (score >= 40) {
+        return 'Good match';
+    }
+
+    return 'Low match';
+}
+
+function MatchScoreBadge({ score }: { score: number }) {
+    return (
+        <Badge
+            variant="outline"
+            className={cn('shrink-0 gap-1.5', matchScoreClasses(score))}
+            title={`${score}/100 against your profile signals`}
+        >
+            <span
+                aria-hidden="true"
+                className="inline-block size-1.5 rounded-full bg-current opacity-70"
+            />
+            {matchScoreLabel(score)} · {score}
+        </Badge>
+    );
+}
+
+const MAX_REASONS_SHOWN = 3;
+const MAX_VALUES_SHOWN = 3;
+
 function ReasonList({ reasons }: { reasons: RecommendationReason[] }) {
     if (reasons.length === 0) {
         return null;
     }
 
+    const visible = reasons.slice(0, MAX_REASONS_SHOWN);
+    const extra = reasons.length - visible.length;
+
     return (
-        <div className="flex flex-col gap-2">
-            {reasons.map((reason) => (
-                <div key={reason.code} className="space-y-1">
-                    <Badge
-                        variant="secondary"
-                        title={reason.values.join(', ')}
-                        className="font-normal"
-                    >
-                        {reason.detail}
-                    </Badge>
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+            <span className="mr-1 text-xs font-medium text-muted-foreground">
+                Why matched
+            </span>
+            {visible.map((reason) => (
+                <Badge
+                    key={reason.code}
+                    variant="secondary"
+                    className="max-w-full gap-1 font-normal"
+                    title={
+                        reason.values.length > 0
+                            ? reason.values.join(', ')
+                            : reason.detail
+                    }
+                >
+                    <span className="truncate">{reason.detail}</span>
                     {reason.values.length > 0 && (
-                        <div className="flex flex-wrap gap-1 pl-1">
-                            {reason.values.map((value, index) => (
-                                <Badge
-                                    key={`${reason.code}-${value}-${index}`}
-                                    variant="outline"
-                                    className="text-xs font-normal"
-                                >
-                                    {value}
-                                </Badge>
-                            ))}
-                        </div>
+                        <span className="truncate text-muted-foreground">
+                            ·{' '}
+                            {reason.values
+                                .slice(0, MAX_VALUES_SHOWN)
+                                .join(', ')}
+                            {reason.values.length > MAX_VALUES_SHOWN &&
+                                ` +${reason.values.length - MAX_VALUES_SHOWN}`}
+                        </span>
                     )}
-                </div>
+                </Badge>
             ))}
+            {extra > 0 && (
+                <span
+                    className="text-xs text-muted-foreground"
+                    title={reasons
+                        .slice(MAX_REASONS_SHOWN)
+                        .map((reason) => reason.detail)
+                        .join(' · ')}
+                >
+                    +{extra} more
+                </span>
+            )}
         </div>
     );
 }
@@ -89,46 +150,70 @@ export default function JobRecommendations({
     const isFallback = mode === 'fallback';
 
     return (
-        <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="flex w-full flex-1 flex-col gap-6 p-6 md:p-8">
             <Head title="Recommended Jobs" />
 
-            <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
+                    <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                         {isFallback ? 'Recent jobs' : 'Recommended for you'}
                     </h1>
-                    <p className="mt-1 text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground md:text-base">
                         {isFallback
                             ? 'Showing recent published jobs while we work out what suits you best.'
-                            : 'Published jobs ranked against your skills, preferences and experience.'}
+                            : `Published jobs ranked against your profile · ${recommendations.total} ${recommendations.total === 1 ? 'result' : 'results'}`}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" size="sm">
                         <Link href={candidate.profile.edit()}>
                             <UserRound className="h-4 w-4" />
                             Edit profile
                         </Link>
                     </Button>
-                    <Button asChild>
+                    <Button asChild size="sm">
                         <Link href="/jobs">Browse Jobs</Link>
                     </Button>
                 </div>
             </div>
 
             {isFallback && (
-                <Card className="mb-6 border-border">
-                    <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-muted-foreground">
-                            Complete your profile to get personalised
-                            recommendations.
+                <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Sparkles className="size-4" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">
+                            Complete your profile to unlock personalized
+                            recommendations
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                            {profileSummary.signals_available} of 5 signals
-                            available
-                        </p>
-                    </CardContent>
-                </Card>
+                        <div className="mt-1.5 flex items-center gap-2">
+                            <div
+                                className="h-1.5 w-40 overflow-hidden rounded-full bg-muted"
+                                role="progressbar"
+                                aria-valuemin={0}
+                                aria-valuemax={5}
+                                aria-valuenow={profileSummary.signals_available}
+                                aria-label="Profile signals completed"
+                            >
+                                <div
+                                    className="h-full rounded-full bg-primary transition-all"
+                                    style={{
+                                        width: `${Math.min(100, (profileSummary.signals_available / 5) * 100)}%`,
+                                    }}
+                                />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                                {profileSummary.signals_available} of 5 signals
+                            </span>
+                        </div>
+                    </div>
+                    <Button asChild size="sm" className="shrink-0">
+                        <Link href={candidate.profile.edit()}>
+                            Finish profile
+                        </Link>
+                    </Button>
+                </div>
             )}
 
             {items.length === 0 ? (
@@ -150,7 +235,7 @@ export default function JobRecommendations({
                     </CardContent>
                 </Card>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {items.map((job) => {
                         const salary = formatSalary(job);
 
@@ -159,11 +244,26 @@ export default function JobRecommendations({
                                 key={job.id}
                                 className="transition-shadow hover:shadow-md"
                             >
-                                <CardContent className="flex flex-col gap-4 p-6">
-                                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                                        <div className="flex-1 space-y-2">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <h2 className="text-xl font-semibold">
+                                <CardContent className="flex flex-col gap-3 p-4">
+                                    <div className="flex items-start gap-4">
+                                        {job.company?.logo_url ? (
+                                            <img
+                                                src={job.company.logo_url}
+                                                alt={job.company.name}
+                                                className="hidden size-12 shrink-0 rounded-lg border border-border object-cover sm:block"
+                                            />
+                                        ) : (
+                                            <div
+                                                aria-hidden="true"
+                                                className="hidden size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground sm:flex"
+                                            >
+                                                <Building2 className="size-6" />
+                                            </div>
+                                        )}
+
+                                        <div className="min-w-0 flex-1 space-y-1.5">
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                <h2 className="text-base leading-snug font-semibold sm:text-lg">
                                                     <Link
                                                         href={`/jobs/${job.id}`}
                                                         className="text-primary hover:underline"
@@ -172,19 +272,25 @@ export default function JobRecommendations({
                                                     </Link>
                                                 </h2>
                                                 {job.has_applied && (
-                                                    <Badge variant="outline">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="gap-1 text-xs"
+                                                    >
                                                         <CheckCircle2 className="h-3 w-3" />
                                                         Applied
                                                     </Badge>
                                                 )}
                                                 {job.is_saved && (
-                                                    <Badge variant="outline">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="text-xs"
+                                                    >
                                                         Saved
                                                     </Badge>
                                                 )}
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                                                 {job.company && (
                                                     <span className="flex items-center gap-1 font-medium text-foreground">
                                                         <Building2 className="h-4 w-4" />
@@ -207,7 +313,7 @@ export default function JobRecommendations({
                                                     </span>
                                                 )}
                                                 {job.workplace_arrangement && (
-                                                    <span className="flex items-center gap-1">
+                                                    <span>
                                                         {
                                                             job
                                                                 .workplace_arrangement
@@ -216,30 +322,32 @@ export default function JobRecommendations({
                                                     </span>
                                                 )}
                                                 {salary && (
-                                                    <span>{salary}</span>
+                                                    <span className="font-medium text-foreground">
+                                                        {salary}
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {job.match_score !== null && (
-                                            <Badge
-                                                variant="default"
-                                                className="shrink-0"
+                                        <div className="flex shrink-0 flex-col items-end gap-2">
+                                            {job.match_score !== null && (
+                                                <MatchScoreBadge
+                                                    score={job.match_score}
+                                                />
+                                            )}
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                size="sm"
                                             >
-                                                Match score {job.match_score}
-                                            </Badge>
-                                        )}
+                                                <Link href={`/jobs/${job.id}`}>
+                                                    View job
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </div>
 
                                     <ReasonList reasons={job.reasons} />
-
-                                    <div className="flex justify-end">
-                                        <Button asChild variant="outline">
-                                            <Link href={`/jobs/${job.id}`}>
-                                                View job
-                                            </Link>
-                                        </Button>
-                                    </div>
                                 </CardContent>
                             </Card>
                         );
@@ -248,7 +356,7 @@ export default function JobRecommendations({
             )}
 
             {recommendations && recommendations.last_page > 1 && (
-                <div className="mt-8">
+                <div className="mt-2">
                     <Pagination
                         currentPage={recommendations.current_page}
                         lastPage={recommendations.last_page}

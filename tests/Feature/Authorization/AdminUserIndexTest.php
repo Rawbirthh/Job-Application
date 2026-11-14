@@ -3,6 +3,7 @@
 namespace Tests\Feature\Authorization;
 
 use App\Enums\PermissionSlug;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,6 +52,95 @@ class AdminUserIndexTest extends TestCase
                 ->component('admin/users/index')
                 ->where('canManageRoles', false),
             );
+    }
+
+    public function test_admin_can_filter_users_by_role(): void
+    {
+        $administrator = User::factory()->platformAdmin()->create(['name' => 'Admin User']);
+        $alice = User::factory()->jobSeeker()->create(['name' => 'Alice Anderson']);
+        $bob = User::factory()->employer()->create(['name' => 'Bob Brown']);
+
+        $jobSeekerRole = Role::query()->where('slug', 'job_seeker')->firstOrFail();
+
+        $this->actingAs($administrator)
+            ->get(route('admin.users.index', ['role' => $jobSeekerRole->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/users/index')
+                ->where('users.total', 1)
+                ->where('users.data.0.id', $alice->id)
+                ->where('filters.role', $jobSeekerRole->id),
+            );
+    }
+
+    public function test_role_filter_combines_with_search(): void
+    {
+        $administrator = User::factory()->platformAdmin()->create(['name' => 'Admin User']);
+        User::factory()->jobSeeker()->create([
+            'name' => 'Alice Anderson',
+        ]);
+        User::factory()->jobSeeker()->create(['name' => 'Alice Zephyr']);
+        User::factory()->employer()->create(['name' => 'Alice Employer']);
+
+        $jobSeekerRole = Role::query()->where('slug', 'job_seeker')->firstOrFail();
+
+        $this->actingAs($administrator)
+            ->get(route('admin.users.index', ['search' => 'Alice', 'role' => $jobSeekerRole->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('users.total', 2)
+                ->where('filters.search', 'Alice')
+                ->where('filters.role', $jobSeekerRole->id),
+            );
+
+        $this->actingAs($administrator)
+            ->get(route('admin.users.index', ['search' => 'Alice Z', 'role' => $jobSeekerRole->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('users.total', 1),
+            );
+    }
+
+    public function test_role_filter_rejects_a_nonexistent_role(): void
+    {
+        $administrator = User::factory()->platformAdmin()->create();
+
+        $response = $this->actingAs($administrator)
+            ->from(route('admin.users.index'))
+            ->get(route('admin.users.index', ['role' => 999999]));
+
+        $response->assertRedirect(route('admin.users.index'));
+        $response->assertSessionHasErrors('role');
+    }
+
+    public function test_role_filter_rejects_a_non_integer_role(): void
+    {
+        $administrator = User::factory()->platformAdmin()->create();
+
+        $response = $this->actingAs($administrator)
+            ->from(route('admin.users.index'))
+            ->get(route('admin.users.index', ['role' => 'abc']));
+
+        $response->assertRedirect(route('admin.users.index'));
+        $response->assertSessionHasErrors('role');
+    }
+
+    public function test_admin_user_index_exposes_the_bounded_role_catalogue(): void
+    {
+        $administrator = User::factory()->platformAdmin()->create();
+
+        $this->actingAs($administrator)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertInertia(function (Assert $page): void {
+                $page->component('admin/users/index')
+                    ->where('filters.role', null);
+
+                $payload = $page->toArray()['props']['roles'];
+                $this->assertNotEmpty($payload);
+                $this->assertContains('job_seeker', array_column($payload, 'slug'));
+                $this->assertSame(['id', 'slug', 'name'], array_keys($payload[0]));
+            });
     }
 
     public function test_admin_can_search_users_by_name_prefix(): void

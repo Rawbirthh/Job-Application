@@ -34,9 +34,6 @@ Route::get('/jobs', [PublicJobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
 
 Route::middleware(['auth'])->group(function (): void {
-    Route::get('notifications', [NotificationController::class, 'index'])
-        ->name('notifications.index');
-
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])
         ->middleware(['throttle:30,1'])
         ->name('notifications.read-all');

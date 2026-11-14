@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -55,6 +56,32 @@ class HandleInertiaRequests extends Middleware
             'notifications_unread_count' => $user instanceof User
                 ? $user->unreadNotifications()->count()
                 : 0,
+            'notifications_recent' => $user instanceof User
+                ? $this->recentNotifications($user)
+                : [],
         ];
+    }
+
+    /**
+     * Latest 10 notifications for the header bell panel. Bounded select;
+     * the notifications table is indexed on the notifiable morph columns.
+     *
+     * @return array<int, array{id: string, type: string, data: array<string, mixed>, read_at: string|null, created_at: string|null}>
+     */
+    private function recentNotifications(User $user): array
+    {
+        return $user->notifications()
+            ->latest()
+            ->select(['id', 'type', 'data', 'read_at', 'created_at'])
+            ->limit(10)
+            ->get()
+            ->map(fn (DatabaseNotification $notification): array => [
+                'id' => $notification->id,
+                'type' => class_basename($notification->type),
+                'data' => $notification->data ?? [],
+                'read_at' => $notification->read_at?->toIso8601String(),
+                'created_at' => $notification->created_at?->toIso8601String(),
+            ])
+            ->all();
     }
 }

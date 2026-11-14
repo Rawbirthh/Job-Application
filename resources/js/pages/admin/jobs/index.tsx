@@ -1,7 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Pagination from '@/components/pagination';
-import { Badge } from '@/components/ui/badge';
+import JobStatusBadge from '@/components/jobs/job-status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -140,9 +140,9 @@ export default function AdminJobsIndex({ jobs, filters }: AdminJobsIndexProps) {
                                             {job.category?.name || '—'}
                                         </td>
                                         <td className="p-4">
-                                            <Badge variant="outline">
-                                                {job.status}
-                                            </Badge>
+                                            <JobStatusBadge
+                                                status={job.status}
+                                            />
                                         </td>
                                         <td className="p-4 text-muted-foreground">
                                             {job.created_at

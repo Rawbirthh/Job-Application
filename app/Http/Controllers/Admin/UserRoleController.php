@@ -37,9 +37,11 @@ class UserRoleController extends Controller
 
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
+            'role' => ['nullable', 'integer', 'exists:roles,id'],
         ]);
 
         $search = trim((string) ($validated['search'] ?? ''));
+        $roleId = isset($validated['role']) ? (int) $validated['role'] : null;
         $prefix = $search === '' ? null : $this->escapeLike($search).'%';
 
         $users = User::query()
@@ -51,6 +53,11 @@ class UserRoleController extends Controller
                         ->orWhere('users.email', 'like', $prefix);
                 });
             })
+            ->when($roleId !== null, function (Builder $query) use ($roleId): void {
+                $query->whereHas('roles', function (Builder $query) use ($roleId): void {
+                    $query->where('roles.id', $roleId);
+                });
+            })
             ->orderBy('users.name')
             ->orderBy('users.id')
             ->paginate(20)
@@ -58,9 +65,19 @@ class UserRoleController extends Controller
 
         $users->through(fn (User $user): array => $this->userPayload($user));
 
+        // The role catalogue is intentionally small, bounded system configuration.
+        $roles = Role::query()
+            ->select(['id', 'slug', 'name'])
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Role $role): array => $this->roleSummary($role))
+            ->all();
+
         return Inertia::render('admin/users/index', [
             'users' => $users,
-            'filters' => ['search' => $search],
+            'roles' => $roles,
+            'filters' => ['search' => $search, 'role' => $roleId],
             'canManageRoles' => $actor instanceof User
                 && $actor->hasPermission(PermissionSlug::UsersRolesManage),
         ]);

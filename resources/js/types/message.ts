@@ -68,4 +68,6 @@ export type ConversationThread = {
 export type MessagesShowProps = {
     conversation: ConversationThread;
     messages: MessagesPaginated;
+    conversations: ConversationsPaginated;
+    unread_total: number;
 };

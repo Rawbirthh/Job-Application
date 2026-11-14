@@ -93,7 +93,7 @@ export function TemplateForm({
                         <p className="text-xs text-muted-foreground">
                             Available bank questions
                         </p>
-                        <div className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                        <div className="max-h-80 space-y-1 overflow-y-auto rounded-md border border-border p-2">
                             {bankQuestions.length === 0 && (
                                 <p className="text-xs text-muted-foreground">
                                     No bank questions available.
@@ -102,7 +102,7 @@ export function TemplateForm({
                             {bankQuestions.map((q) => (
                                 <label
                                     key={q.id}
-                                    className="flex items-center gap-2 text-sm"
+                                    className="flex items-start gap-2 text-sm"
                                 >
                                     <input
                                         type="checkbox"
@@ -111,8 +111,11 @@ export function TemplateForm({
                                         )}
                                         onChange={() => toggleQuestion(q.id)}
                                         disabled={processing}
+                                        className="mt-0.5 shrink-0"
                                     />
-                                    <span>{q.label}</span>
+                                    <span className="min-w-0 leading-snug break-words">
+                                        {q.label}
+                                    </span>
                                 </label>
                             ))}
                         </div>
@@ -122,7 +125,7 @@ export function TemplateForm({
                         <p className="text-xs text-muted-foreground">
                             Selected order
                         </p>
-                        <div className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                        <div className="max-h-80 space-y-1 overflow-y-auto rounded-md border border-border p-2">
                             {selectedQuestions.length === 0 && (
                                 <p className="text-xs text-muted-foreground">
                                     No questions selected.
@@ -131,12 +134,12 @@ export function TemplateForm({
                             {selectedQuestions.map((q, index) => (
                                 <div
                                     key={q.id}
-                                    className="flex items-center justify-between gap-2 text-sm"
+                                    className="flex items-start justify-between gap-2 text-sm"
                                 >
-                                    <span className="truncate">
+                                    <span className="min-w-0 text-sm leading-snug break-words">
                                         {index + 1}. {q.label}
                                     </span>
-                                    <div className="flex gap-1">
+                                    <div className="flex shrink-0 gap-1">
                                         <Button
                                             type="button"
                                             variant="ghost"

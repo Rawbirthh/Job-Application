@@ -1,7 +1,16 @@
 import { FormEvent, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import {
+    ArrowLeft,
+    Briefcase,
+    GraduationCap,
+    Plus,
+    SlidersHorizontal,
+    Sparkles,
+    UserRound,
+    X,
+} from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -88,21 +97,29 @@ export default function CandidateProfileEdit({ profile, options }: Props) {
     });
 
     const [skillInput, setSkillInput] = useState('');
+    const [skillInputError, setSkillInputError] = useState<string | null>(null);
 
     const errors = form.errors as FormErrors;
 
     const addSkill = () => {
         const value = skillInput.trim();
-        if (!value) return;
+        if (!value) {
+            return;
+        }
+        if (form.data.skills.length >= 30) {
+            setSkillInputError('You can add up to 30 skills.');
+            return;
+        }
         const exists = form.data.skills.some(
             (skill) => skill.toLowerCase() === value.toLowerCase(),
         );
         if (exists) {
-            setSkillInput('');
+            setSkillInputError(`“${value}” is already added.`);
             return;
         }
         form.setData('skills', [...form.data.skills, value]);
         setSkillInput('');
+        setSkillInputError(null);
     };
 
     const handleSkillKeyDown = (
@@ -252,841 +269,1055 @@ export default function CandidateProfileEdit({ profile, options }: Props) {
                 </div>
 
                 <form
+                    id="candidate-profile-form"
                     onSubmit={handleSubmit}
-                    className="space-y-6"
+                    className="grid items-start gap-6 lg:grid-cols-3"
                     aria-busy={form.processing}
                 >
-                    <Card className="border-border">
-                        <CardHeader>
-                            <CardTitle className="text-lg">
-                                Basic information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="headline">Headline</Label>
-                                <Input
-                                    id="headline"
-                                    value={form.data.headline ?? ''}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'headline',
-                                            e.target.value === ''
-                                                ? null
-                                                : e.target.value,
-                                        )
-                                    }
-                                    maxLength={150}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        errors.headline ? true : undefined
-                                    }
-                                    aria-describedby="headline-error"
-                                />
-                                <InputError
-                                    id="headline-error"
-                                    message={errors.headline}
-                                />
-                            </div>
+                    <div className="min-w-0 space-y-6 lg:col-span-2 lg:max-w-3xl">
+                        <Card
+                            id="section-basic"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <UserRound
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Basic information
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="headline">Headline</Label>
+                                    <Input
+                                        id="headline"
+                                        value={form.data.headline ?? ''}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'headline',
+                                                e.target.value === ''
+                                                    ? null
+                                                    : e.target.value,
+                                            )
+                                        }
+                                        maxLength={150}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            errors.headline ? true : undefined
+                                        }
+                                        aria-describedby="headline-error"
+                                    />
+                                    <InputError
+                                        id="headline-error"
+                                        message={errors.headline}
+                                    />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="summary">Summary</Label>
-                                <Textarea
-                                    id="summary"
-                                    value={form.data.summary ?? ''}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'summary',
-                                            e.target.value === ''
-                                                ? null
-                                                : e.target.value,
-                                        )
-                                    }
-                                    maxLength={5000}
-                                    rows={5}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        errors.summary ? true : undefined
-                                    }
-                                    aria-describedby="summary-error"
-                                />
-                                <InputError
-                                    id="summary-error"
-                                    message={errors.summary}
-                                />
-                            </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="location">Location</Label>
+                                    <Input
+                                        id="location"
+                                        value={form.data.location ?? ''}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'location',
+                                                e.target.value === ''
+                                                    ? null
+                                                    : e.target.value,
+                                            )
+                                        }
+                                        maxLength={255}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            errors.location ? true : undefined
+                                        }
+                                        aria-describedby="location-error"
+                                    />
+                                    <InputError
+                                        id="location-error"
+                                        message={errors.location}
+                                    />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="location">Location</Label>
-                                <Input
-                                    id="location"
-                                    value={form.data.location ?? ''}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'location',
-                                            e.target.value === ''
-                                                ? null
-                                                : e.target.value,
-                                        )
-                                    }
-                                    maxLength={255}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        errors.location ? true : undefined
-                                    }
-                                    aria-describedby="location-error"
-                                />
-                                <InputError
-                                    id="location-error"
-                                    message={errors.location}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="summary">Summary</Label>
+                                    <Textarea
+                                        id="summary"
+                                        value={form.data.summary ?? ''}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'summary',
+                                                e.target.value === ''
+                                                    ? null
+                                                    : e.target.value,
+                                            )
+                                        }
+                                        maxLength={5000}
+                                        rows={5}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            errors.summary ? true : undefined
+                                        }
+                                        aria-describedby="summary-error"
+                                    />
+                                    <InputError
+                                        id="summary-error"
+                                        message={errors.summary}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                    <Card className="border-border">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Skills</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div className="flex gap-2">
-                                <Input
-                                    id="skill-input"
-                                    value={skillInput}
-                                    onChange={(e) =>
-                                        setSkillInput(e.target.value)
-                                    }
-                                    onKeyDown={handleSkillKeyDown}
-                                    maxLength={50}
-                                    disabled={form.processing}
-                                    placeholder="Type a skill and press Enter"
-                                    aria-label="Add skill"
+                        <Card
+                            id="section-skills"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <Sparkles
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Skills
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="skill-input"
+                                        value={skillInput}
+                                        onChange={(e) => {
+                                            setSkillInput(e.target.value);
+                                            if (skillInputError) {
+                                                setSkillInputError(null);
+                                            }
+                                        }}
+                                        onKeyDown={handleSkillKeyDown}
+                                        maxLength={50}
+                                        disabled={form.processing}
+                                        placeholder="Type a skill and press Enter"
+                                        aria-label="Add skill"
+                                        className="sm:max-w-xs"
+                                        aria-invalid={
+                                            skillInputError ? true : undefined
+                                        }
+                                        aria-describedby="skill-input-error"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={addSkill}
+                                        disabled={form.processing}
+                                    >
+                                        <Plus className="size-4" />
+                                        Add
+                                    </Button>
+                                </div>
+                                <InputError
+                                    id="skill-input-error"
+                                    message={skillInputError ?? undefined}
                                 />
+                                <InputError message={errors.skills} />
+                                {form.data.skills.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        No skills added yet.
+                                    </p>
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {form.data.skills.map(
+                                            (skill, index) => (
+                                                <Badge
+                                                    key={`${skill}-${index}`}
+                                                    variant="secondary"
+                                                    className="flex items-center gap-1"
+                                                >
+                                                    {skill}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            removeSkill(index)
+                                                        }
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                        className="rounded-sm text-muted-foreground hover:text-foreground"
+                                                        aria-label={`Remove ${skill}`}
+                                                    >
+                                                        <X className="size-3" />
+                                                    </button>
+                                                </Badge>
+                                            ),
+                                        )}
+                                    </div>
+                                )}
+                                {form.data.skills.map((_, index) => (
+                                    <InputError
+                                        key={`skill-error-${index}`}
+                                        message={errors[`skills.${index}`]}
+                                    />
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        <Card
+                            id="section-preferences"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <SlidersHorizontal
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Job preferences
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    These optional preferences are used to rank
+                                    recommended jobs. Leave one empty to ignore
+                                    that signal.
+                                </p>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="preferred_category_id">
+                                        Preferred job category
+                                    </Label>
+                                    <Select
+                                        value={
+                                            form.data.preferred_category_id
+                                                ? String(
+                                                      form.data
+                                                          .preferred_category_id,
+                                                  )
+                                                : 'none'
+                                        }
+                                        onValueChange={(value) =>
+                                            form.setData(
+                                                'preferred_category_id',
+                                                value === 'none'
+                                                    ? null
+                                                    : Number(value),
+                                            )
+                                        }
+                                        disabled={form.processing}
+                                    >
+                                        <SelectTrigger id="preferred_category_id">
+                                            <SelectValue placeholder="No preference" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">
+                                                No preference
+                                            </SelectItem>
+                                            {options.categories.map(
+                                                (option) => (
+                                                    <SelectItem
+                                                        key={option.id}
+                                                        value={String(
+                                                            option.id,
+                                                        )}
+                                                    >
+                                                        {option.name}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        id="preferred_category_id-error"
+                                        message={errors.preferred_category_id}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="preferred_experience_level_id">
+                                        Preferred experience level
+                                    </Label>
+                                    <Select
+                                        value={
+                                            form.data
+                                                .preferred_experience_level_id
+                                                ? String(
+                                                      form.data
+                                                          .preferred_experience_level_id,
+                                                  )
+                                                : 'none'
+                                        }
+                                        onValueChange={(value) =>
+                                            form.setData(
+                                                'preferred_experience_level_id',
+                                                value === 'none'
+                                                    ? null
+                                                    : Number(value),
+                                            )
+                                        }
+                                        disabled={form.processing}
+                                    >
+                                        <SelectTrigger id="preferred_experience_level_id">
+                                            <SelectValue placeholder="No preference" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">
+                                                No preference
+                                            </SelectItem>
+                                            {options.experienceLevels.map(
+                                                (option) => (
+                                                    <SelectItem
+                                                        key={option.id}
+                                                        value={String(
+                                                            option.id,
+                                                        )}
+                                                    >
+                                                        {option.name}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        id="preferred_experience_level_id-error"
+                                        message={
+                                            errors.preferred_experience_level_id
+                                        }
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="preferred_workplace_arrangement_id">
+                                        Preferred work arrangement
+                                    </Label>
+                                    <Select
+                                        value={
+                                            form.data
+                                                .preferred_workplace_arrangement_id
+                                                ? String(
+                                                      form.data
+                                                          .preferred_workplace_arrangement_id,
+                                                  )
+                                                : 'none'
+                                        }
+                                        onValueChange={(value) =>
+                                            form.setData(
+                                                'preferred_workplace_arrangement_id',
+                                                value === 'none'
+                                                    ? null
+                                                    : Number(value),
+                                            )
+                                        }
+                                        disabled={form.processing}
+                                    >
+                                        <SelectTrigger id="preferred_workplace_arrangement_id">
+                                            <SelectValue placeholder="No preference" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">
+                                                No preference
+                                            </SelectItem>
+                                            {options.workplaceArrangements.map(
+                                                (option) => (
+                                                    <SelectItem
+                                                        key={option.id}
+                                                        value={String(
+                                                            option.id,
+                                                        )}
+                                                    >
+                                                        {option.name}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        id="preferred_workplace_arrangement_id-error"
+                                        message={
+                                            errors.preferred_workplace_arrangement_id
+                                        }
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card
+                            id="section-education"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <GraduationCap
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Education
+                                </CardTitle>
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={addSkill}
+                                    size="sm"
+                                    onClick={addEducation}
                                     disabled={form.processing}
                                 >
                                     <Plus className="size-4" />
-                                    Add
+                                    Add education
                                 </Button>
-                            </div>
-                            <InputError message={errors.skills} />
-                            {form.data.skills.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No skills added yet.
-                                </p>
-                            ) : (
-                                <div className="flex flex-wrap gap-2">
-                                    {form.data.skills.map((skill, index) => (
-                                        <Badge
-                                            key={`${skill}-${index}`}
-                                            variant="secondary"
-                                            className="flex items-center gap-1"
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {form.data.educations.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                        No education added yet.
+                                    </p>
+                                )}
+                                {form.data.educations.map(
+                                    (education, index) => (
+                                        <div
+                                            key={index}
+                                            className="space-y-3 rounded-lg border border-border p-4"
                                         >
-                                            {skill}
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    removeSkill(index)
-                                                }
-                                                disabled={form.processing}
-                                                className="rounded-sm text-muted-foreground hover:text-foreground"
-                                                aria-label={`Remove ${skill}`}
-                                            >
-                                                <X className="size-3" />
-                                            </button>
-                                        </Badge>
-                                    ))}
-                                </div>
-                            )}
-                            {form.data.skills.map((_, index) => (
-                                <InputError
-                                    key={`skill-error-${index}`}
-                                    message={errors[`skills.${index}`]}
-                                />
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-border">
-                        <CardHeader>
-                            <CardTitle className="text-lg">
-                                Job preferences
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                                These optional preferences are used to rank
-                                recommended jobs. Leave one empty to ignore that
-                                signal.
-                            </p>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="preferred_category_id">
-                                    Preferred job category
-                                </Label>
-                                <Select
-                                    value={
-                                        form.data.preferred_category_id
-                                            ? String(
-                                                  form.data
-                                                      .preferred_category_id,
-                                              )
-                                            : 'none'
-                                    }
-                                    onValueChange={(value) =>
-                                        form.setData(
-                                            'preferred_category_id',
-                                            value === 'none'
-                                                ? null
-                                                : Number(value),
-                                        )
-                                    }
-                                    disabled={form.processing}
-                                >
-                                    <SelectTrigger id="preferred_category_id">
-                                        <SelectValue placeholder="No preference" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            No preference
-                                        </SelectItem>
-                                        {options.categories.map((option) => (
-                                            <SelectItem
-                                                key={option.id}
-                                                value={String(option.id)}
-                                            >
-                                                {option.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    id="preferred_category_id-error"
-                                    message={errors.preferred_category_id}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="preferred_experience_level_id">
-                                    Preferred experience level
-                                </Label>
-                                <Select
-                                    value={
-                                        form.data.preferred_experience_level_id
-                                            ? String(
-                                                  form.data
-                                                      .preferred_experience_level_id,
-                                              )
-                                            : 'none'
-                                    }
-                                    onValueChange={(value) =>
-                                        form.setData(
-                                            'preferred_experience_level_id',
-                                            value === 'none'
-                                                ? null
-                                                : Number(value),
-                                        )
-                                    }
-                                    disabled={form.processing}
-                                >
-                                    <SelectTrigger id="preferred_experience_level_id">
-                                        <SelectValue placeholder="No preference" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            No preference
-                                        </SelectItem>
-                                        {options.experienceLevels.map(
-                                            (option) => (
-                                                <SelectItem
-                                                    key={option.id}
-                                                    value={String(option.id)}
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-sm font-medium">
+                                                    Education {index + 1}
+                                                </h3>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        removeEducation(index)
+                                                    }
+                                                    disabled={form.processing}
+                                                    aria-label={`Remove education ${index + 1}`}
                                                 >
-                                                    {option.name}
-                                                </SelectItem>
-                                            ),
-                                        )}
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    id="preferred_experience_level_id-error"
-                                    message={
-                                        errors.preferred_experience_level_id
-                                    }
-                                />
-                            </div>
+                                                    <X className="size-4" />
+                                                </Button>
+                                            </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="preferred_workplace_arrangement_id">
-                                    Preferred work arrangement
-                                </Label>
-                                <Select
-                                    value={
-                                        form.data
-                                            .preferred_workplace_arrangement_id
-                                            ? String(
-                                                  form.data
-                                                      .preferred_workplace_arrangement_id,
-                                              )
-                                            : 'none'
-                                    }
-                                    onValueChange={(value) =>
-                                        form.setData(
-                                            'preferred_workplace_arrangement_id',
-                                            value === 'none'
-                                                ? null
-                                                : Number(value),
-                                        )
-                                    }
+                                            <div className="grid gap-2">
+                                                <Label
+                                                    htmlFor={`education-${index}-institution`}
+                                                >
+                                                    Institution
+                                                </Label>
+                                                <Input
+                                                    id={`education-${index}-institution`}
+                                                    value={
+                                                        education.institution
+                                                    }
+                                                    onChange={(e) =>
+                                                        updateEducation(
+                                                            index,
+                                                            'institution',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    maxLength={150}
+                                                    disabled={form.processing}
+                                                    aria-invalid={
+                                                        errors[
+                                                            `educations.${index}.institution`
+                                                        ]
+                                                            ? true
+                                                            : undefined
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `educations.${index}.institution`
+                                                        ]
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`education-${index}-degree`}
+                                                    >
+                                                        Degree
+                                                    </Label>
+                                                    <Input
+                                                        id={`education-${index}-degree`}
+                                                        value={
+                                                            education.degree ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateEducation(
+                                                                index,
+                                                                'degree',
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
+                                                                    ? null
+                                                                    : e.target
+                                                                          .value,
+                                                            )
+                                                        }
+                                                        maxLength={100}
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `educations.${index}.degree`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`education-${index}-field`}
+                                                    >
+                                                        Field of study
+                                                    </Label>
+                                                    <Input
+                                                        id={`education-${index}-field`}
+                                                        value={
+                                                            education.field_of_study ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateEducation(
+                                                                index,
+                                                                'field_of_study',
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
+                                                                    ? null
+                                                                    : e.target
+                                                                          .value,
+                                                            )
+                                                        }
+                                                        maxLength={100}
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `educations.${index}.field_of_study`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`education-${index}-start`}
+                                                    >
+                                                        Start date
+                                                    </Label>
+                                                    <Input
+                                                        id={`education-${index}-start`}
+                                                        type="date"
+                                                        value={
+                                                            education.start_date ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateEducation(
+                                                                index,
+                                                                'start_date',
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
+                                                                    ? null
+                                                                    : e.target
+                                                                          .value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `educations.${index}.start_date`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`education-${index}-end`}
+                                                    >
+                                                        End date
+                                                    </Label>
+                                                    <Input
+                                                        id={`education-${index}-end`}
+                                                        type="date"
+                                                        value={
+                                                            education.end_date ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateEducation(
+                                                                index,
+                                                                'end_date',
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
+                                                                    ? null
+                                                                    : e.target
+                                                                          .value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `educations.${index}.end_date`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-2">
+                                                <Label
+                                                    htmlFor={`education-${index}-description`}
+                                                >
+                                                    Description
+                                                </Label>
+                                                <Textarea
+                                                    id={`education-${index}-description`}
+                                                    value={
+                                                        education.description ??
+                                                        ''
+                                                    }
+                                                    onChange={(e) =>
+                                                        updateEducation(
+                                                            index,
+                                                            'description',
+                                                            e.target.value ===
+                                                                ''
+                                                                ? null
+                                                                : e.target
+                                                                      .value,
+                                                        )
+                                                    }
+                                                    maxLength={2000}
+                                                    rows={3}
+                                                    disabled={form.processing}
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `educations.${index}.description`
+                                                        ]
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                    ),
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card
+                            id="section-experience"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <Briefcase
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Work experience
+                                </CardTitle>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addExperience}
                                     disabled={form.processing}
                                 >
-                                    <SelectTrigger id="preferred_workplace_arrangement_id">
-                                        <SelectValue placeholder="No preference" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            No preference
-                                        </SelectItem>
-                                        {options.workplaceArrangements.map(
-                                            (option) => (
-                                                <SelectItem
-                                                    key={option.id}
-                                                    value={String(option.id)}
+                                    <Plus className="size-4" />
+                                    Add experience
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {form.data.experiences.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                        No work experience added yet.
+                                    </p>
+                                )}
+                                {form.data.experiences.map(
+                                    (experience, index) => (
+                                        <div
+                                            key={index}
+                                            className="space-y-3 rounded-lg border border-border p-4"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-sm font-medium">
+                                                    Experience {index + 1}
+                                                </h3>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        removeExperience(index)
+                                                    }
+                                                    disabled={form.processing}
+                                                    aria-label={`Remove experience ${index + 1}`}
                                                 >
-                                                    {option.name}
-                                                </SelectItem>
-                                            ),
-                                        )}
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    id="preferred_workplace_arrangement_id-error"
-                                    message={
-                                        errors.preferred_workplace_arrangement_id
-                                    }
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+                                                    <X className="size-4" />
+                                                </Button>
+                                            </div>
 
-                    <Card className="border-border">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg">Education</CardTitle>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addEducation}
-                                disabled={form.processing}
-                            >
-                                <Plus className="size-4" />
-                                Add education
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`experience-${index}-company`}
+                                                    >
+                                                        Company name
+                                                    </Label>
+                                                    <Input
+                                                        id={`experience-${index}-company`}
+                                                        value={
+                                                            experience.company_name
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateExperience(
+                                                                index,
+                                                                'company_name',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        maxLength={150}
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                        aria-invalid={
+                                                            errors[
+                                                                `experiences.${index}.company_name`
+                                                            ]
+                                                                ? true
+                                                                : undefined
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `experiences.${index}.company_name`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`experience-${index}-title`}
+                                                    >
+                                                        Job title
+                                                    </Label>
+                                                    <Input
+                                                        id={`experience-${index}-title`}
+                                                        value={
+                                                            experience.job_title
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateExperience(
+                                                                index,
+                                                                'job_title',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        maxLength={150}
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                        aria-invalid={
+                                                            errors[
+                                                                `experiences.${index}.job_title`
+                                                            ]
+                                                                ? true
+                                                                : undefined
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `experiences.${index}.job_title`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-2">
+                                                <Label
+                                                    htmlFor={`experience-${index}-location`}
+                                                >
+                                                    Location
+                                                </Label>
+                                                <Input
+                                                    id={`experience-${index}-location`}
+                                                    value={
+                                                        experience.location ??
+                                                        ''
+                                                    }
+                                                    onChange={(e) =>
+                                                        updateExperience(
+                                                            index,
+                                                            'location',
+                                                            e.target.value ===
+                                                                ''
+                                                                ? null
+                                                                : e.target
+                                                                      .value,
+                                                        )
+                                                    }
+                                                    maxLength={100}
+                                                    disabled={form.processing}
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `experiences.${index}.location`
+                                                        ]
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`experience-${index}-start`}
+                                                    >
+                                                        Start date
+                                                    </Label>
+                                                    <Input
+                                                        id={`experience-${index}-start`}
+                                                        type="date"
+                                                        value={
+                                                            experience.start_date ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateExperience(
+                                                                index,
+                                                                'start_date',
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
+                                                                    ? null
+                                                                    : e.target
+                                                                          .value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            form.processing
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `experiences.${index}.start_date`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor={`experience-${index}-end`}
+                                                    >
+                                                        End date
+                                                    </Label>
+                                                    <Input
+                                                        id={`experience-${index}-end`}
+                                                        type="date"
+                                                        value={
+                                                            experience.end_date ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateExperience(
+                                                                index,
+                                                                'end_date',
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
+                                                                    ? null
+                                                                    : e.target
+                                                                          .value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            form.processing ||
+                                                            experience.is_current
+                                                        }
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `experiences.${index}.end_date`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`experience-${index}-current`}
+                                                    checked={
+                                                        experience.is_current
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        updateExperience(
+                                                            index,
+                                                            'is_current',
+                                                            Boolean(checked),
+                                                        )
+                                                    }
+                                                    disabled={form.processing}
+                                                />
+                                                <Label
+                                                    htmlFor={`experience-${index}-current`}
+                                                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                    I currently work here
+                                                </Label>
+                                            </div>
+
+                                            <div className="grid gap-2">
+                                                <Label
+                                                    htmlFor={`experience-${index}-description`}
+                                                >
+                                                    Description
+                                                </Label>
+                                                <Textarea
+                                                    id={`experience-${index}-description`}
+                                                    value={
+                                                        experience.description ??
+                                                        ''
+                                                    }
+                                                    onChange={(e) =>
+                                                        updateExperience(
+                                                            index,
+                                                            'description',
+                                                            e.target.value ===
+                                                                ''
+                                                                ? null
+                                                                : e.target
+                                                                      .value,
+                                                        )
+                                                    }
+                                                    maxLength={2000}
+                                                    rows={3}
+                                                    disabled={form.processing}
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `experiences.${index}.description`
+                                                        ]
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                    ),
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex items-center gap-2">
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing && (
+                                    <Spinner className="mr-2" />
+                                )}
+                                Save profile
                             </Button>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {form.data.educations.length === 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                    No education added yet.
-                                </p>
-                            )}
-                            {form.data.educations.map((education, index) => (
-                                <div
-                                    key={index}
-                                    className="space-y-3 rounded-lg border border-border p-4"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-medium">
-                                            Education {index + 1}
-                                        </h3>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                                removeEducation(index)
-                                            }
-                                            disabled={form.processing}
-                                            aria-label={`Remove education ${index + 1}`}
-                                        >
-                                            <X className="size-4" />
-                                        </Button>
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label
-                                            htmlFor={`education-${index}-institution`}
-                                        >
-                                            Institution
-                                        </Label>
-                                        <Input
-                                            id={`education-${index}-institution`}
-                                            value={education.institution}
-                                            onChange={(e) =>
-                                                updateEducation(
-                                                    index,
-                                                    'institution',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            maxLength={150}
-                                            disabled={form.processing}
-                                            aria-invalid={
-                                                errors[
-                                                    `educations.${index}.institution`
-                                                ]
-                                                    ? true
-                                                    : undefined
-                                            }
-                                        />
-                                        <InputError
-                                            message={
-                                                errors[
-                                                    `educations.${index}.institution`
-                                                ]
-                                            }
-                                        />
-                                    </div>
-
-                                    <div className="grid gap-2 sm:grid-cols-2">
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`education-${index}-degree`}
-                                            >
-                                                Degree
-                                            </Label>
-                                            <Input
-                                                id={`education-${index}-degree`}
-                                                value={education.degree ?? ''}
-                                                onChange={(e) =>
-                                                    updateEducation(
-                                                        index,
-                                                        'degree',
-                                                        e.target.value === ''
-                                                            ? null
-                                                            : e.target.value,
-                                                    )
-                                                }
-                                                maxLength={100}
-                                                disabled={form.processing}
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `educations.${index}.degree`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`education-${index}-field`}
-                                            >
-                                                Field of study
-                                            </Label>
-                                            <Input
-                                                id={`education-${index}-field`}
-                                                value={
-                                                    education.field_of_study ??
-                                                    ''
-                                                }
-                                                onChange={(e) =>
-                                                    updateEducation(
-                                                        index,
-                                                        'field_of_study',
-                                                        e.target.value === ''
-                                                            ? null
-                                                            : e.target.value,
-                                                    )
-                                                }
-                                                maxLength={100}
-                                                disabled={form.processing}
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `educations.${index}.field_of_study`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-2 sm:grid-cols-2">
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`education-${index}-start`}
-                                            >
-                                                Start date
-                                            </Label>
-                                            <Input
-                                                id={`education-${index}-start`}
-                                                type="date"
-                                                value={
-                                                    education.start_date ?? ''
-                                                }
-                                                onChange={(e) =>
-                                                    updateEducation(
-                                                        index,
-                                                        'start_date',
-                                                        e.target.value === ''
-                                                            ? null
-                                                            : e.target.value,
-                                                    )
-                                                }
-                                                disabled={form.processing}
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `educations.${index}.start_date`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`education-${index}-end`}
-                                            >
-                                                End date
-                                            </Label>
-                                            <Input
-                                                id={`education-${index}-end`}
-                                                type="date"
-                                                value={education.end_date ?? ''}
-                                                onChange={(e) =>
-                                                    updateEducation(
-                                                        index,
-                                                        'end_date',
-                                                        e.target.value === ''
-                                                            ? null
-                                                            : e.target.value,
-                                                    )
-                                                }
-                                                disabled={form.processing}
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `educations.${index}.end_date`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label
-                                            htmlFor={`education-${index}-description`}
-                                        >
-                                            Description
-                                        </Label>
-                                        <Textarea
-                                            id={`education-${index}-description`}
-                                            value={education.description ?? ''}
-                                            onChange={(e) =>
-                                                updateEducation(
-                                                    index,
-                                                    'description',
-                                                    e.target.value === ''
-                                                        ? null
-                                                        : e.target.value,
-                                                )
-                                            }
-                                            maxLength={2000}
-                                            rows={3}
-                                            disabled={form.processing}
-                                        />
-                                        <InputError
-                                            message={
-                                                errors[
-                                                    `educations.${index}.description`
-                                                ]
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-border">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg">
-                                Work experience
-                            </CardTitle>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addExperience}
-                                disabled={form.processing}
-                            >
-                                <Plus className="size-4" />
-                                Add experience
-                            </Button>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {form.data.experiences.length === 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                    No work experience added yet.
-                                </p>
-                            )}
-                            {form.data.experiences.map((experience, index) => (
-                                <div
-                                    key={index}
-                                    className="space-y-3 rounded-lg border border-border p-4"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-medium">
-                                            Experience {index + 1}
-                                        </h3>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                                removeExperience(index)
-                                            }
-                                            disabled={form.processing}
-                                            aria-label={`Remove experience ${index + 1}`}
-                                        >
-                                            <X className="size-4" />
-                                        </Button>
-                                    </div>
-
-                                    <div className="grid gap-2 sm:grid-cols-2">
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`experience-${index}-company`}
-                                            >
-                                                Company name
-                                            </Label>
-                                            <Input
-                                                id={`experience-${index}-company`}
-                                                value={experience.company_name}
-                                                onChange={(e) =>
-                                                    updateExperience(
-                                                        index,
-                                                        'company_name',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                maxLength={150}
-                                                disabled={form.processing}
-                                                aria-invalid={
-                                                    errors[
-                                                        `experiences.${index}.company_name`
-                                                    ]
-                                                        ? true
-                                                        : undefined
-                                                }
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `experiences.${index}.company_name`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`experience-${index}-title`}
-                                            >
-                                                Job title
-                                            </Label>
-                                            <Input
-                                                id={`experience-${index}-title`}
-                                                value={experience.job_title}
-                                                onChange={(e) =>
-                                                    updateExperience(
-                                                        index,
-                                                        'job_title',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                maxLength={150}
-                                                disabled={form.processing}
-                                                aria-invalid={
-                                                    errors[
-                                                        `experiences.${index}.job_title`
-                                                    ]
-                                                        ? true
-                                                        : undefined
-                                                }
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `experiences.${index}.job_title`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label
-                                            htmlFor={`experience-${index}-location`}
-                                        >
-                                            Location
-                                        </Label>
-                                        <Input
-                                            id={`experience-${index}-location`}
-                                            value={experience.location ?? ''}
-                                            onChange={(e) =>
-                                                updateExperience(
-                                                    index,
-                                                    'location',
-                                                    e.target.value === ''
-                                                        ? null
-                                                        : e.target.value,
-                                                )
-                                            }
-                                            maxLength={100}
-                                            disabled={form.processing}
-                                        />
-                                        <InputError
-                                            message={
-                                                errors[
-                                                    `experiences.${index}.location`
-                                                ]
-                                            }
-                                        />
-                                    </div>
-
-                                    <div className="grid gap-2 sm:grid-cols-2">
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`experience-${index}-start`}
-                                            >
-                                                Start date
-                                            </Label>
-                                            <Input
-                                                id={`experience-${index}-start`}
-                                                type="date"
-                                                value={
-                                                    experience.start_date ?? ''
-                                                }
-                                                onChange={(e) =>
-                                                    updateExperience(
-                                                        index,
-                                                        'start_date',
-                                                        e.target.value === ''
-                                                            ? null
-                                                            : e.target.value,
-                                                    )
-                                                }
-                                                disabled={form.processing}
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `experiences.${index}.start_date`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label
-                                                htmlFor={`experience-${index}-end`}
-                                            >
-                                                End date
-                                            </Label>
-                                            <Input
-                                                id={`experience-${index}-end`}
-                                                type="date"
-                                                value={
-                                                    experience.end_date ?? ''
-                                                }
-                                                onChange={(e) =>
-                                                    updateExperience(
-                                                        index,
-                                                        'end_date',
-                                                        e.target.value === ''
-                                                            ? null
-                                                            : e.target.value,
-                                                    )
-                                                }
-                                                disabled={
-                                                    form.processing ||
-                                                    experience.is_current
-                                                }
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `experiences.${index}.end_date`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`experience-${index}-current`}
-                                            checked={experience.is_current}
-                                            onCheckedChange={(checked) =>
-                                                updateExperience(
-                                                    index,
-                                                    'is_current',
-                                                    Boolean(checked),
-                                                )
-                                            }
-                                            disabled={form.processing}
-                                        />
-                                        <Label
-                                            htmlFor={`experience-${index}-current`}
-                                            className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            I currently work here
-                                        </Label>
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label
-                                            htmlFor={`experience-${index}-description`}
-                                        >
-                                            Description
-                                        </Label>
-                                        <Textarea
-                                            id={`experience-${index}-description`}
-                                            value={experience.description ?? ''}
-                                            onChange={(e) =>
-                                                updateExperience(
-                                                    index,
-                                                    'description',
-                                                    e.target.value === ''
-                                                        ? null
-                                                        : e.target.value,
-                                                )
-                                            }
-                                            maxLength={2000}
-                                            rows={3}
-                                            disabled={form.processing}
-                                        />
-                                        <InputError
-                                            message={
-                                                errors[
-                                                    `experiences.${index}.description`
-                                                ]
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    <div className="flex items-center gap-2">
-                        <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Spinner className="mr-2" />}
-                            Save profile
-                        </Button>
+                        </div>
                     </div>
+
+                    <aside className="w-full lg:sticky lg:top-6 lg:col-span-1">
+                        <div className="space-y-4">
+                            <Card className="border-border">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+                                        On this page
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <nav aria-label="Profile sections">
+                                        <ul className="space-y-1 text-sm">
+                                            {[
+                                                {
+                                                    id: 'section-basic',
+                                                    label: 'Basic information',
+                                                },
+                                                {
+                                                    id: 'section-skills',
+                                                    label: 'Skills',
+                                                },
+                                                {
+                                                    id: 'section-preferences',
+                                                    label: 'Job preferences',
+                                                },
+                                                {
+                                                    id: 'section-education',
+                                                    label: 'Education',
+                                                },
+                                                {
+                                                    id: 'section-experience',
+                                                    label: 'Work experience',
+                                                },
+                                            ].map((section) => (
+                                                <li key={section.id}>
+                                                    <a
+                                                        href={`#${section.id}`}
+                                                        className="block rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                                    >
+                                                        {section.label}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </nav>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-border">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-base">
+                                        Save changes
+                                    </CardTitle>
+                                    {lastUpdated && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Last saved: {lastUpdated}
+                                        </p>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <Button
+                                        type="submit"
+                                        form="candidate-profile-form"
+                                        className="w-full"
+                                        disabled={form.processing}
+                                    >
+                                        {form.processing && (
+                                            <Spinner className="mr-2" />
+                                        )}
+                                        Save profile
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </aside>
                 </form>
             </div>
         </>

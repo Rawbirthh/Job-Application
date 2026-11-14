@@ -1,8 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, Bell, MessageSquare } from 'lucide-react';
+import { Menu, MessageSquare } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { NotificationBell } from '@/components/notification-bell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,7 +42,6 @@ const activeItemStyles =
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage<{
         auth: Auth;
-        notifications_unread_count?: number;
     }>();
     const { auth } = page.props;
     const isParticipant = (auth.roles ?? []).some((role) =>
@@ -156,19 +156,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 <MessageSquare className="h-5 w-5" />
                             </Link>
                         )}
-                        <Link
-                            href="/notifications"
-                            className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            aria-label="Notifications"
-                        >
-                            <Bell className="h-5 w-5" />
-                            {(page.props.notifications_unread_count ?? 0) >
-                                0 && (
-                                <span className="absolute -top-0.5 -right-0.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1 text-xs font-medium text-destructive-foreground">
-                                    {page.props.notifications_unread_count}
-                                </span>
-                            )}
-                        </Link>
+                        <NotificationBell />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button

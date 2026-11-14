@@ -1,15 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Search, Trash2, Edit3 } from 'lucide-react';
+import { BellRing, Search, Trash2, Edit3 } from 'lucide-react';
 import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -19,11 +14,22 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { cn } from '@/lib/utils';
 import { index as jobsIndex } from '@/routes/jobs';
 import { destroy as savedSearchesDestroy } from '@/routes/candidate/saved-searches';
 import SaveSearchDialog from '@/components/saved-search/save-search-dialog';
 import type { SavedSearchRow, SavedSearchesIndexProps } from '@/types';
 import { describeCriteria, SavedSearchCriteria } from '@/types/saved-search';
+
+function alertBadgeClasses(enabled: boolean, frequency: string | null): string {
+    if (!enabled) {
+        return 'border-border bg-muted text-muted-foreground';
+    }
+
+    return frequency === 'daily'
+        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+        : 'border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400';
+}
 
 export default function SavedSearchesIndex({
     savedSearches,
@@ -35,6 +41,7 @@ export default function SavedSearchesIndex({
         ? savedSearches
         : savedSearches.data;
     const pagination = !Array.isArray(savedSearches) ? savedSearches : null;
+    const total = pagination?.total ?? items.length;
 
     const [editOpen, setEditOpen] = useState(false);
     const [editingSearch, setEditingSearch] = useState<SavedSearchRow | null>(
@@ -109,21 +116,20 @@ export default function SavedSearchesIndex({
     };
 
     return (
-        <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="flex w-full flex-1 flex-col gap-6 p-6 md:p-8">
             <Head title="Saved Searches" />
 
-            <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
+                    <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                         Saved Searches
                     </h1>
-                    <p className="mt-1 text-muted-foreground">
-                        Re-run your saved job searches and manage alert
-                        preferences. New matching jobs surface as in-app
-                        notifications.
+                    <p className="mt-1 text-sm text-muted-foreground md:text-base">
+                        Re-run bookmarked searches and manage job alerts ·{' '}
+                        {total} saved {total === 1 ? 'search' : 'searches'}
                     </p>
                 </div>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" size="sm">
                     <Link href="/jobs">Browse Jobs</Link>
                 </Button>
             </div>
@@ -148,174 +154,176 @@ export default function SavedSearchesIndex({
                     </CardContent>
                 </Card>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {items.map((saved) => {
+                        const criteriaBadges = [
+                            {
+                                key: 'category',
+                                label: criteriaLabelFor(
+                                    'category',
+                                    filterOptions.categories,
+                                    saved.category?.id,
+                                ),
+                            },
+                            {
+                                key: 'employment_type',
+                                label: criteriaLabelFor(
+                                    'employment_type',
+                                    filterOptions.employmentTypes,
+                                    saved.employment_type?.id,
+                                ),
+                            },
+                            {
+                                key: 'workplace_arrangement',
+                                label: criteriaLabelFor(
+                                    'workplace_arrangement',
+                                    filterOptions.workplaceArrangements,
+                                    saved.workplace_arrangement?.id,
+                                ),
+                            },
+                            {
+                                key: 'experience_level',
+                                label: criteriaLabelFor(
+                                    'experience_level',
+                                    filterOptions.experienceLevels,
+                                    saved.experience_level?.id,
+                                ),
+                            },
+                        ].filter((item) => item.label);
+
+                        const hasAnyCriteria =
+                            saved.criteria !== null &&
+                            Boolean(
+                                saved.criteria.search ||
+                                saved.criteria.category ||
+                                saved.criteria.employment_type ||
+                                saved.criteria.workplace_arrangement ||
+                                saved.criteria.experience_level,
+                            );
+
+                        const alertLabel = !saved.alerts_enabled
+                            ? 'Alerts off'
+                            : saved.alert_frequency === 'daily'
+                              ? 'Daily alerts'
+                              : 'Weekly alerts';
+
                         return (
                             <Card
                                 key={saved.id}
                                 className="transition-shadow hover:shadow-md"
                             >
-                                <CardHeader className="flex flex-row items-start justify-between gap-4 px-4 pt-4 pb-3">
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex items-start gap-3">
-                                            <h2 className="text-lg leading-snug font-semibold">
+                                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0 flex-1 space-y-1.5">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <h2 className="text-base leading-snug font-semibold sm:text-lg">
                                                 {saved.name ??
                                                     describeCriteria(
                                                         saved.criteria,
                                                         filterOptions,
                                                     )}
                                             </h2>
-                                            {!saved.alerts_enabled && (
-                                                <Badge variant="outline">
-                                                    Alerts off
-                                                </Badge>
-                                            )}
+                                            <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                    'gap-1.5',
+                                                    alertBadgeClasses(
+                                                        saved.alerts_enabled,
+                                                        saved.alert_frequency,
+                                                    ),
+                                                )}
+                                            >
+                                                <BellRing
+                                                    className="size-3"
+                                                    aria-hidden="true"
+                                                />
+                                                {alertLabel}
+                                            </Badge>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+
+                                        <div className="flex flex-wrap items-center gap-1.5">
                                             {saved.search && (
-                                                <span className="flex items-center gap-1">
-                                                    <Search className="size-3.5" />
-                                                    {saved.search}
+                                                <span className="mr-1 flex items-center gap-1 text-xs text-foreground sm:text-sm">
+                                                    <Search
+                                                        className="size-3.5 text-muted-foreground"
+                                                        aria-hidden="true"
+                                                    />
+                                                    “{saved.search}”
                                                 </span>
                                             )}
-                                            {[
-                                                {
-                                                    key: 'category',
-                                                    label: criteriaLabelFor(
-                                                        'category',
-                                                        filterOptions.categories,
-                                                        saved.category?.id,
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'employment_type',
-                                                    label: criteriaLabelFor(
-                                                        'employment_type',
-                                                        filterOptions.employmentTypes,
-                                                        saved.employment_type
-                                                            ?.id,
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'workplace_arrangement',
-                                                    label: criteriaLabelFor(
-                                                        'workplace_arrangement',
-                                                        filterOptions.workplaceArrangements,
-                                                        saved
-                                                            .workplace_arrangement
-                                                            ?.id,
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'experience_level',
-                                                    label: criteriaLabelFor(
-                                                        'experience_level',
-                                                        filterOptions.experienceLevels,
-                                                        saved.experience_level
-                                                            ?.id,
-                                                    ),
-                                                },
-                                            ]
-                                                .filter((item) => item.label)
-                                                .map((item) => (
-                                                    <Badge
-                                                        key={item.key}
-                                                        variant="secondary"
-                                                    >
-                                                        {item.label}
-                                                    </Badge>
-                                                ))}
-                                            {saved.criteria &&
-                                                !saved.criteria.search &&
-                                                !saved.criteria.category &&
-                                                !saved.criteria
-                                                    .employment_type &&
-                                                !saved.criteria
-                                                    .workplace_arrangement &&
-                                                !saved.criteria
-                                                    .experience_level && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        All jobs
-                                                    </span>
-                                                )}
+                                            {criteriaBadges.map((item) => (
+                                                <Badge
+                                                    key={item.key}
+                                                    variant="secondary"
+                                                    className="font-normal"
+                                                >
+                                                    {item.label}
+                                                </Badge>
+                                            ))}
+                                            {!hasAnyCriteria && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    All jobs
+                                                </span>
+                                            )}
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                                        <div className="flex items-center gap-2">
-                                            <Badge
-                                                variant={
-                                                    saved.alerts_enabled
-                                                        ? 'default'
-                                                        : 'secondary'
-                                                }
-                                            >
-                                                {saved.alerts_enabled
-                                                    ? saved.alert_frequency ===
-                                                      'daily'
-                                                        ? 'Daily'
-                                                        : 'Weekly'
-                                                    : 'Off'}
-                                            </Badge>
-                                            <span className="text-xs text-muted-foreground">
-                                                Last alert:{' '}
-                                                {lastAlerted(
-                                                    saved.last_alerted_at,
-                                                )}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleRerun(saved.criteria);
-                                                }}
-                                            >
-                                                Rerun
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    setEditingSearch(saved);
-                                                    setEditOpen(true);
-                                                }}
-                                            >
-                                                <Edit3 className="mr-1.5 size-3.5" />
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                onClick={() =>
-                                                    handleDelete(saved.id)
-                                                }
-                                            >
-                                                <Trash2 className="mr-1.5 size-3.5" />
-                                                Delete
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardFooter className="border-t border-border px-4 pt-4 pb-4">
-                                    <p className="text-xs text-muted-foreground">
-                                        Created{' '}
-                                        <span className="font-medium">
+
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Last alert:{' '}
+                                            {lastAlerted(saved.last_alerted_at)}{' '}
+                                            · Created{' '}
                                             {new Date(
                                                 saved.created_at,
                                             ).toLocaleDateString(undefined, {
                                                 dateStyle: 'medium',
                                             })}
-                                        </span>
-                                    </p>
-                                </CardFooter>
+                                        </p>
+                                    </div>
+
+                                    <div className="flex shrink-0 items-center gap-2 self-end sm:self-center">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleRerun(saved.criteria);
+                                            }}
+                                        >
+                                            Rerun
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setEditingSearch(saved);
+                                                setEditOpen(true);
+                                            }}
+                                        >
+                                            <Edit3
+                                                className="mr-1.5 size-3.5"
+                                                aria-hidden="true"
+                                            />
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() =>
+                                                handleDelete(saved.id)
+                                            }
+                                        >
+                                            <Trash2
+                                                className="mr-1.5 size-3.5"
+                                                aria-hidden="true"
+                                            />
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </CardContent>
                             </Card>
                         );
                     })}
 
                     {pagination && pagination.last_page > 1 && (
-                        <div className="mt-8">
+                        <div className="mt-2">
                             <Pagination
                                 currentPage={pagination.current_page}
                                 lastPage={pagination.last_page}

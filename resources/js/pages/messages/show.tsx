@@ -25,6 +25,7 @@ import { useFlashToast } from '@/hooks/use-flash-toast';
 import { getEcho } from '@/lib/echo';
 import { http } from '@/lib/http';
 import { cn } from '@/lib/utils';
+import MessagesShell from '@/components/messages/messages-shell';
 import type { ConversationMessage, MessagesShowProps } from '@/types';
 import type { Auth } from '@/types/auth';
 
@@ -44,6 +45,8 @@ const MAX_BODY = 2000;
 export default function MessagesShow({
     conversation,
     messages,
+    conversations,
+    unread_total,
 }: MessagesShowProps) {
     useFlashToast();
 
@@ -130,7 +133,16 @@ export default function MessagesShow({
         // error dialog for a non-Inertia response.
         void http
             .post(`/messages/${conversation.id}/read`)
+            .then(() => refreshInbox())
             .catch(() => undefined);
+    };
+
+    // Refresh just the left-hand inbox props (not the thread) after activity
+    // that changes the unread badges or last-message previews.
+    const refreshInbox = () => {
+        router.reload({
+            only: ['conversations', 'unread_total'],
+        });
     };
 
     // Real-time subscription (no-op when Reverb is not configured).
@@ -170,6 +182,8 @@ export default function MessagesShow({
 
             if (currentUserId && incoming.sender_id !== currentUserId) {
                 markRead();
+            } else {
+                refreshInbox();
             }
         };
 
@@ -188,6 +202,7 @@ export default function MessagesShow({
                         : item,
                 ),
             );
+            refreshInbox();
         };
 
         const handleDeleted = (payload: {
@@ -210,6 +225,7 @@ export default function MessagesShow({
                         : item,
                 ),
             );
+            refreshInbox();
         };
 
         channel
@@ -318,274 +334,320 @@ export default function MessagesShow({
     };
 
     return (
-        <div className="flex h-[calc(100svh-4rem)] min-h-0 flex-col bg-background">
+        <>
             <Head title={`Messages · ${conversation.job.title}`} />
-
-            <div className="shrink-0 border-b border-border">
-                <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
-                    <Link
-                        href={applicationHref}
-                        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to application
-                    </Link>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                        {conversation.application_status_label}
-                    </span>
-                </div>
-                <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-3 gap-y-1 px-4 pb-3 sm:px-6">
-                    <Briefcase className="h-5 w-5 shrink-0 text-muted-foreground" />
-                    <h1 className="text-lg font-bold tracking-tight sm:text-xl">
-                        {conversation.job.title}
-                    </h1>
-                    {conversation.company && (
-                        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                            <Building2 className="h-4 w-4" />
-                            {conversation.company.name}
-                        </span>
-                    )}
-                    <span className="text-sm text-muted-foreground">
-                        {conversation.viewer_role === 'candidate'
-                            ? `Employer · ${conversation.other_party_name}`
-                            : `Candidate · ${conversation.other_party_name}`}
-                    </span>
-                </div>
-            </div>
-
-            <div
-                ref={listRef}
-                role="log"
-                aria-live="polite"
-                aria-label="Conversation messages"
-                className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            <MessagesShell
+                conversations={conversations}
+                unreadTotal={unread_total}
+                activeId={conversation.id}
+                mobilePane="thread"
             >
-                <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4 sm:px-6">
-                    {messages.next_page_url && (
-                        <div className="text-center">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={loadEarlier}
-                            >
-                                Load earlier messages
-                            </Button>
-                        </div>
-                    )}
-
-                    {items.length === 0 ? (
-                        <p className="py-8 text-center text-sm text-muted-foreground">
-                            No messages yet — say hello.
-                        </p>
-                    ) : (
-                        items.map((message) => {
-                            const isMine = message.is_mine;
-                            const isTombstone = message.deleted_at !== null;
-                            const isEditing = editingId === message.id;
-
-                            return (
-                                <div
-                                    key={message.id}
-                                    className={cn(
-                                        'group flex flex-col gap-1',
-                                        isMine ? 'items-end' : 'items-start',
-                                    )}
-                                >
-                                    <div className="flex max-w-[85%] items-center gap-2 text-xs text-muted-foreground">
-                                        {!isMine && (
-                                            <span className="font-medium">
-                                                {message.sender_name}
-                                            </span>
-                                        )}
-                                        {message.created_at && (
-                                            <time dateTime={message.created_at}>
-                                                {new Date(
-                                                    message.created_at,
-                                                ).toLocaleString()}
-                                            </time>
-                                        )}
-                                        {message.edited_at && !isTombstone && (
-                                            <span>(edited)</span>
-                                        )}
-                                    </div>
-
-                                    {isTombstone ? (
-                                        <div className="max-w-[85%] rounded-2xl border border-dashed border-border px-4 py-2 text-sm text-muted-foreground italic">
-                                            This message was deleted
-                                        </div>
-                                    ) : isEditing ? (
-                                        <form
-                                            onSubmit={(event) =>
-                                                saveEdit(event, message.id)
-                                            }
-                                            className="flex w-full max-w-[85%] flex-col gap-2"
-                                        >
-                                            <Textarea
-                                                value={editForm.data.body}
-                                                onChange={(event) =>
-                                                    editForm.setData(
-                                                        'body',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                                maxLength={MAX_BODY}
-                                                autoFocus
-                                                rows={2}
-                                            />
-                                            {editForm.errors.body && (
-                                                <InputError
-                                                    message={
-                                                        editForm.errors.body
-                                                    }
-                                                />
-                                            )}
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={cancelEdit}
-                                                >
-                                                    <X className="mr-1 h-4 w-4" />
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    type="submit"
-                                                    size="sm"
-                                                    disabled={
-                                                        editForm.processing
-                                                    }
-                                                >
-                                                    <Check className="mr-1 h-4 w-4" />
-                                                    Save
-                                                </Button>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div className="relative">
-                                            <div
-                                                className={cn(
-                                                    'max-w-[85%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap',
-                                                    isMine
-                                                        ? 'rounded-br-md bg-primary text-primary-foreground'
-                                                        : 'rounded-bl-md bg-muted text-foreground',
-                                                )}
-                                            >
-                                                {message.body}
-                                            </div>
-                                            {isMine &&
-                                                conversation.can_send && (
-                                                    <div className="absolute top-0 -left-2 flex -translate-x-full gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                startEdit(
-                                                                    message,
-                                                                )
-                                                            }
-                                                            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                                            aria-label="Edit message"
-                                                        >
-                                                            <Pencil className="h-3.5 w-3.5" />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setDeleteMessageId(
-                                                                    message.id,
-                                                                )
-                                                            }
-                                                            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                                            aria-label="Delete message"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })
-                    )}
-                </div>
-            </div>
-
-            <div className="shrink-0 border-t border-border bg-background">
-                <div className="mx-auto w-full max-w-3xl px-4 py-3 sm:px-6">
-                    {conversation.can_send ? (
-                        <form onSubmit={submitSend} className="space-y-2">
-                            <Textarea
-                                value={sendForm.data.body}
-                                onChange={(event) =>
-                                    sendForm.setData('body', event.target.value)
-                                }
-                                onKeyDown={handleComposerKeyDown}
-                                maxLength={MAX_BODY}
-                                rows={2}
-                                placeholder="Write a message…"
-                                aria-label="Message"
-                            />
-                            <div className="flex items-center justify-between gap-4">
-                                <span className="text-xs text-muted-foreground">
-                                    {sendForm.data.body.length}/{MAX_BODY}
+                <div className="flex h-full min-h-0 flex-col bg-background">
+                    <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
+                        <Link
+                            href="/messages"
+                            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+                            aria-label="Back to conversations"
+                        >
+                            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+                        </Link>
+                        <Briefcase
+                            className="hidden h-5 w-5 shrink-0 text-muted-foreground sm:block"
+                            aria-hidden="true"
+                        />
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h1 className="truncate text-base font-semibold sm:text-lg">
+                                    {conversation.job.title}
+                                </h1>
+                                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                                    {conversation.application_status_label}
                                 </span>
-                                <Button
-                                    type="submit"
-                                    disabled={sendForm.processing}
-                                >
-                                    Send
-                                </Button>
                             </div>
-                            {sendForm.errors.body && (
-                                <InputError message={sendForm.errors.body} />
-                            )}
-                        </form>
-                    ) : (
-                        <div className="rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-                            {conversation.read_only_notice ??
-                                'This conversation is read-only.'}
+                            <p className="truncate text-xs text-muted-foreground">
+                                {conversation.company && (
+                                    <>
+                                        <Building2
+                                            className="mr-1 inline h-3 w-3 align-[-1px]"
+                                            aria-hidden="true"
+                                        />
+                                        {conversation.company.name} ·{' '}
+                                    </>
+                                )}
+                                {conversation.viewer_role === 'candidate'
+                                    ? `Employer · ${conversation.other_party_name}`
+                                    : `Candidate · ${conversation.other_party_name}`}
+                            </p>
                         </div>
-                    )}
-                </div>
-            </div>
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                        >
+                            <Link href={applicationHref}>View application</Link>
+                        </Button>
+                    </div>
 
-            <Dialog
-                open={deleteMessageId !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleteMessageId(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete message?</DialogTitle>
-                        <DialogDescription>
-                            The message body is destroyed permanently and other
-                            participants will see "This message was deleted".
-                            This cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setDeleteMessageId(null)}
-                        >
-                            Keep message
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            disabled={deleteForm.processing}
-                            onClick={confirmDelete}
-                        >
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+                    <div
+                        ref={listRef}
+                        role="log"
+                        aria-live="polite"
+                        aria-label="Conversation messages"
+                        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                    >
+                        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4 sm:px-6">
+                            {messages.next_page_url && (
+                                <div className="text-center">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={loadEarlier}
+                                    >
+                                        Load earlier messages
+                                    </Button>
+                                </div>
+                            )}
+
+                            {items.length === 0 ? (
+                                <p className="py-8 text-center text-sm text-muted-foreground">
+                                    No messages yet — say hello.
+                                </p>
+                            ) : (
+                                items.map((message) => {
+                                    const isMine = message.is_mine;
+                                    const isTombstone =
+                                        message.deleted_at !== null;
+                                    const isEditing = editingId === message.id;
+
+                                    return (
+                                        <div
+                                            key={message.id}
+                                            className={cn(
+                                                'group flex flex-col gap-1',
+                                                isMine
+                                                    ? 'items-end'
+                                                    : 'items-start',
+                                            )}
+                                        >
+                                            <div className="flex max-w-[85%] items-center gap-2 text-xs text-muted-foreground">
+                                                {!isMine && (
+                                                    <span className="font-medium">
+                                                        {message.sender_name}
+                                                    </span>
+                                                )}
+                                                {message.created_at && (
+                                                    <time
+                                                        dateTime={
+                                                            message.created_at
+                                                        }
+                                                    >
+                                                        {new Date(
+                                                            message.created_at,
+                                                        ).toLocaleString()}
+                                                    </time>
+                                                )}
+                                                {message.edited_at &&
+                                                    !isTombstone && (
+                                                        <span>(edited)</span>
+                                                    )}
+                                            </div>
+
+                                            {isTombstone ? (
+                                                <div className="max-w-[85%] rounded-2xl border border-dashed border-border px-4 py-2 text-sm text-muted-foreground italic">
+                                                    This message was deleted
+                                                </div>
+                                            ) : isEditing ? (
+                                                <form
+                                                    onSubmit={(event) =>
+                                                        saveEdit(
+                                                            event,
+                                                            message.id,
+                                                        )
+                                                    }
+                                                    className="flex w-full max-w-[85%] flex-col gap-2"
+                                                >
+                                                    <Textarea
+                                                        value={
+                                                            editForm.data.body
+                                                        }
+                                                        onChange={(event) =>
+                                                            editForm.setData(
+                                                                'body',
+                                                                event.target
+                                                                    .value,
+                                                            )
+                                                        }
+                                                        maxLength={MAX_BODY}
+                                                        autoFocus
+                                                        rows={2}
+                                                    />
+                                                    {editForm.errors.body && (
+                                                        <InputError
+                                                            message={
+                                                                editForm.errors
+                                                                    .body
+                                                            }
+                                                        />
+                                                    )}
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={cancelEdit}
+                                                        >
+                                                            <X className="mr-1 h-4 w-4" />
+                                                            Cancel
+                                                        </Button>
+                                                        <Button
+                                                            type="submit"
+                                                            size="sm"
+                                                            disabled={
+                                                                editForm.processing
+                                                            }
+                                                        >
+                                                            <Check className="mr-1 h-4 w-4" />
+                                                            Save
+                                                        </Button>
+                                                    </div>
+                                                </form>
+                                            ) : (
+                                                <div className="relative">
+                                                    <div
+                                                        className={cn(
+                                                            'max-w-[85%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap',
+                                                            isMine
+                                                                ? 'rounded-br-md bg-primary text-primary-foreground'
+                                                                : 'rounded-bl-md bg-muted text-foreground',
+                                                        )}
+                                                    >
+                                                        {message.body}
+                                                    </div>
+                                                    {isMine &&
+                                                        conversation.can_send && (
+                                                            <div className="absolute top-0 -left-2 flex -translate-x-full gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        startEdit(
+                                                                            message,
+                                                                        )
+                                                                    }
+                                                                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                                                    aria-label="Edit message"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setDeleteMessageId(
+                                                                            message.id,
+                                                                        )
+                                                                    }
+                                                                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                                                    aria-label="Delete message"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="shrink-0 border-t border-border bg-background">
+                        <div className="mx-auto w-full max-w-3xl px-4 py-3 sm:px-6">
+                            {conversation.can_send ? (
+                                <form
+                                    onSubmit={submitSend}
+                                    className="space-y-2"
+                                >
+                                    <Textarea
+                                        value={sendForm.data.body}
+                                        onChange={(event) =>
+                                            sendForm.setData(
+                                                'body',
+                                                event.target.value,
+                                            )
+                                        }
+                                        onKeyDown={handleComposerKeyDown}
+                                        maxLength={MAX_BODY}
+                                        rows={2}
+                                        placeholder="Write a message…"
+                                        aria-label="Message"
+                                    />
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-xs text-muted-foreground">
+                                            {sendForm.data.body.length}/
+                                            {MAX_BODY}
+                                        </span>
+                                        <Button
+                                            type="submit"
+                                            disabled={sendForm.processing}
+                                        >
+                                            Send
+                                        </Button>
+                                    </div>
+                                    {sendForm.errors.body && (
+                                        <InputError
+                                            message={sendForm.errors.body}
+                                        />
+                                    )}
+                                </form>
+                            ) : (
+                                <div className="rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                                    {conversation.read_only_notice ??
+                                        'This conversation is read-only.'}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <Dialog
+                        open={deleteMessageId !== null}
+                        onOpenChange={(open) => {
+                            if (!open) {
+                                setDeleteMessageId(null);
+                            }
+                        }}
+                    >
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Delete message?</DialogTitle>
+                                <DialogDescription>
+                                    The message body is destroyed permanently
+                                    and other participants will see "This
+                                    message was deleted". This cannot be undone.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setDeleteMessageId(null)}
+                                >
+                                    Keep message
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={deleteForm.processing}
+                                    onClick={confirmDelete}
+                                >
+                                    Delete
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </MessagesShell>
+        </>
     );
 }

@@ -20,6 +20,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -44,6 +45,18 @@ class MessageController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        return Inertia::render('messages/index', $this->inboxProps($user, $request));
+    }
+
+    /**
+     * Shared inbox payload (paginated conversation list + unread total) for
+     * both the two-pane inbox and the thread view. Bounded: a page of at
+     * most 15 rows with the same eager loads the page endpoint uses.
+     *
+     * @return array{conversations: array<string, mixed>, unread_total: int}
+     */
+    private function inboxProps(User $user, Request $request): array
+    {
         $allowedCompanyIds = $this->conversations->allowedCompanyIdsFor($user);
 
         $select = [
@@ -142,18 +155,30 @@ class MessageController extends Controller
 
         $lastPage = max(1, (int) ceil($total / $perPage));
 
-        return Inertia::render('messages/index', [
+        // Page URLs must not leak the thread's `before` cursor. Build them
+        // from the named route (thread view) or the current path (inbox).
+        $routeName = $request->route()?->getName();
+        $conversation = $request->route('conversation');
+        $makePageUrl = function (int $page) use ($request, $routeName, $conversation): string {
+            if ($routeName === 'messages.show' && $conversation instanceof ApplicationConversation) {
+                return route('messages.show', ['conversation' => $conversation->id, 'page' => $page]);
+            }
+
+            return $request->url().'?'.Arr::query(['page' => $page]);
+        };
+
+        return [
             'conversations' => [
                 'data' => $items,
                 'current_page' => $page,
                 'last_page' => $lastPage,
                 'per_page' => $perPage,
                 'total' => $total,
-                'prev_page_url' => $page > 1 ? $request->fullUrlWithQuery(['page' => $page - 1]) : null,
-                'next_page_url' => $page < $lastPage ? $request->fullUrlWithQuery(['page' => $page + 1]) : null,
+                'prev_page_url' => $page > 1 ? $makePageUrl($page - 1) : null,
+                'next_page_url' => $page < $lastPage ? $makePageUrl($page + 1) : null,
             ],
             'unread_total' => $this->conversations->unreadCountFor($user),
-        ]);
+        ];
     }
 
     /**
@@ -221,6 +246,7 @@ class MessageController extends Controller
         $canSend = Gate::allows('send', $conversation) && ! $application->status->isTerminal();
 
         return Inertia::render('messages/show', [
+            ...$this->inboxProps($user, $request),
             'conversation' => [
                 'id' => $conversation->id,
                 'viewer_role' => $isCandidate ? 'candidate' : 'employer',

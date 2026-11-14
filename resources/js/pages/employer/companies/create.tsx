@@ -1,5 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import {
+    ArrowLeft,
+    Building2,
+    Factory,
+    Image as ImageIcon,
+} from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { useForm } from '@inertiajs/react';
@@ -62,6 +67,9 @@ export default function EmployerCompanyCreate() {
         });
     };
 
+    const sectionLinkClassName =
+        'block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none';
+
     return (
         <>
             <Head title="Create Company Profile" />
@@ -86,109 +94,168 @@ export default function EmployerCompanyCreate() {
                     </p>
                 </div>
 
-                <Card className="border-border">
-                    <CardHeader>
-                        <CardTitle className="text-lg">
-                            Company details
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form
-                            onSubmit={handleSubmit}
-                            className="space-y-4"
-                            aria-busy={form.processing}
+                <form
+                    id="company-form"
+                    onSubmit={handleSubmit}
+                    className="grid items-start gap-6 lg:grid-cols-3"
+                    aria-busy={form.processing}
+                >
+                    <div className="min-w-0 space-y-6 lg:col-span-2 lg:max-w-3xl">
+                        {/* Identity */}
+                        <Card
+                            id="section-identity"
+                            className="scroll-mt-24 border-border"
                         >
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">
-                                    Company name{' '}
-                                    <span
-                                        className="text-red-600"
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <Building2
+                                        className="size-4 text-muted-foreground"
                                         aria-hidden="true"
+                                    />
+                                    Company identity
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 sm:grid-cols-2">
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="name">
+                                        Company name{' '}
+                                        <span
+                                            className="text-red-600"
+                                            aria-hidden="true"
+                                        >
+                                            *
+                                        </span>
+                                    </Label>
+                                    <Input
+                                        id="name"
+                                        value={form.data.name}
+                                        onChange={(e) =>
+                                            form.setData('name', e.target.value)
+                                        }
+                                        required
+                                        minLength={2}
+                                        maxLength={150}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            form.errors.name ? true : undefined
+                                        }
+                                        aria-describedby={
+                                            form.errors.name
+                                                ? 'name-error'
+                                                : undefined
+                                        }
+                                    />
+                                    <InputError
+                                        id="name-error"
+                                        message={form.errors.name}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="slug">
+                                        Slug (optional)
+                                    </Label>
+                                    <Input
+                                        id="slug"
+                                        value={form.data.slug}
+                                        onChange={(e) =>
+                                            form.setData('slug', e.target.value)
+                                        }
+                                        maxLength={100}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            form.errors.slug ? true : undefined
+                                        }
+                                        aria-describedby="slug-help slug-error"
+                                    />
+                                    <p
+                                        id="slug-help"
+                                        className="text-xs text-muted-foreground"
                                     >
-                                        *
-                                    </span>
-                                </Label>
-                                <Input
-                                    id="name"
-                                    value={form.data.name}
-                                    onChange={(e) =>
-                                        form.setData('name', e.target.value)
-                                    }
-                                    required
-                                    minLength={2}
-                                    maxLength={150}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        form.errors.name ? true : undefined
-                                    }
-                                    aria-describedby={
-                                        form.errors.name
-                                            ? 'name-error'
-                                            : undefined
-                                    }
-                                />
-                                <InputError
-                                    id="name-error"
-                                    message={form.errors.name}
-                                />
-                            </div>
+                                        Leave blank to generate from the name.
+                                    </p>
+                                    <InputError
+                                        id="slug-error"
+                                        message={form.errors.slug}
+                                    />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="slug">Slug (optional)</Label>
-                                <Input
-                                    id="slug"
-                                    value={form.data.slug}
-                                    onChange={(e) =>
-                                        form.setData('slug', e.target.value)
-                                    }
-                                    maxLength={100}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        form.errors.slug ? true : undefined
-                                    }
-                                    aria-describedby="slug-help slug-error"
-                                />
-                                <p
-                                    id="slug-help"
-                                    className="text-xs text-muted-foreground"
-                                >
-                                    Leave blank to generate from the company
-                                    name.
-                                </p>
-                                <InputError
-                                    id="slug-error"
-                                    message={form.errors.slug}
-                                />
-                            </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="website">Website</Label>
+                                    <Input
+                                        id="website"
+                                        type="url"
+                                        value={form.data.website ?? ''}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'website',
+                                                e.target.value === ''
+                                                    ? null
+                                                    : e.target.value,
+                                            )
+                                        }
+                                        maxLength={255}
+                                        placeholder="https://example.com"
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            form.errors.website
+                                                ? true
+                                                : undefined
+                                        }
+                                        aria-describedby="website-error"
+                                    />
+                                    <InputError
+                                        id="website-error"
+                                        message={form.errors.website}
+                                    />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="overview">Overview</Label>
-                                <Textarea
-                                    id="overview"
-                                    value={form.data.overview ?? ''}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'overview',
-                                            e.target.value === ''
-                                                ? null
-                                                : e.target.value,
-                                        )
-                                    }
-                                    maxLength={5000}
-                                    rows={4}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        form.errors.overview ? true : undefined
-                                    }
-                                    aria-describedby="overview-error"
-                                />
-                                <InputError
-                                    id="overview-error"
-                                    message={form.errors.overview}
-                                />
-                            </div>
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="overview">Overview</Label>
+                                    <Textarea
+                                        id="overview"
+                                        value={form.data.overview ?? ''}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'overview',
+                                                e.target.value === ''
+                                                    ? null
+                                                    : e.target.value,
+                                            )
+                                        }
+                                        maxLength={5000}
+                                        rows={4}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            form.errors.overview
+                                                ? true
+                                                : undefined
+                                        }
+                                        aria-describedby="overview-error"
+                                    />
+                                    <InputError
+                                        id="overview-error"
+                                        message={form.errors.overview}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                            <div className="grid gap-2 sm:grid-cols-2">
+                        {/* Business details */}
+                        <Card
+                            id="section-details"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <Factory
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Business details
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 sm:grid-cols-2">
                                 <div className="grid gap-2">
                                     <Label htmlFor="industry">Industry</Label>
                                     <Input
@@ -243,135 +310,191 @@ export default function EmployerCompanyCreate() {
                                         message={form.errors.size_band}
                                     />
                                 </div>
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="website">Website</Label>
-                                <Input
-                                    id="website"
-                                    type="url"
-                                    value={form.data.website ?? ''}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'website',
-                                            e.target.value === ''
-                                                ? null
-                                                : e.target.value,
-                                        )
-                                    }
-                                    maxLength={255}
-                                    placeholder="https://example.com"
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        form.errors.website ? true : undefined
-                                    }
-                                    aria-describedby="website-error"
-                                />
-                                <InputError
-                                    id="website-error"
-                                    message={form.errors.website}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="location">Location</Label>
-                                <Input
-                                    id="location"
-                                    value={form.data.location ?? ''}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'location',
-                                            e.target.value === ''
-                                                ? null
-                                                : e.target.value,
-                                        )
-                                    }
-                                    maxLength={255}
-                                    disabled={form.processing}
-                                    aria-invalid={
-                                        form.errors.location ? true : undefined
-                                    }
-                                    aria-describedby="location-error"
-                                />
-                                <InputError
-                                    id="location-error"
-                                    message={form.errors.location}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="logo">Logo</Label>
-                                {previewUrl && (
-                                    <img
-                                        src={previewUrl}
-                                        alt="Logo preview"
-                                        className="size-16 rounded-md object-cover"
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="location">Location</Label>
+                                    <Input
+                                        id="location"
+                                        value={form.data.location ?? ''}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'location',
+                                                e.target.value === ''
+                                                    ? null
+                                                    : e.target.value,
+                                            )
+                                        }
+                                        maxLength={255}
+                                        disabled={form.processing}
+                                        aria-invalid={
+                                            form.errors.location
+                                                ? true
+                                                : undefined
+                                        }
+                                        aria-describedby="location-error"
                                     />
-                                )}
-                                <input
-                                    id="logo"
-                                    type="file"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    onChange={handleLogoChange}
-                                    disabled={form.processing}
-                                    className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium"
-                                    aria-describedby="logo-help logo-error"
-                                />
-                                <p
-                                    id="logo-help"
-                                    className="text-xs text-muted-foreground"
-                                >
-                                    JPEG, PNG, or WebP. Maximum 2 MB.
-                                </p>
-                                <InputError
-                                    id="logo-error"
-                                    message={form.errors.logo}
-                                />
-                            </div>
+                                    <InputError
+                                        id="location-error"
+                                        message={form.errors.location}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                            <div className="flex items-center space-x-2 pt-2">
-                                <Checkbox
-                                    id="is_active"
-                                    checked={form.data.is_active}
-                                    onCheckedChange={(checked) =>
-                                        form.setData(
-                                            'is_active',
-                                            Boolean(checked),
-                                        )
-                                    }
-                                    disabled={form.processing}
-                                />
-                                <Label
-                                    htmlFor="is_active"
-                                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                    Active (visible on public pages)
-                                </Label>
-                            </div>
-                            <InputError message={form.errors.is_active} />
-
-                            <div className="flex items-center gap-2 pt-2">
-                                <Button
-                                    type="submit"
-                                    disabled={form.processing}
-                                >
-                                    {form.processing && (
-                                        <Spinner className="mr-2" />
+                        {/* Logo & visibility */}
+                        <Card
+                            id="section-logo"
+                            className="scroll-mt-24 border-border"
+                        >
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <ImageIcon
+                                        className="size-4 text-muted-foreground"
+                                        aria-hidden="true"
+                                    />
+                                    Logo &amp; visibility
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="logo">Logo</Label>
+                                    {previewUrl && (
+                                        <img
+                                            src={previewUrl}
+                                            alt="Logo preview"
+                                            className="size-20 rounded-lg border border-border object-cover"
+                                        />
                                     )}
-                                    Create company
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    asChild
-                                    disabled={form.processing}
-                                >
-                                    <Link href={companiesIndex()}>Cancel</Link>
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                                    <input
+                                        id="logo"
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={handleLogoChange}
+                                        disabled={form.processing}
+                                        className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium"
+                                        aria-describedby="logo-help logo-error"
+                                    />
+                                    <p
+                                        id="logo-help"
+                                        className="text-xs text-muted-foreground"
+                                    >
+                                        JPEG, PNG, or WebP. Maximum 2 MB.
+                                    </p>
+                                    <InputError
+                                        id="logo-error"
+                                        message={form.errors.logo}
+                                    />
+                                </div>
+
+                                <div className="flex items-center space-x-2 border-t border-border pt-4">
+                                    <Checkbox
+                                        id="is_active"
+                                        checked={form.data.is_active}
+                                        onCheckedChange={(checked) =>
+                                            form.setData(
+                                                'is_active',
+                                                Boolean(checked),
+                                            )
+                                        }
+                                        disabled={form.processing}
+                                    />
+                                    <Label
+                                        htmlFor="is_active"
+                                        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
+                                        Active (visible on public pages)
+                                    </Label>
+                                </div>
+                                <InputError message={form.errors.is_active} />
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex items-center gap-2">
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing && (
+                                    <Spinner className="mr-2" />
+                                )}
+                                Create company
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                asChild
+                                disabled={form.processing}
+                            >
+                                <Link href={companiesIndex()}>Cancel</Link>
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Sticky aside: navigation + submit */}
+                    <aside className="w-full lg:sticky lg:top-6 lg:col-span-1">
+                        <div className="space-y-4">
+                            <Card className="border-border">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        On this page
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <nav aria-label="Company profile sections">
+                                        <ul className="space-y-1 text-sm">
+                                            {[
+                                                {
+                                                    id: 'section-identity',
+                                                    label: 'Company identity',
+                                                },
+                                                {
+                                                    id: 'section-details',
+                                                    label: 'Business details',
+                                                },
+                                                {
+                                                    id: 'section-logo',
+                                                    label: 'Logo & visibility',
+                                                },
+                                            ].map((section) => (
+                                                <li key={section.id}>
+                                                    <a
+                                                        href={`#${section.id}`}
+                                                        className={
+                                                            sectionLinkClassName
+                                                        }
+                                                    >
+                                                        {section.label}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </nav>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-border">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-base">
+                                        Create company
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <Button
+                                        type="submit"
+                                        form="company-form"
+                                        className="w-full"
+                                        disabled={form.processing}
+                                    >
+                                        {form.processing && (
+                                            <Spinner className="mr-2" />
+                                        )}
+                                        Create company
+                                    </Button>
+                                    <p className="mt-2 text-xs text-muted-foreground">
+                                        Your profile appears on public company
+                                        pages once it is created.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </aside>
+                </form>
             </div>
         </>
     );

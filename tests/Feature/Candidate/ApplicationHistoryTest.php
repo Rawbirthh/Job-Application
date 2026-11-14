@@ -59,6 +59,74 @@ class ApplicationHistoryTest extends TestCase
             );
     }
 
+    public function test_applications_can_be_filtered_by_status(): void
+    {
+        $jobSeeker = User::factory()->jobSeeker()->create();
+        $employer = User::factory()->approvedEmployer()->create();
+        $company = Company::factory()->for($employer, 'owner')->create();
+        $jobs = Job::factory()->count(3)->for($company)->create(['status' => 'published']);
+
+        JobApplication::factory()->create([
+            'user_id' => $jobSeeker->id,
+            'job_posting_id' => $jobs[0]->id,
+            'status' => 'shortlisted',
+        ]);
+        JobApplication::factory()->create([
+            'user_id' => $jobSeeker->id,
+            'job_posting_id' => $jobs[1]->id,
+            'status' => 'rejected',
+        ]);
+        JobApplication::factory()->create([
+            'user_id' => $jobSeeker->id,
+            'job_posting_id' => $jobs[2]->id,
+            'status' => 'shortlisted',
+        ]);
+
+        $this->actingAs($jobSeeker)
+            ->get(route('candidate.applications.index', ['status' => 'shortlisted']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('candidate/applications/index')
+                ->has('applications.data', 2)
+                ->where('filters.status', 'shortlisted')
+                ->where('statusCounts.shortlisted', 2)
+                ->where('statusCounts.rejected', 1),
+            );
+    }
+
+    public function test_status_filter_rejects_an_unknown_status(): void
+    {
+        $jobSeeker = User::factory()->jobSeeker()->create();
+
+        $response = $this->actingAs($jobSeeker)
+            ->from(route('candidate.applications.index'))
+            ->get(route('candidate.applications.index', ['status' => 'definitely_not_a_status']));
+
+        $response->assertRedirect(route('candidate.applications.index'));
+        $response->assertSessionHasErrors('status');
+    }
+
+    public function test_unknown_status_filter_value_never_returns_an_arbitrary_sql_value(): void
+    {
+        $jobSeeker = User::factory()->jobSeeker()->create();
+        $employer = User::factory()->approvedEmployer()->create();
+        $company = Company::factory()->for($employer, 'owner')->create();
+        $job = Job::factory()->for($company)->create(['status' => 'published']);
+
+        JobApplication::factory()->create([
+            'user_id' => $jobSeeker->id,
+            'job_posting_id' => $job->id,
+            'status' => 'submitted',
+        ]);
+
+        $this->actingAs($jobSeeker)
+            ->get(route('candidate.applications.index', ['status' => 'withdrawn']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('applications.data', 0),
+            );
+    }
+
     public function test_application_history_is_scoped_to_the_authenticated_user(): void
     {
         $jobSeeker1 = User::factory()->jobSeeker()->create();
