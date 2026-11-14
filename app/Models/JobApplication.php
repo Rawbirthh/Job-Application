@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property-read CandidateResume|null $candidateResume
  * @property-read Collection<int, JobApplicationStatusHistory> $statusHistories
  * @property-read Collection<int, Interview> $interviews
+ * @property-read ApplicationConversation|null $conversation
  */
 class JobApplication extends Model
 {
@@ -90,5 +92,13 @@ class JobApplication extends Model
     public function screeningAnswers(): HasMany
     {
         return $this->hasMany(JobApplicationAnswer::class, 'job_application_id');
+    }
+
+    /**
+     * @return HasOne<ApplicationConversation, $this>
+     */
+    public function conversation(): HasOne
+    {
+        return $this->hasOne(ApplicationConversation::class, 'application_id');
     }
 }

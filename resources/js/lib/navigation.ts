@@ -12,6 +12,7 @@ import {
     Bookmark,
     FileText,
     Bell,
+    MessageSquare,
     ClipboardList,
     Flag,
     ListChecks,
@@ -68,6 +69,12 @@ export const mainNavConfig: NavItemConfig[] = [
         href: '/candidate/applications',
         icon: FileText,
         requiredRoles: ['job_seeker'],
+    },
+    {
+        title: 'Messages',
+        href: '/messages',
+        icon: MessageSquare,
+        requiredRoles: ['job_seeker', 'employer'],
     },
     {
         title: 'Notifications',

@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\CompanyMemberStatus;
 use App\Enums\JobApplicationStatus;
 use App\Enums\PermissionSlug;
 use App\Enums\RoleSlug;
 use App\Models\Company;
+use App\Models\CompanyMember;
+use App\Models\ConversationMessage;
 use App\Models\EmployerOnboardingRequest;
 use App\Models\Interview;
 use App\Models\Job;
@@ -27,6 +30,7 @@ use App\Notifications\InterviewResponseNotification;
 use App\Notifications\InterviewScheduledNotification;
 use App\Notifications\JobModerationOutcomeNotification;
 use App\Notifications\JobSubmittedForReviewNotification;
+use App\Notifications\NewConversationMessageNotification;
 use App\Notifications\NewJobApplicationNotification;
 use App\Notifications\ReportOutcomeNotification;
 use App\Notifications\ReportSubmittedNotification;
@@ -230,6 +234,91 @@ class NotificationService
     public function savedSearchMatched(SavedSearch $search, array $jobs): void
     {
         $this->notify($search->user, new SavedSearchMatchedNotification($search, $jobs));
+    }
+
+    /**
+     * Notify the people on the other side of a conversation about a new message.
+     * Coalesces to one unread notification per conversation per recipient.
+     */
+    public function newConversationMessage(ConversationMessage $message): void
+    {
+        $message->loadMissing(['conversation.application.jobPosting.company.owner', 'sender:id,name']);
+
+        $application = $message->conversation->application;
+        $company = $application->jobPosting->company;
+
+        if ((int) $message->sender_id === (int) $application->user_id) {
+            $recipients = $this->companyParticipantsWithManagePermission($company);
+        } else {
+            $recipients = [$application->user];
+        }
+
+        foreach ($recipients as $recipient) {
+            $this->notifyCoalescedMessage($recipient, $message);
+        }
+    }
+
+    /**
+     * Company owner (implicit owner role) plus active members whose company
+     * role grants applicants.manage — bounded by team size.
+     *
+     * @return array<int, User>
+     */
+    private function companyParticipantsWithManagePermission(?Company $company): array
+    {
+        if ($company === null) {
+            return [];
+        }
+
+        $company->loadMissing('owner:id,name,email');
+
+        $recipients = [];
+        if ($company->owner instanceof User) {
+            $recipients[] = $company->owner;
+        }
+
+        $members = CompanyMember::query()
+            ->with('user:id,name,email')
+            ->where('company_id', $company->id)
+            ->where('status', CompanyMemberStatus::Active->value)
+            ->get();
+
+        foreach ($members as $membership) {
+            $user = $membership->user;
+            if ($user instanceof User && in_array('applicants.manage', $membership->company_role->permissions(), true)) {
+                $recipients[] = $user;
+            }
+        }
+
+        return collect($recipients)->unique('id')->values()->all();
+    }
+
+    private function notifyCoalescedMessage(User $recipient, ConversationMessage $message): void
+    {
+        $conversationId = (int) $message->conversation_id;
+        $data = NewConversationMessageNotification::dataFor($message);
+
+        try {
+            $existing = $recipient->unreadNotifications()
+                ->where('type', NewConversationMessageNotification::class)
+                ->where('data->conversation_id', $conversationId)
+                ->latest()
+                ->first();
+
+            if ($existing !== null) {
+                $existing->forceFill(['data' => $data])->save();
+
+                return;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Message notification refresh failed', [
+                'exception' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        $this->notify($recipient, new NewConversationMessageNotification($message));
     }
 
     private function notify(User $notifiable, object $notification): void

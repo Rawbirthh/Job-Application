@@ -54,7 +54,11 @@ class JobApplicationTest extends TestCase
         $jobSeeker = User::factory()->jobSeeker()->create();
         $employer = User::factory()->approvedEmployer()->create();
         $company = Company::factory()->for($employer, 'owner')->create();
-        $job = Job::factory()->for($company)->create(['status' => 'published']);
+        $job = Job::factory()->for($company)->create([
+            'status' => 'published',
+            // Pin a far-future deadline so the apply form cannot reject on a clock boundary.
+            'application_deadline' => now()->addDays(30),
+        ]);
 
         CandidateResume::factory()->for($jobSeeker, 'user')->create();
 
@@ -411,7 +415,11 @@ class JobApplicationTest extends TestCase
         $otherCandidate = User::factory()->jobSeeker()->create();
         $employer = User::factory()->approvedEmployer()->create();
         $company = Company::factory()->for($employer, 'owner')->create();
-        $job = Job::factory()->for($company)->create(['status' => 'published']);
+        $job = Job::factory()->for($company)->create([
+            'status' => 'published',
+            // Pin a far-future deadline so store validation cannot reject the apply on a clock boundary.
+            'application_deadline' => now()->addDays(30),
+        ]);
 
         $q = JobScreeningQuestion::create(['job_posting_id' => $job->id, 'type' => 'short_text', 'label' => 'Question label', 'options' => null, 'is_required' => true, 'sort_order' => 0, 'is_active' => true]);
 

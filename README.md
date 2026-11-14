@@ -57,3 +57,12 @@ References: [Laravel 13 testing docs](https://laravel.com/framework/docs/13.x/te
 - `/review` — inspect current changes without editing them.
 - `/remember save` — save the key project/session context before switching sessions.
 - `/remember restore` — restore and verify saved context at the start of a clean session.
+
+## Application development notes
+
+- **Real-time messaging (Feature 35):** the app uses Laravel Reverb (self-hosted WebSocket server, Pusher protocol) with Laravel Echo on the frontend. For local development run, alongside the app server:
+    - `php artisan reverb:start` (default `127.0.0.1:8080`)
+    - `php artisan queue:work` (broadcast events implement `ShouldBroadcast` and need a queue worker; `QUEUE_CONNECTION=database`)
+    - Copy `.env.example` values; local values live in `.env` only (`REVERB_APP_ID/KEY/SECRET` are generated locally, never committed). When `VITE_REVERB_APP_KEY` is unset (CI/phpunit/builds without Reverb), realtime is disabled gracefully and pages fall back to server rendering.
+    - The test suite runs with `BROADCAST_CONNECTION=null` and `QUEUE_CONNECTION=sync`; broadcast assertions use `Event::fake()`.
+    - Production needs supervised `reverb:start` and `queue:work` processes.

@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Listeners\RecordAuthenticationAuditEvents;
+use App\Models\ApplicationConversation;
+use App\Models\ConversationMessage;
+use App\Policies\ConversationPolicy;
 use App\Policies\EmployerPolicy;
 use App\Policies\NotificationPolicy;
 use Carbon\CarbonImmutable;
@@ -14,6 +17,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -41,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('employers.reactivate', [EmployerPolicy::class, 'reactivate']);
 
         Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
+        Gate::policy(ApplicationConversation::class, ConversationPolicy::class);
+        Gate::policy(ConversationMessage::class, ConversationPolicy::class);
+
+        // Edit/delete targets are allowed to resolve to tombstoned messages;
+        // the service then returns a validation error instead of a 404.
+        Route::bind('message', fn (string $value): ConversationMessage => ConversationMessage::withTrashed()->findOrFail($value));
 
         // Authentication events are the only source of login/logout facts.
         Event::listen(Login::class, [RecordAuthenticationAuditEvents::class, 'handleLogin']);

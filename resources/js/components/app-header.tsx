@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, MessageSquare } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -39,8 +39,14 @@ const activeItemStyles =
     'text-foreground dark:bg-accent dark:text-accent-foreground';
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
-    const page = usePage<{ auth: Auth }>();
+    const page = usePage<{
+        auth: Auth;
+        notifications_unread_count?: number;
+    }>();
     const { auth } = page.props;
+    const isParticipant = (auth.roles ?? []).some((role) =>
+        ['job_seeker', 'employer'].includes(role),
+    );
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
@@ -141,6 +147,15 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                     </div>
 
                     <div className="ml-auto flex items-center space-x-2">
+                        {isParticipant && (
+                            <Link
+                                href="/messages"
+                                className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                aria-label="Messages"
+                            >
+                                <MessageSquare className="h-5 w-5" />
+                            </Link>
+                        )}
                         <Link
                             href="/notifications"
                             className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

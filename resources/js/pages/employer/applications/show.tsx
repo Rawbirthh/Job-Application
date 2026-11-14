@@ -9,6 +9,7 @@ import {
     GraduationCap,
     Mail,
     MapPin,
+    MessageSquare,
     User,
     Users,
 } from 'lucide-react';
@@ -73,6 +74,7 @@ interface Props {
         } | null;
     };
     allowed_transitions: { value: string; label: string }[];
+    can_message?: boolean;
     status_histories: StatusHistory[];
     candidate: {
         id: number;
@@ -107,6 +109,7 @@ interface Props {
 export default function EmployerApplicationShow({
     application,
     allowed_transitions,
+    can_message = false,
     status_histories,
     candidate,
     job,
@@ -125,6 +128,7 @@ export default function EmployerApplicationShow({
         new_status: '',
         reason: '',
     });
+    const openConversation = useForm<Record<string, never>>({});
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -232,12 +236,30 @@ export default function EmployerApplicationShow({
                                 )}
                             </p>
                         </div>
-                        <Badge
-                            variant={statusBadgeVariant(application.status)}
-                            className="w-fit text-sm"
-                        >
-                            {formatStatus(application.status)}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                            {can_message && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={openConversation.processing}
+                                    onClick={() =>
+                                        openConversation.post(
+                                            `/applications/${application.id}/conversation`,
+                                            { preserveScroll: true },
+                                        )
+                                    }
+                                >
+                                    <MessageSquare className="mr-2 size-4" />
+                                    Messages
+                                </Button>
+                            )}
+                            <Badge
+                                variant={statusBadgeVariant(application.status)}
+                                className="w-fit text-sm"
+                            >
+                                {formatStatus(application.status)}
+                            </Badge>
+                        </div>
                     </div>
                 </div>
 

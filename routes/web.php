@@ -21,6 +21,7 @@ use App\Http\Controllers\Employer\JobController;
 use App\Http\Controllers\Employer\JobScreeningQuestionController;
 use App\Http\Controllers\Employer\ScreeningQuestionController;
 use App\Http\Controllers\Employer\ScreeningTemplateController;
+use App\Http\Controllers\Messaging\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicJobController;
 use App\Http\Controllers\ReportController;
@@ -45,6 +46,25 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('reports', [ReportController::class, 'store'])
         ->middleware(['throttle:10,1'])
         ->name('reports.store');
+
+    // Feature 35: application-based real-time messaging
+    Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
+    Route::post('messages/{conversation}/messages', [MessageController::class, 'store'])
+        ->middleware(['throttle:30,1'])
+        ->name('messages.store');
+    Route::post('messages/{conversation}/read', [MessageController::class, 'read'])
+        ->middleware(['throttle:60,1'])
+        ->name('messages.read');
+    Route::put('messages/{message}', [MessageController::class, 'update'])
+        ->middleware(['throttle:30,1'])
+        ->name('messages.update');
+    Route::delete('messages/{message}', [MessageController::class, 'destroy'])
+        ->middleware(['throttle:30,1'])
+        ->name('messages.destroy');
+    Route::post('applications/{application}/conversation', [MessageController::class, 'open'])
+        ->middleware(['throttle:30,1'])
+        ->name('messages.open');
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 

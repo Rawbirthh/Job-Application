@@ -1,5 +1,11 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Building, Building2, ExternalLink } from 'lucide-react';
+import {
+    ArrowLeft,
+    Building,
+    Building2,
+    ExternalLink,
+    MessageSquare,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +39,7 @@ import { ScreeningAnswers } from '@/components/screening/screening-answers';
 interface Props {
     application: Application;
     can_withdraw: boolean;
+    can_message: boolean;
     status_histories: StatusHistory[];
     job: {
         id: number;
@@ -71,6 +78,7 @@ interface Props {
 export default function CandidateApplicationShow({
     application,
     can_withdraw,
+    can_message,
     status_histories,
     job,
     timezones,
@@ -84,6 +92,7 @@ export default function CandidateApplicationShow({
     const { data, setData, post, processing, errors } = useForm({
         reason: '',
     });
+    const openConversation = useForm<Record<string, never>>({});
 
     const handleWithdraw = (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,7 +134,7 @@ export default function CandidateApplicationShow({
         <div className="container mx-auto max-w-6xl px-4 py-8">
             <Head title={`Application: ${job.title}`} />
 
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <Button
                         variant="ghost"
@@ -153,6 +162,21 @@ export default function CandidateApplicationShow({
                         )}
                     </div>
                 </div>
+                {can_message && (
+                    <Button
+                        variant="outline"
+                        disabled={openConversation.processing}
+                        onClick={() =>
+                            openConversation.post(
+                                `/applications/${application.id}/conversation`,
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Messages
+                    </Button>
+                )}
             </div>
 
             <div className="grid gap-8 lg:grid-cols-3">

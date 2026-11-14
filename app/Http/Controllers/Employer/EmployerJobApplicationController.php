@@ -176,6 +176,11 @@ class EmployerJobApplicationController extends Controller
                 'selected_option' => $a->selected_option,
             ])->all();
 
+        $canViewApplicants = $job->company !== null
+            && $actor instanceof User
+            && $actor->isApprovedEmployer()
+            && $actor->hasCompanyPermission($job->company, 'applicants.view');
+
         return Inertia::render('employer/applications/show', [
             'application' => [
                 'id' => $application->id,
@@ -189,6 +194,7 @@ class EmployerJobApplicationController extends Controller
                     'size' => $application->candidateResume->size,
                 ] : null,
             ],
+            'can_message' => ! $application->status->isTerminal() && $canViewApplicants,
             'allowed_transitions' => $canManageApplicants
                 ? array_map(
                     fn (JobApplicationStatus $s): array => [

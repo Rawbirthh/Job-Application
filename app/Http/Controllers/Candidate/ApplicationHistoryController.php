@@ -195,6 +195,7 @@ class ApplicationHistoryController extends Controller
                     : null,
             ],
             'can_withdraw' => ! $application->status->isTerminal(),
+            'can_message' => ! $application->status->isTerminal(),
             'status_histories' => $application->statusHistories->map(fn (JobApplicationStatusHistory $history): array => [
                 'id' => $history->id,
                 'from_status' => $history->from_status->value,
