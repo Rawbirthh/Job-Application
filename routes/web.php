@@ -14,7 +14,9 @@ use App\Http\Controllers\Employer\AnalyticsController as EmployerAnalyticsContro
 use App\Http\Controllers\Employer\CompanyController;
 use App\Http\Controllers\Employer\CompanyMemberController;
 use App\Http\Controllers\Employer\EmployerDashboardController;
+use App\Http\Controllers\Employer\EmployerEvaluationController;
 use App\Http\Controllers\Employer\EmployerJobApplicationController;
+use App\Http\Controllers\Employer\EmployerNoteController;
 use App\Http\Controllers\Employer\EmployerOnboardingController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\JobController;
@@ -192,6 +194,20 @@ Route::middleware(['auth'])->group(function (): void {
             Route::post('interviews/{interview}/cancel', [EmployerInterviewController::class, 'cancel'])
                 ->middleware(['throttle:20,1'])
                 ->name('interviews.cancel');
+
+            // Feature 36: private recruiter notes and evaluations
+            Route::post('applications/{application}/notes', [EmployerNoteController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('applications.notes.store');
+            Route::put('applications/{application}/notes/{note}', [EmployerNoteController::class, 'update'])
+                ->middleware(['throttle:20,1'])
+                ->name('applications.notes.update');
+            Route::delete('applications/{application}/notes/{note}', [EmployerNoteController::class, 'destroy'])
+                ->middleware(['throttle:20,1'])
+                ->name('applications.notes.destroy');
+            Route::post('applications/{application}/evaluations', [EmployerEvaluationController::class, 'store'])
+                ->middleware(['throttle:20,1'])
+                ->name('applications.evaluations.store');
         });
     });
 

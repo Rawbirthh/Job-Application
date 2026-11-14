@@ -4,7 +4,11 @@ namespace App\Providers;
 
 use App\Listeners\RecordAuthenticationAuditEvents;
 use App\Models\ApplicationConversation;
+use App\Models\ApplicationEvaluation;
+use App\Models\ApplicationNote;
 use App\Models\ConversationMessage;
+use App\Policies\ApplicationEvaluationPolicy;
+use App\Policies\ApplicationNotePolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\EmployerPolicy;
 use App\Policies\NotificationPolicy;
@@ -47,6 +51,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
         Gate::policy(ApplicationConversation::class, ConversationPolicy::class);
         Gate::policy(ConversationMessage::class, ConversationPolicy::class);
+        Gate::policy(ApplicationNote::class, ApplicationNotePolicy::class);
+        Gate::policy(ApplicationEvaluation::class, ApplicationEvaluationPolicy::class);
 
         // Edit/delete targets are allowed to resolve to tombstoned messages;
         // the service then returns a validation error instead of a 404.

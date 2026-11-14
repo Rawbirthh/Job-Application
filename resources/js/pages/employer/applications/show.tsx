@@ -32,8 +32,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmployerInterviews } from '@/components/interview/employer-interviews';
 import { ScreeningAnswers } from '@/components/screening/screening-answers';
+import { ApplicationNotes } from '@/components/notes/application-notes';
+import { EvaluationScorecard } from '@/components/evaluation/evaluation-scorecard';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import type {
+    ApplicationEvaluationItem,
+    ApplicationNoteItem,
     EmployerInterviewRound,
     InterviewPagination,
     ScreeningAnswer,
@@ -100,6 +104,9 @@ interface Props {
     interview_eligible: boolean;
     can_update_status?: boolean;
     can_schedule_interview?: boolean;
+    can_manage_notes?: boolean;
+    notes?: ApplicationNoteItem[];
+    evaluations?: ApplicationEvaluationItem[];
     timezones: string[];
     interviews: EmployerInterviewRound[];
     interview_pagination: InterviewPagination;
@@ -116,6 +123,9 @@ export default function EmployerApplicationShow({
     interview_eligible,
     can_update_status = true,
     can_schedule_interview = true,
+    can_manage_notes = false,
+    notes = [],
+    evaluations = [],
     timezones,
     interviews,
     interview_pagination,
@@ -367,6 +377,18 @@ export default function EmployerApplicationShow({
                             timezones={timezones}
                             interviews={interviews}
                             pagination={interview_pagination}
+                        />
+
+                        {/* Feature 36: private recruiter notes and candidate evaluation */}
+                        <ApplicationNotes
+                            applicationId={application.id}
+                            notes={notes}
+                            canManage={can_manage_notes}
+                        />
+                        <EvaluationScorecard
+                            applicationId={application.id}
+                            evaluations={evaluations}
+                            canManage={can_manage_notes}
                         />
 
                         {/* Candidate Summary Card */}

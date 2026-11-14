@@ -222,7 +222,7 @@ class JobApplicationTest extends TestCase
         $jobSeeker = User::factory()->jobSeeker()->create();
         $employer = User::factory()->approvedEmployer()->create();
         $company = Company::factory()->for($employer, 'owner')->create();
-        $job = Job::factory()->for($company)->create(['status' => 'published']);
+        $job = Job::factory()->for($company)->create(['status' => 'published', 'application_deadline' => now()->addDays(30)]);
 
         $qShort = JobScreeningQuestion::create([
             'job_posting_id' => $job->id,

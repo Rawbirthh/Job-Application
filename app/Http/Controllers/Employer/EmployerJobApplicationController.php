@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Employer;
 use App\Enums\JobApplicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employer\TransitionApplicationStatusRequest;
+use App\Models\ApplicationEvaluation;
+use App\Models\ApplicationNote;
 use App\Models\CandidateEducation;
 use App\Models\CandidateExperience;
 use App\Models\Interview;
@@ -113,6 +115,7 @@ class EmployerJobApplicationController extends Controller
         $actor = request()->user();
         $canManageApplicants = $job->company !== null
             && $actor instanceof User
+            && $actor->isApprovedEmployer()
             && $actor->hasCompanyPermission($job->company, 'applicants.manage');
 
         $interviewPaginator = $application->interviews()
@@ -180,6 +183,18 @@ class EmployerJobApplicationController extends Controller
             && $actor instanceof User
             && $actor->isApprovedEmployer()
             && $actor->hasCompanyPermission($job->company, 'applicants.view');
+
+        // Feature 36: private recruiter notes and evaluations. Bounded by human
+        // authorship per application (spec D5); eager-load author/evaluator only.
+        $notes = $application->notes()
+            ->select(['id', 'application_id', 'author_id', 'body', 'edited_at', 'created_at'])
+            ->with('author:id,name')
+            ->get();
+
+        $evaluations = $application->evaluations()
+            ->select(['id', 'application_id', 'evaluator_id', 'relevant_experience', 'technical_skills', 'communication', 'interview_performance', 'comment', 'created_at'])
+            ->with('evaluator:id,name')
+            ->get();
 
         return Inertia::render('employer/applications/show', [
             'application' => [
@@ -267,6 +282,34 @@ class EmployerJobApplicationController extends Controller
             ], true) && $canManageApplicants,
             'can_update_status' => $canManageApplicants,
             'can_schedule_interview' => $canManageApplicants,
+            'can_manage_notes' => $canManageApplicants,
+            'notes' => $notes->map(fn (ApplicationNote $note): array => [
+                'id' => $note->id,
+                'body' => $note->body,
+                'edited_at' => $note->edited_at?->toIso8601String(),
+                'created_at' => $note->created_at?->toIso8601String(),
+                'author' => $note->author ? [
+                    'id' => $note->author->id,
+                    'name' => $note->author->name,
+                ] : null,
+                'can_edit' => $canManageApplicants && $note->author_id !== null && $note->author_id === $actor->id,
+                'can_delete' => $canManageApplicants && $note->author_id !== null && $note->author_id === $actor->id,
+            ])->values()->all(),
+            'evaluations' => $evaluations->map(fn (ApplicationEvaluation $evaluation): array => [
+                'id' => $evaluation->id,
+                'created_at' => $evaluation->created_at?->toIso8601String(),
+                'evaluator' => $evaluation->evaluator ? [
+                    'id' => $evaluation->evaluator->id,
+                    'name' => $evaluation->evaluator->name,
+                ] : null,
+                'ratings' => [
+                    'relevant_experience' => $evaluation->relevant_experience,
+                    'technical_skills' => $evaluation->technical_skills,
+                    'communication' => $evaluation->communication,
+                    'interview_performance' => $evaluation->interview_performance,
+                ],
+                'comment' => $evaluation->comment,
+            ])->values()->all(),
             'timezones' => DateTimeZone::listIdentifiers(),
             'screening_answers' => $screeningAnswers,
         ]);

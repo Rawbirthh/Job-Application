@@ -27,6 +27,8 @@ use Illuminate\Support\Carbon;
  * @property-read CandidateResume|null $candidateResume
  * @property-read Collection<int, JobApplicationStatusHistory> $statusHistories
  * @property-read Collection<int, Interview> $interviews
+ * @property-read Collection<int, ApplicationNote> $notes
+ * @property-read Collection<int, ApplicationEvaluation> $evaluations
  * @property-read ApplicationConversation|null $conversation
  */
 class JobApplication extends Model
@@ -100,5 +102,25 @@ class JobApplication extends Model
     public function conversation(): HasOne
     {
         return $this->hasOne(ApplicationConversation::class, 'application_id');
+    }
+
+    /**
+     * Private recruiter notes for this application, newest first.
+     *
+     * @return HasMany<ApplicationNote, $this>
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(ApplicationNote::class, 'application_id')->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * Append-only recruiter evaluations, newest first.
+     *
+     * @return HasMany<ApplicationEvaluation, $this>
+     */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(ApplicationEvaluation::class, 'application_id')->orderByDesc('created_at')->orderByDesc('id');
     }
 }
