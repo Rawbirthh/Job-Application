@@ -133,3 +133,65 @@ test('public job listing filters by search and category', function (): void {
             ->where('jobs.data.0.id', $job2->id)
         );
 });
+
+test('public job listing filters by location', function (): void {
+    $employer = User::factory()->approvedEmployer()->create();
+    $company = Company::factory()->create([
+        'owner_user_id' => $employer->id,
+        'is_active' => true,
+    ]);
+
+    $manilaJob = Job::factory()->create([
+        'company_id' => $company->id,
+        'title' => 'Manila Operations Lead',
+        'location' => 'Manila, Metro Manila',
+        'status' => 'published',
+    ]);
+
+    Job::factory()->create([
+        'company_id' => $company->id,
+        'title' => 'Cebu Support Engineer',
+        'location' => 'Cebu City',
+        'status' => 'published',
+    ]);
+
+    $this->get(route('jobs.index', ['location' => 'Manila']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('jobs/index')
+            ->has('jobs.data', 1)
+            ->where('jobs.data.0.id', $manilaJob->id)
+            ->where('filters.location', 'Manila')
+        );
+
+    $this->get(route('jobs.index', ['location' => 'Nowhereville']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('jobs.data', 0)
+        );
+});
+
+test('public job listing paginates with a cursor', function (): void {
+    $employer = User::factory()->approvedEmployer()->create();
+    $company = Company::factory()->create([
+        'owner_user_id' => $employer->id,
+        'is_active' => true,
+    ]);
+
+    Job::factory()->count(15)->create([
+        'company_id' => $company->id,
+        'status' => 'published',
+    ]);
+
+    $this->get(route('jobs.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('jobs/index')
+            ->has('jobs.data', 12)
+            ->where('jobs.per_page', 12)
+            ->has('jobs.next_cursor')
+            ->has('jobs.data.0.description')
+            ->has('jobs.data.0.responsibilities')
+            ->has('jobs.data.0.requirements')
+        );
+});

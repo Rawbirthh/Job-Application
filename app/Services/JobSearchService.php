@@ -11,12 +11,13 @@ class JobSearchService
     /**
      * Extract the public job listing filters from the current request.
      *
-     * @return array{search: string, category: int, employment_type: int, workplace_arrangement: int, experience_level: int}
+     * @return array{search: string, location: string, category: int, employment_type: int, workplace_arrangement: int, experience_level: int}
      */
     public function filtersFromRequest(): array
     {
         return [
             'search' => request()->string('search')->toString(),
+            'location' => request()->string('location')->toString(),
             'category' => request()->integer('category'),
             'employment_type' => request()->integer('employment_type'),
             'workplace_arrangement' => request()->integer('workplace_arrangement'),
@@ -28,7 +29,7 @@ class JobSearchService
      * Apply the public listing criteria to the given job query.
      *
      * @param  Builder<Job>  $jobQuery
-     * @param  array{search: string|null, category: int|null, employment_type: int|null, workplace_arrangement: int|null, experience_level: int|null}  $filters
+     * @param  array{search: string|null, location?: string|null, category: int|null, employment_type: int|null, workplace_arrangement: int|null, experience_level: int|null}  $filters
      * @return Builder<Job>
      */
     public function apply(Builder $jobQuery, array $filters): Builder
@@ -41,6 +42,12 @@ class JobSearchService
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhere('location', 'like', "%{$search}%");
             });
+        }
+
+        $location = $filters['location'] ?? '';
+
+        if ($location !== '') {
+            $jobQuery->where('location', 'like', "%{$location}%");
         }
 
         $categoryId = $filters['category'] ?? 0;

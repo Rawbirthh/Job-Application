@@ -43,14 +43,27 @@ class PublicJobController extends Controller
                 'salary_currency',
                 'salary_negotiable',
                 'pay_period_id',
+                'application_deadline',
+                'skills',
+                // Full text fields: rendered in the split-view preview panel.
+                'description',
+                'responsibilities',
+                'requirements',
                 'created_at',
-            ])
-            ->latest();
+            ]);
 
         $searchService->visibility($query);
         $searchService->apply($query, $filters);
 
-        $jobs = $query->paginate(12)->withQueryString();
+        // Order by created_at with an id tiebreak: identical timestamps are
+        // common (seeded rows), and a non-unique cursor column would skip or
+        // duplicate rows between pages. The existing
+        // job_postings_status_created_at_index covers the range + sort.
+        $jobs = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->cursorPaginate(12)
+            ->withQueryString();
 
         /** @var User|null $user */
         $user = request()->user();
@@ -60,7 +73,9 @@ class PublicJobController extends Controller
 
         return Inertia::render('jobs/index', [
             'savedJobIds' => $savedJobIds,
-            'jobs' => $jobs->through(fn (Job $job): array => [
+            // Infinite scroll: merged with client-side data on partial reloads;
+            // the React <InfiniteScroll data="jobs"> triggers the next page.
+            'jobs' => Inertia::scroll($jobs->through(fn (Job $job): array => [
                 'id' => $job->id,
                 'title' => $job->title,
                 'location' => $job->location,
@@ -68,7 +83,19 @@ class PublicJobController extends Controller
                 'max_salary' => $job->salary_max,
                 'salary_currency' => $job->salary_currency,
                 'salary_negotiable' => $job->salary_negotiable,
-                'published_at' => $job->created_at?->toIso8601String(),
+                // Raw Carbon, not an ISO string: the cursor paginator reads the
+                // ORDER BY columns out of the transformed items, and Carbon's
+                // __toString() gives a bindable 'Y-m-d H:i:s' datetime. The
+                // JSON payload still serializes it to ISO-8601 for the client.
+                'created_at' => $job->created_at,
+                'description' => $job->description,
+                'responsibilities' => $job->responsibilities,
+                'requirements' => $job->requirements,
+                'skills' => array_slice(array_values(array_filter(
+                    is_array($job->skills) ? $job->skills : [],
+                    'is_string',
+                )), 0, 12),
+                'application_deadline' => $job->application_deadline?->toIso8601String(),
                 'company' => $job->company ? [
                     'id' => $job->company->id,
                     'name' => $job->company->name,
@@ -95,13 +122,14 @@ class PublicJobController extends Controller
                     'id' => $job->payPeriod->id,
                     'name' => $job->payPeriod->name,
                 ] : null,
-            ]),
+            ])),
             'categories' => JobCategory::query()->active()->select(['id', 'name'])->orderBy('name')->get(),
             'employmentTypes' => EmploymentType::query()->active()->select(['id', 'name'])->orderBy('sort_order')->get(),
             'workplaceArrangements' => WorkplaceArrangement::query()->active()->select(['id', 'name'])->orderBy('name')->get(),
             'experienceLevels' => ExperienceLevel::query()->active()->select(['id', 'name'])->orderBy('sort_order')->get(),
             'filters' => [
                 'search' => $filters['search'] !== '' ? $filters['search'] : null,
+                'location' => $filters['location'] !== '' ? $filters['location'] : null,
                 'category' => $filters['category'] > 0 ? $filters['category'] : null,
                 'employment_type' => $filters['employment_type'] > 0 ? $filters['employment_type'] : null,
                 'workplace_arrangement' => $filters['workplace_arrangement'] > 0 ? $filters['workplace_arrangement'] : null,
