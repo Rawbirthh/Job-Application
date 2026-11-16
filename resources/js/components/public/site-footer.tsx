@@ -4,6 +4,7 @@ import { dashboard, home, login, register } from '@/routes';
 
 const exploreLinks = [
     { label: 'How it works', href: '#how-it-works' },
+    { label: 'Engineering highlights', href: '#engineering' },
     { label: 'For employers', href: '#for-employers' },
     { label: 'FAQ', href: '#faq' },
 ] as const;
@@ -25,12 +26,10 @@ export function SiteFooter() {
                             href={home()}
                             className="inline-flex min-h-11 items-center gap-2 rounded-lg text-foreground focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                         >
-                            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-foreground text-background shadow-sm">
-                                <AppLogoIcon
-                                    aria-hidden="true"
-                                    className="size-5 fill-current"
-                                />
-                            </span>
+                            <AppLogoIcon
+                                aria-hidden="true"
+                                className="size-9 shrink-0 rounded-lg shadow-sm"
+                            />
                             <span className="text-base font-semibold tracking-[-0.02em]">
                                 {name}
                             </span>

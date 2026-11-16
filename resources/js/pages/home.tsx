@@ -1,32 +1,48 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, ListChecks, ScanSearch, UserRound } from 'lucide-react';
+import {
+    ArrowRight,
+    Check,
+    History,
+    LayoutDashboard,
+    ListChecks,
+    MessagesSquare,
+    ScanSearch,
+    ScrollText,
+    ShieldCheck,
+} from 'lucide-react';
 import { FaqList, type FaqItem } from '@/components/public/faq-list';
 import { HeroArt } from '@/components/public/hero-art';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard, login, register } from '@/routes';
 
+type HomeStats = {
+    openRoles: number;
+    hiringCompanies: number;
+};
+
 const whyCards = [
     {
-        title: 'Clarity up front',
-        description: 'Built to show the details that matter before you apply.',
-        icon: ScanSearch,
+        title: 'Progress you can see',
+        description:
+            'Every application is tracked through clear stages, from first click to final decision — with a full history you can look back on.',
+        icon: ListChecks,
+    },
+    {
+        title: 'Conversations, not silence',
+        description:
+            'Message the employer right inside each application — in real time when they are online, and always there when you come back.',
+        icon: MessagesSquare,
     },
     {
         title: 'A profile with purpose',
         description:
-            'Bring your experience, skills, and resume together in one place.',
-        icon: UserRound,
-    },
-    {
-        title: 'Progress you can see',
-        description:
-            'A clear view of every application, from first click to final decision.',
-        icon: ListChecks,
+            'Bring your experience, skills, and resume together in one place — used to surface roles that actually fit you.',
+        icon: ScanSearch,
     },
 ] as const;
 
-const steps = [
+const candidateSteps = [
     {
         title: 'Create your profile',
         description:
@@ -35,13 +51,88 @@ const steps = [
     {
         title: 'Find a better fit',
         description:
-            'Explore roles with the context you need to make a confident decision.',
+            'Browse open roles and filter by keyword, location, category, and workplace setup — salary is shown when the employer discloses it.',
     },
     {
         title: 'Apply and keep track',
         description:
-            'Follow every application and see where each conversation stands.',
+            'Follow every stage in real time, get notified when things move, and message the employer inside the application.',
     },
+] as const;
+
+const employerSteps = [
+    {
+        title: 'Set up your company',
+        description:
+            'Create your company profile, invite your team, and assign roles and permissions that fit how you hire.',
+    },
+    {
+        title: 'Publish your roles',
+        description:
+            'Define category, experience level, salary, and screening questions — and start receiving qualified applicants.',
+    },
+    {
+        title: 'Run your pipeline',
+        description:
+            'Review applicants on a visual board, schedule interviews, keep private notes and scorecards, and decide with confidence.',
+    },
+] as const;
+
+const engineeringHighlights = [
+    {
+        title: 'Real-time messaging',
+        description:
+            'Every application carries a persistent conversation, delivered live over Laravel Reverb and kept in sync when you were offline.',
+        icon: MessagesSquare,
+    },
+    {
+        title: 'Visual recruitment pipeline',
+        description:
+            'Employers move applicants through each hiring stage on a drag-and-drop board — with keyboard control and one shared status engine.',
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Rule-based recommendations',
+        description:
+            'Roles are scored against skills, experience level, and preferences — transparent rules, no black-box magic.',
+        icon: ScanSearch,
+    },
+    {
+        title: 'Custom role-based access',
+        description:
+            'A database-backed role and permission system for candidates, employers, and platform admins — enforced on the server, every time.',
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Full application history',
+        description:
+            'Every status change is recorded with who, when, and why — with private, author-only recruiter notes and evaluations.',
+        icon: History,
+    },
+    {
+        title: 'Audit-logged administration',
+        description:
+            'An append-only audit log and moderation tools for the platform team — content leaves the site through review, never silently.',
+        icon: ScrollText,
+    },
+] as const;
+
+const employerCapabilities = [
+    'Company profile with team members and per-person permissions',
+    'Job postings with categories, experience levels, salary, and screening questions',
+    'Applicant pipeline with interview scheduling built in',
+    'Private recruiter notes and structured evaluations',
+    'Hiring analytics and real-time notifications',
+] as const;
+
+const techStack = [
+    'Laravel 13',
+    'React 19',
+    'Inertia 3',
+    'TypeScript',
+    'Tailwind CSS 4',
+    'MySQL',
+    'Laravel Reverb',
 ] as const;
 
 const eyebrowClassName =
@@ -54,29 +145,38 @@ const heroInlineLinkClassName =
     'font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none';
 
 export default function Home() {
-    const { auth, name } = usePage().props;
+    const { auth, name, stats } = usePage().props;
     const isAuthenticated = Boolean(auth.user);
+    const homeStats = stats as HomeStats | undefined;
 
     const faqItems: FaqItem[] = [
         {
             question: `What is ${name}?`,
-            answer: `${name} is a job portal for people looking for work and for employers who want to hire. You can create an account now; job search and employer tools are part of the first release.`,
-        },
-        {
-            question: 'How do I get started?',
-            answer: 'Create an account to get set up. Profile tools for your experience, skills, and resume are part of the first release.',
+            answer: `${name} is a job portal and recruitment platform with three audiences: candidates who want to find and follow the right roles, employers who want to hire well, and a platform team that keeps the marketplace fair and safe.`,
         },
         {
             question: 'Can I search for jobs today?',
-            answer: 'Not yet. Job search, listings, and applications are coming in the first release. This page does not show live roles today.',
+            answer: 'Yes. Browse open roles on the jobs page and filter by keyword, location, category, employment type, and workplace setup — salary is shown when the employer discloses it. You can also save searches and get alerted about new matches.',
+        },
+        {
+            question: 'How do I get started as a candidate?',
+            answer: 'Create an account, complete your profile — experience, skills, and an uploaded resume — then start applying. Your dashboard keeps every application, interview, and message in one place.',
         },
         {
             question: 'I’m hiring. How do I post a role?',
-            answer: 'Employer onboarding is coming soon. Create an account now and be ready to build your company profile and publish roles when it opens.',
+            answer: 'Create an account, set up your company profile, and publish roles with categories, experience levels, salary, and screening questions. Applications flow straight into your hiring pipeline with interview scheduling built in.',
+        },
+        {
+            question: 'What happens after I apply?',
+            answer: 'You will see every status change in real time, receive notifications as things move, and can message the employer directly inside the application — all in one thread.',
+        },
+        {
+            question: 'What can employers see about me?',
+            answer: 'Once you apply, the employer sees the application and the resume version you submitted with it. Recruiter notes and evaluations are private to the hiring team and are never shown to candidates.',
         },
         {
             question: 'Where can I manage my account?',
-            answer: 'Sign in and open your Dashboard. Account and security settings are available from the account menu there.',
+            answer: 'Sign in and open your Dashboard. Profile, security, two-factor authentication, and passkeys live in the account settings menu.',
         },
     ];
 
@@ -85,7 +185,7 @@ export default function Home() {
             <Head title="Find work that fits the life you want.">
                 <meta
                     name="description"
-                    content="A calmer place to discover roles, understand what they offer, and take the next step — without the noise."
+                    content="Browse open roles, apply with a profile that shows your skills, and follow every application in real time — a calmer, clearer way to get hired and to hire."
                 />
                 <meta
                     property="og:title"
@@ -93,7 +193,7 @@ export default function Home() {
                 />
                 <meta
                     property="og:description"
-                    content="A calmer place to discover roles, understand what they offer, and take the next step — without the noise."
+                    content="Browse open roles, apply with a profile that shows your skills, and follow every application in real time — a calmer, clearer way to get hired and to hire."
                 />
                 <meta property="og:type" content="website" />
             </Head>
@@ -122,9 +222,10 @@ export default function Home() {
                         </h1>
 
                         <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                            A calmer place to discover roles, understand what
-                            they offer, and take the next step — without the
-                            noise.
+                            Browse open roles, apply with a profile that shows
+                            your skills, and follow every application from first
+                            click to final decision — and hire well if you are
+                            on the other side of the table.
                         </p>
 
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -133,16 +234,8 @@ export default function Home() {
                                 size="lg"
                                 className="h-11 px-6 focus-visible:ring-2 focus-visible:ring-foreground"
                             >
-                                <Link
-                                    href={
-                                        isAuthenticated
-                                            ? dashboard()
-                                            : register()
-                                    }
-                                >
-                                    {isAuthenticated
-                                        ? 'Open your dashboard'
-                                        : 'Create your profile'}
+                                <Link href="/jobs">
+                                    Browse jobs
                                     <ArrowRight
                                         className="size-4"
                                         aria-hidden="true"
@@ -155,17 +248,40 @@ export default function Home() {
                                 variant="outline"
                                 className="h-11 px-6 focus-visible:ring-2 focus-visible:ring-foreground"
                             >
-                                <Link href="/jobs">Browse Jobs</Link>
+                                <Link
+                                    href={
+                                        isAuthenticated
+                                            ? dashboard()
+                                            : register()
+                                    }
+                                >
+                                    {isAuthenticated
+                                        ? 'Open your dashboard'
+                                        : 'Create your profile'}
+                                </Link>
                             </Button>
                             <Button
                                 asChild
                                 size="lg"
-                                variant="outline"
+                                variant="ghost"
                                 className="h-11 px-6 focus-visible:ring-2 focus-visible:ring-foreground"
                             >
                                 <a href="#how-it-works">See how it works</a>
                             </Button>
                         </div>
+
+                        {homeStats && homeStats.openRoles > 0 && (
+                            <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-2 text-sm text-muted-foreground backdrop-blur-sm">
+                                <span
+                                    aria-hidden="true"
+                                    className="size-2 rounded-full bg-emerald-500"
+                                />
+                                {homeStats.openRoles.toLocaleString()} open
+                                roles across{' '}
+                                {homeStats.hiringCompanies.toLocaleString()}{' '}
+                                companies — live right now
+                            </p>
+                        )}
 
                         <p className="mt-5 text-sm text-muted-foreground">
                             {isAuthenticated ? (
@@ -251,36 +367,109 @@ export default function Home() {
                             id="how-it-works-heading"
                             className={sectionHeadingClassName}
                         >
-                            A simpler path from looking to landing.
+                            From looking to landing — and from posting to hired.
                         </h2>
                     </div>
 
-                    <ol className="mt-12 grid gap-8 md:grid-cols-3 md:gap-6">
-                        {steps.map((step, index) => (
-                            <li
-                                key={step.title}
-                                className="relative before:absolute before:top-12 before:-bottom-8 before:left-5 before:w-px before:bg-border last:before:hidden md:before:hidden"
+                    <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-12">
+                        <div>
+                            <p className={eyebrowClassName}>For candidates</p>
+                            <ol className="mt-5 space-y-6">
+                                {candidateSteps.map((step, index) => (
+                                    <li
+                                        key={step.title}
+                                        className="flex items-start gap-4"
+                                    >
+                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-home-accent/40 bg-home-accent-soft text-sm font-semibold text-foreground">
+                                            {String(index + 1).padStart(2, '0')}
+                                        </span>
+                                        <span>
+                                            <h3 className="text-lg font-semibold tracking-[-0.01em]">
+                                                {step.title}
+                                            </h3>
+                                            <p className="mt-1.5 text-sm leading-7 text-muted-foreground">
+                                                {step.description}
+                                            </p>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+
+                        <div>
+                            <p className={eyebrowClassName}>For employers</p>
+                            <ol className="mt-5 space-y-6">
+                                {employerSteps.map((step, index) => (
+                                    <li
+                                        key={step.title}
+                                        className="flex items-start gap-4"
+                                    >
+                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-home-accent/40 bg-home-accent-soft text-sm font-semibold text-foreground">
+                                            {String(index + 1).padStart(2, '0')}
+                                        </span>
+                                        <span>
+                                            <h3 className="text-lg font-semibold tracking-[-0.01em]">
+                                                {step.title}
+                                            </h3>
+                                            <p className="mt-1.5 text-sm leading-7 text-muted-foreground">
+                                                {step.description}
+                                            </p>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                id="engineering"
+                aria-labelledby="engineering-heading"
+                className="scroll-mt-24 bg-background py-20 md:py-28"
+            >
+                <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
+                    <div className="max-w-2xl">
+                        <p className={eyebrowClassName}>
+                            Engineering highlights
+                        </p>
+                        <h2
+                            id="engineering-heading"
+                            className={sectionHeadingClassName}
+                        >
+                            Built like a real product, because it is.
+                        </h2>
+                        <p className="mt-4 text-base leading-7 text-muted-foreground">
+                            A quick look under the hood — every capability above
+                            runs on systems designed to hold up under real use.
+                        </p>
+                    </div>
+
+                    <div className="mt-12 grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+                        {engineeringHighlights.map((item) => (
+                            <article
+                                key={item.title}
+                                className="rounded-2xl border border-border bg-card p-6"
                             >
-                                <div className="flex items-center gap-4">
-                                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-home-accent/40 bg-home-accent-soft text-sm font-semibold text-foreground">
-                                        {String(index + 1).padStart(2, '0')}
-                                    </span>
-                                    {index < steps.length - 1 && (
-                                        <span
-                                            aria-hidden="true"
-                                            className="hidden h-px flex-1 bg-border md:block"
-                                        />
-                                    )}
+                                <div className="flex size-11 items-center justify-center rounded-xl bg-home-accent-soft text-home-accent">
+                                    <item.icon
+                                        className="size-5"
+                                        aria-hidden="true"
+                                    />
                                 </div>
-                                <h3 className="mt-5 text-lg font-semibold tracking-[-0.01em]">
-                                    {step.title}
+                                <h3 className="mt-5 text-base font-semibold tracking-[-0.01em]">
+                                    {item.title}
                                 </h3>
-                                <p className="mt-2 max-w-sm text-sm leading-7 text-muted-foreground md:max-w-none">
-                                    {step.description}
+                                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                                    {item.description}
                                 </p>
-                            </li>
+                            </article>
                         ))}
-                    </ol>
+                    </div>
+
+                    <p className="mt-8 rounded-2xl border border-border bg-home-surface px-6 py-4 text-center text-sm text-muted-foreground">
+                        {techStack.join('  ·  ')}
+                    </p>
                 </div>
             </section>
 
@@ -295,7 +484,7 @@ export default function Home() {
                             aria-hidden="true"
                             className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-home-accent/10 blur-3xl"
                         />
-                        <div className="relative grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+                        <div className="relative grid gap-10 lg:grid-cols-2 lg:gap-12">
                             <div>
                                 <p className="text-xs font-medium tracking-[0.18em] text-sidebar-foreground/70 uppercase">
                                     For employers
@@ -306,13 +495,10 @@ export default function Home() {
                                 >
                                     Meet people who are ready to do the work.
                                 </h2>
-                            </div>
-
-                            <div>
-                                <p className="text-base leading-7 text-sidebar-foreground/80">
-                                    {isAuthenticated
-                                        ? 'Employer onboarding is coming soon. When it opens, you’ll be able to build your company profile, publish roles, and manage applicants.'
-                                        : 'Employer onboarding is coming soon. Create an account now and be ready to build your company profile, publish roles, and manage applicants.'}
+                                <p className="mt-4 text-base leading-7 text-sidebar-foreground/80">
+                                    Everything you need to go from open role to
+                                    signed offer — without juggling spreadsheets
+                                    and inbox threads.
                                 </p>
                                 <Button
                                     asChild
@@ -328,7 +514,7 @@ export default function Home() {
                                     >
                                         {isAuthenticated
                                             ? 'Open your dashboard'
-                                            : 'Create an account'}
+                                            : 'Create your company profile'}
                                         <ArrowRight
                                             className="size-4"
                                             aria-hidden="true"
@@ -336,6 +522,21 @@ export default function Home() {
                                     </Link>
                                 </Button>
                             </div>
+
+                            <ul className="flex flex-col justify-center gap-4">
+                                {employerCapabilities.map((capability) => (
+                                    <li
+                                        key={capability}
+                                        className="flex items-start gap-3 text-sm leading-7 text-sidebar-foreground/90"
+                                    >
+                                        <Check
+                                            className="mt-1 size-4 shrink-0 text-home-accent-soft"
+                                            aria-hidden="true"
+                                        />
+                                        {capability}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </div>
                 </div>

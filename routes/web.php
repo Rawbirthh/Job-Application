@@ -28,9 +28,15 @@ use App\Http\Controllers\Messaging\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicJobController;
 use App\Http\Controllers\ReportController;
+use App\Models\Job;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'home')->name('home');
+Route::inertia('/', 'home', [
+    'stats' => fn (): array => [
+        'openRoles' => Job::published()->count(),
+        'hiringCompanies' => Job::published()->distinct()->count('company_id'),
+    ],
+])->name('home');
 Route::get('/jobs', [PublicJobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
 

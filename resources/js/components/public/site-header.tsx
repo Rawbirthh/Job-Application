@@ -85,12 +85,10 @@ export function SiteHeader() {
                     href={home()}
                     className="flex min-h-11 items-center gap-2 rounded-lg pr-2 text-foreground focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                 >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-foreground text-background shadow-sm">
-                        <AppLogoIcon
-                            aria-hidden="true"
-                            className="size-5 fill-current"
-                        />
-                    </span>
+                    <AppLogoIcon
+                        aria-hidden="true"
+                        className="size-9 shrink-0 rounded-lg shadow-sm"
+                    />
                     <span className="max-w-[10rem] truncate text-base font-semibold tracking-[-0.02em] sm:max-w-none">
                         {name}
                     </span>
@@ -133,12 +131,10 @@ export function SiteHeader() {
                         >
                             <SheetHeader className="border-b border-border px-5 py-4 pr-14 text-left">
                                 <div className="flex items-center gap-2 pb-1">
-                                    <span className="flex size-8 items-center justify-center rounded-lg bg-foreground text-background">
-                                        <AppLogoIcon
-                                            aria-hidden="true"
-                                            className="size-4 fill-current"
-                                        />
-                                    </span>
+                                    <AppLogoIcon
+                                        aria-hidden="true"
+                                        className="size-8 rounded-md"
+                                    />
                                     <span className="text-sm font-semibold">
                                         {name}
                                     </span>
