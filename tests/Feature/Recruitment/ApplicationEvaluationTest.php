@@ -279,7 +279,7 @@ class ApplicationEvaluationTest extends TestCase
         $this->assertFalse(Route::has('employer.applications.evaluations.destroy'));
     }
 
-    public function test_evaluations_can_be_submitted_on_terminal_applications_and_closed_jobs(): void
+    public function test_evaluations_can_be_submitted_on_terminal_applications(): void
     {
         foreach ([JobApplicationStatus::Hired, JobApplicationStatus::Rejected, JobApplicationStatus::Withdrawn] as $status) {
             [$application, $employer] = $this->context($status);
@@ -288,13 +288,23 @@ class ApplicationEvaluationTest extends TestCase
                 ->post(route('employer.applications.evaluations.store', $application), $this->validPayload())
                 ->assertRedirect();
         }
+    }
 
+    // A closed job locks the whole application record for employer writes,
+    // including evaluations.
+    public function test_evaluations_cannot_be_submitted_when_job_is_closed(): void
+    {
         [$application, $employer] = $this->context();
-        $application->jobPosting->update(['status' => 'closed']);
+        $application->jobPosting->status = 'closed';
+        $application->jobPosting->save();
 
         $this->actingAs($employer)
             ->post(route('employer.applications.evaluations.store', $application), $this->validPayload())
-            ->assertRedirect();
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('application_evaluations', [
+            'application_id' => $application->id,
+        ]);
     }
 
     // ------------------------------------------------------------ helpers

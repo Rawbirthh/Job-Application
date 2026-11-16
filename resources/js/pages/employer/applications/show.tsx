@@ -12,6 +12,7 @@ import {
     MessageSquare,
     User,
     Users,
+    Lock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -111,6 +112,7 @@ interface Props {
     interviews: EmployerInterviewRound[];
     interview_pagination: InterviewPagination;
     screening_answers?: ScreeningAnswer[];
+    job_closed?: boolean;
 }
 
 export default function EmployerApplicationShow({
@@ -124,6 +126,7 @@ export default function EmployerApplicationShow({
     can_update_status = true,
     can_schedule_interview = true,
     can_manage_notes = false,
+    job_closed = false,
     notes = [],
     evaluations = [],
     timezones,
@@ -272,6 +275,20 @@ export default function EmployerApplicationShow({
                         </div>
                     </div>
                 </div>
+
+                {job_closed && (
+                    <div
+                        role="status"
+                        className="flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300"
+                    >
+                        <Lock className="size-4 shrink-0" aria-hidden="true" />
+                        <span>
+                            This job is closed — the application is read-only.
+                            Status, interviews, notes, evaluations and messages
+                            can no longer be changed.
+                        </span>
+                    </div>
+                )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Main Content Area */}

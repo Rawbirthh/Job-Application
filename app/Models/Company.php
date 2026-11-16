@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CompanyMemberRole;
+use App\Enums\CompanyMemberStatus;
 use Database\Factories\CompanyFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -95,6 +97,49 @@ class Company extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to companies where the given user holds the given company-scoped permission.
+     *
+     * The role -> permission mapping is resolved from the CompanyMemberRole enum so it stays a
+     * single source of truth, and it is applied in SQL so listing the authorized companies does
+     * not require a permission lookup per company.
+     *
+     * @param  Builder<Company>  $query
+     * @return Builder<Company>
+     */
+    public function scopeForUserWithPermission(Builder $query, User $user, string $permission): Builder
+    {
+        $roles = collect(CompanyMemberRole::cases())
+            ->filter(fn (CompanyMemberRole $role): bool => in_array($permission, $role->permissions(), true))
+            ->map(fn (CompanyMemberRole $role): string => $role->value)
+            ->values()
+            ->all();
+
+        if ($roles === []) {
+            return $query;
+        }
+
+        $ownerAllowed = in_array($permission, CompanyMemberRole::Owner->permissions(), true);
+
+        return $query->where(function (Builder $query) use ($user, $roles, $ownerAllowed): void {
+            if ($ownerAllowed) {
+                $query->where('owner_user_id', $user->id);
+            }
+
+            $members = function (Builder $members) use ($user, $roles): void {
+                $members->where('user_id', $user->id)
+                    ->where('status', CompanyMemberStatus::Active->value)
+                    ->whereIn('company_role', $roles);
+            };
+
+            if ($ownerAllowed) {
+                $query->orWhereHas('members', $members);
+            } else {
+                $query->whereHas('members', $members);
+            }
+        });
     }
 
     /**

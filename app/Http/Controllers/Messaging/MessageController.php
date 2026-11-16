@@ -243,7 +243,15 @@ class MessageController extends Controller
 
         $messages = $this->threadMessages($conversation, $request, $user);
 
-        $canSend = Gate::allows('send', $conversation) && ! $application->status->isTerminal();
+        $canSend = Gate::allows('send', $conversation)
+            && ! $application->status->isTerminal()
+            && ! $job->isClosed();
+
+        $readOnlyNotice = $application->status->isTerminal()
+            ? __('This application is :status — messaging is read-only.', ['status' => $application->status->label()])
+            : ($job->isClosed()
+                ? __('This job is closed — messaging is read-only.')
+                : null);
 
         return Inertia::render('messages/show', [
             ...$this->inboxProps($user, $request),
@@ -267,9 +275,7 @@ class MessageController extends Controller
                     ? $company->name
                     : $application->user->name,
                 'can_send' => $canSend,
-                'read_only_notice' => $application->status->isTerminal()
-                    ? __('This application is :status — messaging is read-only.', ['status' => $application->status->label()])
-                    : null,
+                'read_only_notice' => $readOnlyNotice,
             ],
             'messages' => $messages,
         ]);

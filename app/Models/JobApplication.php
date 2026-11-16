@@ -105,6 +105,14 @@ class JobApplication extends Model
     }
 
     /**
+     * Whether the employer-side write actions are locked because the job is closed.
+     */
+    public function jobIsClosed(): bool
+    {
+        return $this->jobPosting->isClosed();
+    }
+
+    /**
      * Private recruiter notes for this application, newest first.
      *
      * @return HasMany<ApplicationNote, $this>

@@ -19,7 +19,8 @@ class ApplicationNotePolicy
 
     public function createForApplication(User $actor, JobApplication $application): bool
     {
-        return $this->hasEmployerPermission($actor, $application, 'applicants.manage');
+        return ! $application->jobIsClosed()
+            && $this->hasEmployerPermission($actor, $application, 'applicants.manage');
     }
 
     /**

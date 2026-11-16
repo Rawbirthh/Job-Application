@@ -22,7 +22,11 @@ class ApplicationStatusTransitionService
     ): JobApplication {
         return DB::transaction(function () use ($application, $newStatus, $expectedCurrentStatus, $actor, $reason) {
             /** @var JobApplication $lockedApp */
-            $lockedApp = JobApplication::where('id', $application->id)->lockForUpdate()->firstOrFail();
+            $lockedApp = JobApplication::where('id', $application->id)->lockForUpdate()->with('jobPosting:id,status')->firstOrFail();
+
+            if ($lockedApp->jobPosting->isClosed()) {
+                abort(422, __('This job is closed. The application can no longer be changed.'));
+            }
 
             if ($lockedApp->status->value !== $expectedCurrentStatus) {
                 abort(409, __('The application status has changed since you loaded the page. Please refresh and try again.'));
@@ -121,7 +125,11 @@ class ApplicationStatusTransitionService
     ): JobApplication {
         return DB::transaction(function () use ($application, $actor, $reason) {
             /** @var JobApplication $lockedApp */
-            $lockedApp = JobApplication::where('id', $application->id)->lockForUpdate()->firstOrFail();
+            $lockedApp = JobApplication::where('id', $application->id)->lockForUpdate()->with('jobPosting:id,status')->firstOrFail();
+
+            if ($lockedApp->jobPosting->isClosed()) {
+                abort(422, __('This job is closed. The application can no longer be changed.'));
+            }
 
             if ($lockedApp->status !== JobApplicationStatus::InterviewScheduled) {
                 abort(409, __('The application status has changed since you loaded the page. Please refresh and try again.'));

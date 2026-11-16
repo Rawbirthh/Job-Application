@@ -18,6 +18,7 @@ use App\Services\ApplicationStatusTransitionService;
 use App\Services\NotificationService;
 use DateTimeZone;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -111,11 +112,15 @@ class EmployerJobApplicationController extends Controller
         $job = $application->jobPosting;
         $user = $application->user;
         $profile = $user->candidateProfile;
+        $isJobClosed = $job->isClosed();
 
         $actor = request()->user();
+        // A closed job locks the whole application record for employer writes;
+        // viewing stays open for participants who could already read it.
         $canManageApplicants = $job->company !== null
             && $actor instanceof User
             && $actor->isApprovedEmployer()
+            && ! $isJobClosed
             && $actor->hasCompanyPermission($job->company, 'applicants.manage');
 
         $interviewPaginator = $application->interviews()
@@ -209,7 +214,7 @@ class EmployerJobApplicationController extends Controller
                     'size' => $application->candidateResume->size,
                 ] : null,
             ],
-            'can_message' => ! $application->status->isTerminal() && $canViewApplicants,
+            'can_message' => ! $application->status->isTerminal() && ! $isJobClosed && $canViewApplicants,
             'allowed_transitions' => $canManageApplicants
                 ? array_map(
                     fn (JobApplicationStatus $s): array => [
@@ -280,6 +285,7 @@ class EmployerJobApplicationController extends Controller
                 JobApplicationStatus::Shortlisted,
                 JobApplicationStatus::InterviewScheduled,
             ], true) && $canManageApplicants,
+            'job_closed' => $isJobClosed,
             'can_update_status' => $canManageApplicants,
             'can_schedule_interview' => $canManageApplicants,
             'can_manage_notes' => $canManageApplicants,
@@ -317,13 +323,17 @@ class EmployerJobApplicationController extends Controller
 
     /**
      * Update the status of an application.
+     *
+     * This is the single Feature 24 transition entry point. It is used by the
+     * application detail form (which expects a redirect) and by the recruitment
+     * pipeline board (which expects JSON), so the response shape is negotiated.
      */
     public function updateStatus(
         TransitionApplicationStatusRequest $request,
         JobApplication $application,
         ApplicationStatusTransitionService $transitionService,
         NotificationService $notificationService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $from = $application->status;
         $newStatus = JobApplicationStatus::from($request->validated('new_status'));
 
@@ -336,6 +346,14 @@ class EmployerJobApplicationController extends Controller
         );
 
         $notificationService->applicationStatusChanged($updated, $from, $newStatus);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'application_id' => $updated->id,
+                'previous_status' => $from->value,
+                'status' => $updated->status->value,
+            ]);
+        }
 
         return Redirect::back()->with('success', __('Application status updated successfully.'));
     }

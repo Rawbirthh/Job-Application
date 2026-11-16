@@ -19,6 +19,7 @@ import {
     ScrollText,
     Sparkles,
     BarChart3,
+    Kanban,
     type LucideIcon,
 } from 'lucide-react';
 import admin from '@/routes/admin';
@@ -85,6 +86,12 @@ export const mainNavConfig: NavItemConfig[] = [
         title: 'Jobs & Applicants',
         href: employer.jobs.index(),
         icon: Briefcase,
+        requiredRoles: ['employer'],
+    },
+    {
+        title: 'Pipeline',
+        href: employer.pipeline.index(),
+        icon: Kanban,
         requiredRoles: ['employer'],
     },
     {

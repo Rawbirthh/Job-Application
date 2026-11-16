@@ -4,6 +4,7 @@ import {
     Briefcase,
     Calendar,
     FileText,
+    Kanban,
     MapPin,
     User,
     Users,
@@ -12,6 +13,7 @@ import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import employer from '@/routes/employer';
 
 interface ApplicantItem {
     id: number;
@@ -100,6 +102,13 @@ export default function EmployerJobApplicantsIndex({
         }
     };
 
+    const pipelineHref = employer.pipeline.index({
+        query: {
+            ...(job.company ? { company: job.company.id } : {}),
+            job: job.id,
+        },
+    }).url;
+
     return (
         <>
             <Head title={`Applicants - ${job.title}`} />
@@ -144,9 +153,17 @@ export default function EmployerJobApplicantsIndex({
                                 )}
                             </p>
                         </div>
-                        <Badge variant="outline" className="w-fit text-xs">
-                            Job Status: {job.status}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button asChild variant="outline" size="sm">
+                                <Link href={pipelineHref}>
+                                    <Kanban className="mr-2 size-4" />
+                                    Open pipeline
+                                </Link>
+                            </Button>
+                            <Badge variant="outline" className="w-fit text-xs">
+                                Job Status: {job.status}
+                            </Badge>
+                        </div>
                     </div>
                 </div>
 

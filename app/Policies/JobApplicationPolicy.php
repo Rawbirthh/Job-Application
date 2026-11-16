@@ -41,6 +41,7 @@ class JobApplicationPolicy
 
         return $actor->isApprovedEmployer()
             && $job->company !== null
+            && ! $job->isClosed()
             && $actor->hasCompanyPermission($job->company, 'applicants.manage');
     }
 

@@ -47,4 +47,17 @@ class CompanyPolicy
     {
         return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'analytics.view');
     }
+
+    /**
+     * Determine whether the actor may read the recruitment pipeline of the given company.
+     *
+     * The pipeline is a company-scoped read surface over the employer's own job
+     * applications, so the check mirrors the other company-scoped policy methods.
+     * Moving an application is a separate action guarded by
+     * JobApplicationPolicy::transitionStatus().
+     */
+    public function viewPipeline(User $actor, Company $company): bool
+    {
+        return $actor->isApprovedEmployer() && $actor->hasCompanyPermission($company, 'applicants.view');
+    }
 }

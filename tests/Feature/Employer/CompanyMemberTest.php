@@ -525,13 +525,17 @@ class CompanyMemberTest extends TestCase
         $this->actingAs($rc)->post(route('employer.jobs.store'), $jobPayload)->assertRedirect();
         $this->actingAs($rc)->put(route('employer.jobs.update', $job), $jobUpdatePayload)->assertRedirect();
         $this->actingAs($rc)->get(route('employer.jobs.screening-questions.index', $job))->assertOk();
-        $this->actingAs($rc)->post(route('employer.jobs.submit', $job))->assertRedirect();
-        $this->actingAs($rc)->post(route('employer.jobs.close', $job))->assertRedirect();
         $this->actingAs($rc)->get(route('employer.jobs.applicants', $job))->assertOk();
         $this->actingAs($rc)->get(route('employer.applications.show', $application))->assertOk();
         $this->actingAs($rc)->post(route('employer.applications.update-status', $application), $statusPayload)->assertRedirect();
         $this->actingAs($rc)->get(route('employer.applications.resume.download', $application))->assertOk();
         $this->actingAs($rc)->post(route('employer.applications.interviews.store', $shortlistedApp), $interviewPayload)->assertRedirect();
+        $this->actingAs($rc)->post(route('employer.jobs.submit', $job))->assertRedirect();
+        $this->actingAs($rc)->post(route('employer.jobs.close', $job))->assertRedirect();
+
+        // closing the job locks application writes for the recruiter as well
+        $this->actingAs($rc)->post(route('employer.applications.update-status', $application), $statusPayload)->assertForbidden();
+        $this->actingAs($rc)->post(route('employer.applications.interviews.store', $shortlistedApp), $interviewPayload)->assertForbidden();
         $this->actingAs($rc)->put(route('employer.companies.update', $company), ['name' => 'Hacked'])->assertForbidden();
         $this->actingAs($rc)->get(route('employer.companies.edit', $company))->assertForbidden();
         $this->actingAs($rc)->get(route('employer.companies.members.index', $company))->assertForbidden();
@@ -541,23 +545,28 @@ class CompanyMemberTest extends TestCase
         ])->assertForbidden();
 
         // reset state mutated by recruiter assertions
+        // (job status is not fillable on the model — restore at the query layer)
         Job::where('id', $job->id)->update(['status' => 'draft']);
-        $job->refresh();
+        $job = $job->fresh();
         JobApplication::where('id', $application->id)->update(['status' => 'submitted']);
-        $application->refresh();
+        $application = $application->fresh();
 
         // ---- co-owner
         $o = $coOwnerUser;
         $this->actingAs($o)->post(route('employer.jobs.store'), $jobPayload)->assertRedirect();
         $this->actingAs($o)->put(route('employer.jobs.update', $job), $jobUpdatePayload)->assertRedirect();
         $this->actingAs($o)->get(route('employer.jobs.screening-questions.index', $job))->assertOk();
-        $this->actingAs($o)->post(route('employer.jobs.submit', $job))->assertRedirect();
-        $this->actingAs($o)->post(route('employer.jobs.close', $job))->assertRedirect();
         $this->actingAs($o)->get(route('employer.jobs.applicants', $job))->assertOk();
         $this->actingAs($o)->get(route('employer.applications.show', $application))->assertOk();
         $this->actingAs($o)->post(route('employer.applications.update-status', $application), $statusPayload)->assertRedirect();
         $this->actingAs($o)->get(route('employer.applications.resume.download', $application))->assertOk();
         $this->actingAs($o)->post(route('employer.applications.interviews.store', $shortlistedApp), $interviewPayload)->assertRedirect();
+        $this->actingAs($o)->post(route('employer.jobs.submit', $job))->assertRedirect();
+        $this->actingAs($o)->post(route('employer.jobs.close', $job))->assertRedirect();
+
+        // closing the job locks application writes for the co-owner as well
+        $this->actingAs($o)->post(route('employer.applications.update-status', $application), $statusPayload)->assertForbidden();
+        $this->actingAs($o)->post(route('employer.applications.interviews.store', $shortlistedApp), $interviewPayload)->assertForbidden();
         $this->actingAs($o)->get(route('employer.companies.edit', $company))->assertOk();
         $this->actingAs($o)->get(route('employer.companies.members.index', $company))->assertOk();
     }

@@ -256,6 +256,19 @@ class Job extends Model
     }
 
     /**
+     * Whether the job has been closed.
+     *
+     * A closed job stops new applications. Its application records remain readable
+     * by everyone who could already view them, but employer write actions are locked
+     * (status transitions, interview management, recruiter notes/evaluations and
+     * messaging), mirroring the read-only rule for terminal applications.
+     */
+    public function isClosed(): bool
+    {
+        return $this->status === 'closed';
+    }
+
+    /**
      * @return HasMany<SavedJob, $this>
      */
     public function savedJobs(): HasMany

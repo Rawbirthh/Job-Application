@@ -19,7 +19,8 @@ class ApplicationEvaluationPolicy
 
     public function createForApplication(User $actor, JobApplication $application): bool
     {
-        return $this->hasEmployerPermission($actor, $application, 'applicants.manage');
+        return ! $application->jobIsClosed()
+            && $this->hasEmployerPermission($actor, $application, 'applicants.manage');
     }
 
     // Intentionally no update()/delete(): evaluations are append-only (D3).

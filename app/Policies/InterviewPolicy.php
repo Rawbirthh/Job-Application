@@ -16,7 +16,8 @@ class InterviewPolicy
 
     public function manage(User $actor, Interview $interview): bool
     {
-        return $this->hasCompanyPermission($actor, $interview->jobApplication, 'applicants.manage');
+        return ! $interview->jobApplication->jobIsClosed()
+            && $this->hasCompanyPermission($actor, $interview->jobApplication, 'applicants.manage');
     }
 
     public function respond(User $actor, Interview $interview): bool
@@ -26,7 +27,8 @@ class InterviewPolicy
 
     public function createForApplication(User $actor, JobApplication $application): bool
     {
-        return $this->hasCompanyPermission($actor, $application, 'applicants.manage');
+        return ! $application->jobIsClosed()
+            && $this->hasCompanyPermission($actor, $application, 'applicants.manage');
     }
 
     private function hasCompanyPermission(User $actor, JobApplication $application, string $permission): bool

@@ -21,6 +21,7 @@ use App\Http\Controllers\Employer\EmployerOnboardingController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\JobController;
 use App\Http\Controllers\Employer\JobScreeningQuestionController;
+use App\Http\Controllers\Employer\RecruitmentPipelineController;
 use App\Http\Controllers\Employer\ScreeningQuestionController;
 use App\Http\Controllers\Employer\ScreeningTemplateController;
 use App\Http\Controllers\Messaging\MessageController;
@@ -83,6 +84,11 @@ Route::middleware(['auth'])->group(function (): void {
         Route::get('analytics', [EmployerAnalyticsController::class, 'index'])
             ->middleware(['role:employer', 'employer.approved'])
             ->name('analytics.index');
+
+        // Feature 37: visual recruitment pipeline
+        Route::get('pipeline', [RecruitmentPipelineController::class, 'index'])
+            ->middleware(['role:employer', 'employer.approved'])
+            ->name('pipeline.index');
 
         Route::prefix('companies')->name('companies.')->middleware(['role:employer', 'employer.approved'])->group(function (): void {
             Route::get('/', [CompanyController::class, 'index'])->name('index');

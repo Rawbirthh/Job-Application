@@ -362,16 +362,20 @@ class ApplicationNotesTest extends TestCase
         }
     }
 
-    public function test_notes_can_be_created_when_job_is_closed(): void
+    // A closed job locks the whole application record for employer writes,
+    // including notes (Feature 36's terminal-application allowance still
+    // applies when the job is open).
+    public function test_notes_cannot_be_created_when_job_is_closed(): void
     {
         [$application, $employer] = $this->context();
-        $application->jobPosting->update(['status' => 'closed']);
+        $application->jobPosting->status = 'closed';
+        $application->jobPosting->save();
 
         $this->actingAs($employer)
             ->post(route('employer.applications.notes.store', $application), ['body' => 'Closed-job note'])
-            ->assertRedirect();
+            ->assertForbidden();
 
-        $this->assertDatabaseHas('application_notes', [
+        $this->assertDatabaseMissing('application_notes', [
             'application_id' => $application->id,
             'body' => 'Closed-job note',
         ]);

@@ -24,9 +24,16 @@ class ConversationPolicy
 
     /**
      * Same predicate as viewApplication, with send permission on the employer side.
+     *
+     * A closed job closes the conversation for both sides, mirroring the
+     * read-only rule for terminal applications.
      */
     public function sendApplication(User $actor, JobApplication $application): bool
     {
+        if ($application->jobIsClosed()) {
+            return false;
+        }
+
         if ($actor->is($application->user)) {
             return true;
         }

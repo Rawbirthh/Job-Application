@@ -213,14 +213,18 @@ class ConversationService
     }
 
     /**
-     * Lock the application row and reject writes on terminal applications.
+     * Lock the application row and reject writes on terminal applications or jobs
+     * that are closed.
      */
     private function lockedApplication(int $applicationId): JobApplication
     {
         /** @var JobApplication $application */
-        $application = JobApplication::query()->lockForUpdate()->findOrFail($applicationId);
+        $application = JobApplication::query()
+            ->lockForUpdate()
+            ->with('jobPosting:id,status')
+            ->findOrFail($applicationId);
 
-        if ($application->status->isTerminal()) {
+        if ($application->status->isTerminal() || $application->jobPosting->isClosed()) {
             throw ValidationException::withMessages([
                 'body' => __('Messaging is closed for this application.'),
             ]);
