@@ -51,6 +51,19 @@ class EmployerOnboardingController extends Controller
             $this->authorize('view', $onboardingRequest);
         }
 
+        $cooldownEndsAt = null;
+
+        if ($user->status === EmployerStatus::Rejected && $onboardingRequest?->reviewed_at !== null) {
+            $cooldownEndsAt = $onboardingRequest->reviewed_at->copy()->addDays(7);
+        }
+
+        $isVerified = $user->email_verified_at !== null;
+
+        $canApply = $isVerified
+            && ($user->status === null
+                || ($user->status === EmployerStatus::Rejected
+                    && ($cooldownEndsAt === null || now()->greaterThanOrEqualTo($cooldownEndsAt))));
+
         return Inertia::render('employer/onboarding', [
             'status' => $user->status?->value,
             'request' => $onboardingRequest === null ? null : [
@@ -65,7 +78,10 @@ class EmployerOnboardingController extends Controller
             'suspension_reason' => $user->status === EmployerStatus::Suspended
                 ? $user->suspension_reason
                 : null,
-            'can_apply' => $user->status === null || $user->status === EmployerStatus::Rejected,
+            'is_verified' => $isVerified,
+            'verification_link_sent' => $request->session()->get('status') === 'verification-link-sent',
+            'retry_after' => $cooldownEndsAt?->toIso8601String(),
+            'can_apply' => $canApply,
             'can_access_employer_dashboard' => $user->isApprovedEmployer(),
         ]);
     }

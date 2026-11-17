@@ -16,6 +16,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,19 @@ class AppServiceProvider extends ServiceProvider
         // Edit/delete targets are allowed to resolve to tombstoned messages;
         // the service then returns a validation error instead of a 404.
         Route::bind('message', fn (string $value): ConversationMessage => ConversationMessage::withTrashed()->findOrFail($value));
+
+        // Feature 38: do not send the verification email at registration.
+        // Verification is requested on-demand from the employer onboarding flow
+        // (verify-first page / Resend button). The framework registers its
+        // SendEmailVerificationNotification listener for Registered inside its
+        // own provider-boot callback, which completes later in the boot
+        // sequence; an app-level booted() callback is guaranteed to run after
+        // every provider boots, so this removes exactly that listener. No app
+        // listener is registered for Registered (audits listen to
+        // Login/Logout/PasswordReset).
+        $this->app->booted(function (): void {
+            Event::forget(Registered::class);
+        });
 
         // Authentication events are the only source of login/logout facts.
         Event::listen(Login::class, [RecordAuthenticationAuditEvents::class, 'handleLogin']);

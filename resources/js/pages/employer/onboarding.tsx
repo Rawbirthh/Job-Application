@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CheckCircle2, Clock, ShieldAlert } from 'lucide-react';
+import { Form } from '@inertiajs/react';
+import { CheckCircle2, Clock, MailCheck, ShieldAlert } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,12 +24,16 @@ import {
     store as employerOnboardingStore,
 } from '@/routes/employer/onboarding';
 import employer from '@/routes/employer';
+import { send as verificationSend } from '@/routes/verification';
 import type { EmployerOnboardingPageProps } from '@/types';
 
 export default function EmployerOnboarding({
     status,
     request,
     suspension_reason,
+    is_verified,
+    verification_link_sent,
+    retry_after,
     can_apply,
     can_access_employer_dashboard,
 }: EmployerOnboardingPageProps) {
@@ -47,6 +52,15 @@ export default function EmployerOnboarding({
     const isApproved = status === 'approved';
     const isRejected = status === 'rejected';
     const isSuspended = status === 'suspended';
+
+    const showVerifyFirst = !is_verified && (status === null || isRejected);
+    const retryAfterDate = retry_after
+        ? new Date(retry_after).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+          })
+        : null;
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -83,343 +97,457 @@ export default function EmployerOnboarding({
                     </p>
                 </div>
 
-                {isApproved && (
-                    <Alert>
-                        <CheckCircle2 className="size-4" />
-                        <AlertTitle>Application approved</AlertTitle>
-                        <AlertDescription>
-                            Your employer access is active. You can now manage
-                            your company profile and job postings.
-                            {can_access_employer_dashboard && (
-                                <div className="mt-3">
-                                    <Button asChild>
-                                        <Link href={employer.dashboard()}>
-                                            Go to employer dashboard
-                                        </Link>
-                                    </Button>
-                                </div>
-                            )}
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                {isSuspended && (
-                    <Alert variant="destructive">
-                        <ShieldAlert className="size-4" />
-                        <AlertTitle>Employer access suspended</AlertTitle>
-                        <AlertDescription>
-                            <p>
-                                Your employer capability has been suspended. The
-                                reason provided by the administrator is shown
-                                below.
-                            </p>
-                            {suspension_reason && (
-                                <p className="mt-2 font-medium">
-                                    {suspension_reason}
-                                </p>
-                            )}
-                            <p className="mt-2 text-sm">
-                                Employer actions are unavailable until your
-                                access is reactivated. You can still use your
-                                candidate account.
-                            </p>
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                {isPending && request && (
+                {showVerifyFirst && (
                     <Card className="border-border">
                         <CardHeader>
-                            <div className="flex items-center justify-between gap-2">
-                                <CardTitle className="text-lg">
-                                    Application under review
-                                </CardTitle>
-                                <Badge
-                                    variant="default"
-                                    className={statusBadgeClass(status)}
-                                >
-                                    {status}
-                                </Badge>
+                            <div className="flex size-12 items-center justify-center rounded-xl bg-home-accent-soft text-home-accent">
+                                <MailCheck
+                                    className="size-6"
+                                    aria-hidden="true"
+                                />
                             </div>
+                            <CardTitle className="mt-1 text-lg">
+                                Verify your email
+                            </CardTitle>
                             <CardDescription>
-                                Submitted on{' '}
-                                {new Date(
-                                    request.submitted_at,
-                                ).toLocaleString()}
+                                Before you can apply for employer access, please
+                                confirm your email address. We sent a
+                                verification link to your inbox when you
+                                registered.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid gap-2 text-sm">
-                                <div>
-                                    <span className="font-medium">
-                                        Company:
-                                    </span>{' '}
-                                    {request.company_name}
-                                </div>
-                                <div>
-                                    <span className="font-medium">Role:</span>{' '}
-                                    {request.job_title}
-                                </div>
-                                {request.company_website && (
-                                    <div>
-                                        <span className="font-medium">
-                                            Website:
-                                        </span>{' '}
-                                        {request.company_website}
-                                    </div>
-                                )}
-                                {request.message && (
-                                    <div>
-                                        <span className="font-medium">
-                                            Message:
-                                        </span>{' '}
-                                        {request.message}
-                                    </div>
-                                )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                You cannot submit another application while this
-                                one is under review. We will update this page
-                                when a decision is made.
-                            </p>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {isRejected && request?.review_note && (
-                    <Alert variant="destructive">
-                        <ShieldAlert className="size-4" />
-                        <AlertTitle>Application not approved</AlertTitle>
-                        <AlertDescription>
-                            <p className="font-medium">{request.review_note}</p>
-                            <p className="mt-2 text-sm">
-                                You may revise and resubmit your application
-                                below.
-                            </p>
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                {(status === null || isRejected) && can_apply && (
-                    <Card className="border-border">
-                        <CardHeader>
-                            <CardTitle className="text-lg">
-                                {isRejected
-                                    ? 'Resubmit your application'
-                                    : 'Apply for employer access'}
-                            </CardTitle>
-                            <CardDescription>
-                                Tell us about the company you represent. An
-                                administrator reviews every request.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form
-                                onSubmit={handleSubmit}
-                                className="space-y-4"
-                                aria-busy={form.processing}
-                            >
-                                <div className="grid gap-2">
-                                    <Label htmlFor="company_name">
-                                        Company name{' '}
-                                        <span
-                                            className="text-red-600"
-                                            aria-hidden="true"
-                                        >
-                                            *
-                                        </span>
-                                    </Label>
-                                    <Input
-                                        id="company_name"
-                                        value={form.data.company_name}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'company_name',
-                                                e.target.value,
-                                            )
-                                        }
-                                        required
-                                        minLength={2}
-                                        maxLength={150}
-                                        disabled={form.processing}
-                                        aria-invalid={
-                                            form.errors.company_name ||
-                                            errors.company_name
-                                                ? true
-                                                : undefined
-                                        }
-                                        aria-describedby={
-                                            form.errors.company_name ||
-                                            errors.company_name
-                                                ? 'company_name-error'
-                                                : undefined
-                                        }
+                            {verification_link_sent && (
+                                <p
+                                    role="status"
+                                    aria-live="polite"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                >
+                                    <CheckCircle2
+                                        className="size-4 shrink-0"
+                                        aria-hidden="true"
                                     />
-                                    <InputError
-                                        id="company_name-error"
-                                        message={
-                                            form.errors.company_name ??
-                                            errors.company_name
-                                        }
-                                    />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="company_website">
-                                        Company website (optional)
-                                    </Label>
-                                    <Input
-                                        id="company_website"
-                                        type="url"
-                                        value={form.data.company_website}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'company_website',
-                                                e.target.value,
-                                            )
-                                        }
-                                        maxLength={255}
-                                        placeholder="https://example.com"
-                                        disabled={form.processing}
-                                        aria-invalid={
-                                            form.errors.company_website ||
-                                            errors.company_website
-                                                ? true
-                                                : undefined
-                                        }
-                                        aria-describedby="company_website-help company_website-error"
-                                    />
-                                    <p
-                                        id="company_website-help"
-                                        className="text-xs text-muted-foreground"
-                                    >
-                                        Include the https:// prefix.
-                                    </p>
-                                    <InputError
-                                        id="company_website-error"
-                                        message={
-                                            form.errors.company_website ??
-                                            errors.company_website
-                                        }
-                                    />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="job_title">
-                                        Your role at the company{' '}
-                                        <span
-                                            className="text-red-600"
-                                            aria-hidden="true"
-                                        >
-                                            *
-                                        </span>
-                                    </Label>
-                                    <Input
-                                        id="job_title"
-                                        value={form.data.job_title}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'job_title',
-                                                e.target.value,
-                                            )
-                                        }
-                                        required
-                                        minLength={2}
-                                        maxLength={100}
-                                        disabled={form.processing}
-                                        aria-invalid={
-                                            form.errors.job_title ||
-                                            errors.job_title
-                                                ? true
-                                                : undefined
-                                        }
-                                        aria-describedby={
-                                            form.errors.job_title ||
-                                            errors.job_title
-                                                ? 'job_title-error'
-                                                : undefined
-                                        }
-                                    />
-                                    <InputError
-                                        id="job_title-error"
-                                        message={
-                                            form.errors.job_title ??
-                                            errors.job_title
-                                        }
-                                    />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="message">
-                                        Message (optional)
-                                    </Label>
-                                    <Textarea
-                                        id="message"
-                                        value={form.data.message}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'message',
-                                                e.target.value,
-                                            )
-                                        }
-                                        maxLength={1000}
-                                        rows={4}
-                                        disabled={form.processing}
-                                        aria-invalid={
-                                            form.errors.message ||
-                                            errors.message
-                                                ? true
-                                                : undefined
-                                        }
-                                        aria-describedby="message-error"
-                                    />
-                                    <InputError
-                                        id="message-error"
-                                        message={
-                                            form.errors.message ??
-                                            errors.message
-                                        }
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-2 pt-2">
-                                    <Button
-                                        type="submit"
-                                        disabled={form.processing}
-                                    >
-                                        {form.processing && (
+                                    Verification link sent — check your inbox.
+                                </p>
+                            )}
+                            <Form {...verificationSend.form()}>
+                                {({ processing }) => (
+                                    <Button type="submit" disabled={processing}>
+                                        {processing && (
                                             <Spinner className="mr-2" />
                                         )}
-                                        {isRejected
-                                            ? 'Resubmit application'
-                                            : 'Submit application'}
+                                        Resend verification email
                                     </Button>
-                                </div>
-                            </form>
+                                )}
+                            </Form>
+                            <p className="text-sm text-muted-foreground">
+                                Already verified? The link may have expired —
+                                resend it above. You can keep using your
+                                candidate account in the meantime.
+                            </p>
                         </CardContent>
                     </Card>
                 )}
 
-                {!can_apply && !isPending && !isApproved && !isRejected && (
-                    <Card className="border-border">
-                        <CardHeader>
-                            <CardTitle className="text-lg">
-                                Status unavailable
-                            </CardTitle>
-                            <CardDescription>
-                                You cannot submit a new application right now.
-                            </CardDescription>
-                        </CardHeader>
-                    </Card>
-                )}
+                {!showVerifyFirst && (
+                    <>
+                        {!is_verified && (
+                            <div className="inline-flex w-full flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/30 bg-amber-50 px-4 py-3 dark:bg-amber-500/10">
+                                <p
+                                    role="alert"
+                                    className="inline-flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-200"
+                                >
+                                    <MailCheck
+                                        className="size-4 shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                    Your email is not verified — employer
+                                    capability cannot be granted or restored
+                                    until you verify.
+                                </p>
+                                <Form {...verificationSend.form()}>
+                                    {({ processing }) => (
+                                        <Button
+                                            type="submit"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={processing}
+                                        >
+                                            {processing && (
+                                                <Spinner className="mr-2" />
+                                            )}
+                                            Resend verification email
+                                        </Button>
+                                    )}
+                                </Form>
+                            </div>
+                        )}
 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="size-4" aria-hidden="true" />
-                    <span>
-                        Review times vary. This page reflects your current
-                        status.
-                    </span>
-                </div>
+                        {isApproved && (
+                            <Alert>
+                                <CheckCircle2 className="size-4" />
+                                <AlertTitle>Application approved</AlertTitle>
+                                <AlertDescription>
+                                    Your employer access is active. You can now
+                                    manage your company profile and job
+                                    postings.
+                                    {can_access_employer_dashboard && (
+                                        <div className="mt-3">
+                                            <Button asChild>
+                                                <Link
+                                                    href={employer.dashboard()}
+                                                >
+                                                    Go to employer dashboard
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    )}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        {isSuspended && (
+                            <Alert variant="destructive">
+                                <ShieldAlert className="size-4" />
+                                <AlertTitle>
+                                    Employer access suspended
+                                </AlertTitle>
+                                <AlertDescription>
+                                    <p>
+                                        Your employer capability has been
+                                        suspended. The reason provided by the
+                                        administrator is shown below.
+                                    </p>
+                                    {suspension_reason && (
+                                        <p className="mt-2 font-medium">
+                                            {suspension_reason}
+                                        </p>
+                                    )}
+                                    <p className="mt-2 text-sm">
+                                        Employer actions are unavailable until
+                                        your access is reactivated. You can
+                                        still use your candidate account.
+                                    </p>
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        {isPending && request && (
+                            <Card className="border-border">
+                                <CardHeader>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <CardTitle className="text-lg">
+                                            Application under review
+                                        </CardTitle>
+                                        <Badge
+                                            variant="default"
+                                            className={statusBadgeClass(status)}
+                                        >
+                                            {status}
+                                        </Badge>
+                                    </div>
+                                    <CardDescription>
+                                        Submitted on{' '}
+                                        {new Date(
+                                            request.submitted_at,
+                                        ).toLocaleString()}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid gap-2 text-sm">
+                                        <div>
+                                            <span className="font-medium">
+                                                Company:
+                                            </span>{' '}
+                                            {request.company_name}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">
+                                                Role:
+                                            </span>{' '}
+                                            {request.job_title}
+                                        </div>
+                                        {request.company_website && (
+                                            <div>
+                                                <span className="font-medium">
+                                                    Website:
+                                                </span>{' '}
+                                                {request.company_website}
+                                            </div>
+                                        )}
+                                        {request.message && (
+                                            <div>
+                                                <span className="font-medium">
+                                                    Message:
+                                                </span>{' '}
+                                                {request.message}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        You cannot submit another application
+                                        while this one is under review. We will
+                                        update this page when a decision is
+                                        made.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {isRejected && request?.review_note && (
+                            <Alert variant="destructive">
+                                <ShieldAlert className="size-4" />
+                                <AlertTitle>
+                                    Application not approved
+                                </AlertTitle>
+                                <AlertDescription>
+                                    <p className="font-medium">
+                                        {request.review_note}
+                                    </p>
+                                    <p className="mt-2 text-sm">
+                                        You may revise and resubmit your
+                                        application below.
+                                    </p>
+                                    {retryAfterDate && (
+                                        <p className="mt-2 text-xs text-muted-foreground">
+                                            You can request again after{' '}
+                                            {retryAfterDate}.
+                                        </p>
+                                    )}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        {(status === null || isRejected) && can_apply && (
+                            <Card className="border-border">
+                                <CardHeader>
+                                    <CardTitle className="text-lg">
+                                        {isRejected
+                                            ? 'Resubmit your application'
+                                            : 'Apply for employer access'}
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Tell us about the company you represent.
+                                        An administrator reviews every request.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form
+                                        onSubmit={handleSubmit}
+                                        className="space-y-4"
+                                        aria-busy={form.processing}
+                                    >
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="company_name">
+                                                Company name{' '}
+                                                <span
+                                                    className="text-red-600"
+                                                    aria-hidden="true"
+                                                >
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Input
+                                                id="company_name"
+                                                value={form.data.company_name}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'company_name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                required
+                                                minLength={2}
+                                                maxLength={150}
+                                                disabled={form.processing}
+                                                aria-invalid={
+                                                    form.errors.company_name ||
+                                                    errors.company_name
+                                                        ? true
+                                                        : undefined
+                                                }
+                                                aria-describedby={
+                                                    form.errors.company_name ||
+                                                    errors.company_name
+                                                        ? 'company_name-error'
+                                                        : undefined
+                                                }
+                                            />
+                                            <InputError
+                                                id="company_name-error"
+                                                message={
+                                                    form.errors.company_name ??
+                                                    errors.company_name
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="company_website">
+                                                Company website (optional)
+                                            </Label>
+                                            <Input
+                                                id="company_website"
+                                                type="url"
+                                                value={
+                                                    form.data.company_website
+                                                }
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'company_website',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                maxLength={255}
+                                                placeholder="https://example.com"
+                                                disabled={form.processing}
+                                                aria-invalid={
+                                                    form.errors
+                                                        .company_website ||
+                                                    errors.company_website
+                                                        ? true
+                                                        : undefined
+                                                }
+                                                aria-describedby="company_website-help company_website-error"
+                                            />
+                                            <p
+                                                id="company_website-help"
+                                                className="text-xs text-muted-foreground"
+                                            >
+                                                Include the https:// prefix.
+                                            </p>
+                                            <InputError
+                                                id="company_website-error"
+                                                message={
+                                                    form.errors
+                                                        .company_website ??
+                                                    errors.company_website
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="job_title">
+                                                Your role at the company{' '}
+                                                <span
+                                                    className="text-red-600"
+                                                    aria-hidden="true"
+                                                >
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Input
+                                                id="job_title"
+                                                value={form.data.job_title}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'job_title',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                required
+                                                minLength={2}
+                                                maxLength={100}
+                                                disabled={form.processing}
+                                                aria-invalid={
+                                                    form.errors.job_title ||
+                                                    errors.job_title
+                                                        ? true
+                                                        : undefined
+                                                }
+                                                aria-describedby={
+                                                    form.errors.job_title ||
+                                                    errors.job_title
+                                                        ? 'job_title-error'
+                                                        : undefined
+                                                }
+                                            />
+                                            <InputError
+                                                id="job_title-error"
+                                                message={
+                                                    form.errors.job_title ??
+                                                    errors.job_title
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="message">
+                                                Message (optional)
+                                            </Label>
+                                            <Textarea
+                                                id="message"
+                                                value={form.data.message}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'message',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                maxLength={1000}
+                                                rows={4}
+                                                disabled={form.processing}
+                                                aria-invalid={
+                                                    form.errors.message ||
+                                                    errors.message
+                                                        ? true
+                                                        : undefined
+                                                }
+                                                aria-describedby="message-error"
+                                            />
+                                            <InputError
+                                                id="message-error"
+                                                message={
+                                                    form.errors.message ??
+                                                    errors.message
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-2 pt-2">
+                                            <Button
+                                                type="submit"
+                                                disabled={form.processing}
+                                            >
+                                                {form.processing && (
+                                                    <Spinner className="mr-2" />
+                                                )}
+                                                {isRejected
+                                                    ? 'Resubmit application'
+                                                    : 'Submit application'}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {!can_apply &&
+                            !isPending &&
+                            !isApproved &&
+                            !isRejected && (
+                                <Card className="border-border">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">
+                                            Status unavailable
+                                        </CardTitle>
+                                        <CardDescription>
+                                            You cannot submit a new application
+                                            right now.
+                                        </CardDescription>
+                                    </CardHeader>
+                                </Card>
+                            )}
+
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="size-4" aria-hidden="true" />
+                            <span>
+                                Review times vary. This page reflects your
+                                current status.
+                            </span>
+                        </div>
+                    </>
+                )}
             </div>
         </>
     );

@@ -38,13 +38,27 @@ class ProfileController extends Controller
     {
         $request->user()->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
+        $emailChanged = $request->user()->isDirty('email');
+
+        if ($emailChanged) {
             $request->user()->email_verified_at = null;
         }
 
         $request->user()->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
+        if ($emailChanged) {
+            $request->user()->sendEmailVerificationNotification();
+
+            Inertia::flash('toast', [
+                'type' => 'success',
+                'message' => __('Profile updated. We sent a verification link to your new email address.'),
+            ]);
+        } else {
+            Inertia::flash('toast', [
+                'type' => 'success',
+                'message' => __('Profile updated.'),
+            ]);
+        }
 
         return to_route('profile.edit');
     }

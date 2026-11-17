@@ -7,7 +7,9 @@ use App\Enums\CompanyMemberStatus;
 use App\Enums\EmployerStatus;
 use App\Enums\RoleSlug;
 use App\Models\Concerns\HasRolesAndPermissions;
+use App\Notifications\QueuedVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +25,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property EmployerStatus|null $status
  * @property-read EmployerOnboardingRequest|null $employerOnboardingRequest
  */
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRolesAndPermissions, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -144,6 +146,15 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->status === EmployerStatus::Approved
             && $this->hasRole(RoleSlug::Employer);
+    }
+
+    /**
+     * Send the verification email through the queue so registration and
+     * resend requests do not block on the mail transport.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new QueuedVerifyEmail);
     }
 
     /**

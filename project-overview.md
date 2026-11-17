@@ -4,7 +4,7 @@
 
 ## How to reference a feature in OpenCode
 
-Features use simple, global numbers from **Feature 1** through **Feature 37**. Each feature has its own objective, dependencies, scope, rules, acceptance criteria, and test expectations. Features marked **deferred** are retained for future reference but are not part of the active portfolio implementation scope.
+Features use simple, global numbers from **Feature 1** through **Feature 38**. Each feature has its own objective, dependencies, scope, rules, acceptance criteria, and test expectations. Features marked **deferred** are retained for future reference but are not part of the active portfolio implementation scope.
 
 Architect one feature without coding:
 
@@ -45,6 +45,7 @@ These are the default rules for the planned product. An Architect specification 
 
 - Public job-seeker registration must assign only the approved default candidate/job-seeker capability server-side. A submitted role ID or role name from the browser must never be trusted.
 - Employer onboarding is a controlled flow. It may assign employer capability only through the approved registration/onboarding process. Employer account/company approval can be required before publishing jobs.
+- Requesting employer capability requires a verified email; after a rejection, re-inquiry is limited by a cooldown (Feature 38).
 - The initial administrator must be provisioned through a trusted seeder, command, or other protected setup mechanism. Never expose an administrator self-registration route.
 - The custom authorization implementation must support roles and permissions without hard-coding permission checks across the UI. Seed a minimal set of required system roles/permissions and protect against removing the last usable administrator or deleting permissions that the system requires.
 - Do not implement company-team collaboration until Feature 28. Before that feature, company access is based on the company owner and explicit Policy checks.
@@ -144,6 +145,7 @@ Implement the features in dependency order. The phases group related capabilitie
 - **Feature 32 — Employer and platform analytics** (completed)
 - **Feature 33 — Employer plans, payments, and promoted jobs** (deferred; not required for the portfolio scope)
 - **Feature 34 — Rule-based job recommendations** (no AI or external AI provider)
+- **Feature 38 — Employer trust ramp: verified email and re-inquiry cooldown**
 
 ### Phase 6 — Communication and recruiter productivity
 
@@ -751,6 +753,52 @@ Implement the features in dependency order. The phases group related capabilitie
 **Tests:** Company/application scoping; pagination or bounded loading; filters and status counts; valid and invalid status transitions; authorization denial; stale/double transition handling; status-history integrity; keyboard/status-menu operation; and ensuring private notes, evaluations, resumes, and messages are not exposed in board payloads.
 
 **Deliverables:** Responsive Kanban-style recruitment board, server-driven filters/counts, integration with Feature 24 transitions, accessible status controls, and backend/frontend tests.
+
+## Feature 38 — Employer trust ramp: verified email and re-inquiry cooldown
+
+**Objective:** Close the two cheapest trust gaps in the employer upgrade flow without gating candidate flows and without changing publication review: require a verified email before a user can request employer capability (and before an admin can approve it), and limit re-inquiries after a rejection.
+
+**Dependencies:** Feature 2 (dormant email-verification plumbing), Feature 10 (employer-account review and suspension), Feature 11 (employer onboarding and eligibility state).
+
+**Context:** Feature 2 deliberately disabled email verification (decision A1) and deferred re-enabling it to a separate, approved feature — this is that feature, scoped narrowly. Universal pre-publication review stays exactly as implemented: every job goes through `pending_review` and no auto-publish or graduated-autonomy path is introduced.
+
+**In scope:**
+
+- Candidate flows (register, login, browse, apply, saved searches, messaging) remain completely free of verification requirements.
+- An unverified user may not submit an employer onboarding request; the onboarding page shows a clear "verify your email first" state with a resend action.
+- Reuse the deferred Laravel/Fortify email-verification machinery (signed-link notification and verification endpoint) scoped to this purpose; no social/SSO expansion. Local development uses the log mailer or a Mailtrap-compatible inbox; deployed environments require configured SMTP.
+- Admin approval of a pending employer request also requires the applicant's `email_verified_at` to be set (defense-in-depth); unverified pending requests cannot be approved, and the attempt fails with a clear message with no partial role assignment.
+- Re-inquiry cooldown: after a rejection, the user may submit a new employer onboarding request only after **7 days** from the recorded rejection timestamp (`reviewed_at` on the onboarding request). Submissions during the cooldown return a clear error and do not create/update the request or change any status.
+- Existing `throttle:10,1` on the onboarding endpoint remains in place.
+
+**Out of scope:**
+
+- Any verification requirement for candidates, applications, browsing, or messaging.
+- Relaxing or bypassing universal `pending_review` moderation, or any graduated-autonomy/auto-publish mechanism for trusted employers.
+- Domain/MX matching automation, free-mail blocklists, or verification of company registration numbers.
+- Job re-review rules, moderation-queue UI changes, and Feature 14/15 changes.
+- Payment or plans (Feature 33 remains deferred).
+
+**Rules:**
+
+- Verification status is read server-side from `users.email_verified_at`; the UI state is advisory only.
+- Both the submit path and the approve path enforce the gate server-side — the UI cannot be the boundary.
+- The cooldown is computed from the persisted rejection timestamp, never from client input.
+- The existing update-or-create semantics for re-applying after cooldown expiry are preserved; audit logging of the approval/rejection/suspension decisions remains append-only.
+- Suspension/reactivation semantics from Feature 10/11 are unchanged; the cooldown applies only after a rejection.
+
+**Acceptance criteria:**
+
+- An unverified user sees the verify-first state on the onboarding page; `POST /employer/onboarding` from an unverified user is rejected server-side even by direct request.
+- Completing email verification enables the form; a verified user's submission creates the pending request as today.
+- The admin cannot approve a pending request whose user is unverified; the attempt returns a clear error and assigns nothing.
+- Re-submission within 7 days of a rejection is rejected with a clear message; on or after day 7 it succeeds (subject to the other eligibility rules).
+- Candidate registration, login, browsing, and applying behave exactly as before, with no verification gate anywhere on those paths.
+- Existing employer onboarding, review, and moderation tests remain green (updated only where they assumed unverified submission works).
+
+**Tests:** Unverified submit blocked (UI and direct POST); verified submit succeeds; verification resend; approve blocked while applicant is unverified and succeeds after verification; cooldown boundary cases (inside and just past day 7, with a controllable clock); candidate-flow regression (no verification gate introduced); audit integrity of approve/reject decisions; and the full existing suite stays green.
+
+**Deliverables:** Employer-scoped email-verification flow (notification and signed verification route), onboarding submit gate with verify-first page state and resend, admin approval guard, 7-day re-inquiry cooldown in the onboarding service, local mail setup documentation, updated/new tests, and a spec under `docs/specs/`.
 
 ---
 

@@ -27,10 +27,30 @@ class EmployerOnboardingService
         return DB::transaction(function () use ($user, $data): EmployerOnboardingRequest {
             $locked = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
 
+            if ($locked->email_verified_at === null) {
+                throw ValidationException::withMessages([
+                    'status' => 'Verify your email address before applying to become an employer.',
+                ]);
+            }
+
             if ($locked->status !== null && $locked->status !== EmployerStatus::Rejected) {
                 throw ValidationException::withMessages([
                     'status' => 'This account already has an employer application in progress.',
                 ]);
+            }
+
+            if ($locked->status === EmployerStatus::Rejected) {
+                $rejection = $locked->employerOnboardingRequest;
+
+                if ($rejection !== null && $rejection->reviewed_at !== null) {
+                    $retryAfter = $rejection->reviewed_at->copy()->addDays(7);
+
+                    if (now()->lessThan($retryAfter)) {
+                        throw ValidationException::withMessages([
+                            'status' => "You can request employer access again after {$retryAfter->toFormattedDateString()}.",
+                        ]);
+                    }
+                }
             }
 
             $request = $locked->employerOnboardingRequest()->updateOrCreate(
@@ -63,6 +83,12 @@ class EmployerOnboardingService
             if ($locked->status !== EmployerStatus::Pending) {
                 throw ValidationException::withMessages([
                     'status' => 'Only pending employer requests can be approved.',
+                ]);
+            }
+
+            if ($locked->email_verified_at === null) {
+                throw ValidationException::withMessages([
+                    'status' => 'The applicant has not verified their email address.',
                 ]);
             }
 
@@ -165,6 +191,12 @@ class EmployerOnboardingService
             if ($locked->status !== EmployerStatus::Suspended) {
                 throw ValidationException::withMessages([
                     'status' => 'Only suspended employer accounts can be reactivated.',
+                ]);
+            }
+
+            if ($locked->email_verified_at === null) {
+                throw ValidationException::withMessages([
+                    'status' => 'The applicant has not verified their email address.',
                 ]);
             }
 

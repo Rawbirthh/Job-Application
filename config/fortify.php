@@ -118,6 +118,7 @@ return [
         'login' => 'login',
         'two-factor' => 'two-factor',
         'passkeys' => 'passkeys',
+        'verification' => 'verification',
     ],
 
     /*
@@ -163,9 +164,11 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        // Email verification is intentionally disabled until the dedicated
-        // verification feature is implemented.
-        // Features::emailVerification(),
+        // Employer trust ramp (Feature 38): verification mail + signed routes;
+        // no `verified` middleware is applied to any route — candidate flows
+        // are never gated. Employer eligibility is enforced in the onboarding
+        // service.
+        Features::emailVerification(),
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,

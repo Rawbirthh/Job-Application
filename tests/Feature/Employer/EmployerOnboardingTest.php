@@ -6,6 +6,7 @@ use App\Enums\EmployerStatus;
 use App\Enums\RoleSlug;
 use App\Models\EmployerOnboardingRequest;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Feature\Authorization\Concerns\InteractsWithAuthorizationCatalogue;
@@ -19,6 +20,13 @@ class EmployerOnboardingTest extends TestCase
     {
         parent::setUp();
         $this->seedAuthorizationCatalogue();
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_guests_are_redirected_to_login_from_onboarding(): void
@@ -154,6 +162,10 @@ class EmployerOnboardingTest extends TestCase
 
         $applicant->refresh();
         $this->assertSame(EmployerStatus::Rejected, $applicant->status);
+
+        // Feature 38: immediate resubmission is blocked by the 7-day
+        // cooldown, so travel past the boundary before re-applying.
+        Carbon::setTestNow(now()->addDays(8));
 
         $this->actingAs($applicant)
             ->get(route('employer.onboarding.index'))

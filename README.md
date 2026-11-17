@@ -58,6 +58,39 @@ References: [Laravel 13 testing docs](https://laravel.com/framework/docs/13.x/te
 - `/remember save` — save the key project/session context before switching sessions.
 - `/remember restore` — restore and verify saved context at the start of a clean session.
 
+## Email verification (employer onboarding — Feature 38)
+
+Employer access requires a verified email; candidate flows (register, login, browse, apply, messaging) are **never** gated by verification. Verification mail is **not** sent at registration; it is requested on demand — when an unverified user opens `/employer/onboarding` they see a verify-first card with a **Resend verification email** button.
+
+- Local development uses `MAIL_MAILER=log`: the verification link is written to `storage/logs/laravel.log` (search for the `VerifyEmail` URL). Alternatively open `/employer/onboarding`, click **Resend verification email**, and follow the link from the log tail.
+- To use a real inbox locally, point `MAIL_*` in `.env` at a Mailtrap-compatible inbox or another SMTP server. Never commit SMTP credentials.
+- Deployed environments require configured SMTP (`MAIL_MAILER=smtp`, host/port/credentials via environment); without it, verification links do not leave the app.
+- Signed verification links expire after 60 minutes (`auth.verification.expire`). Candidates can keep using every candidate feature without ever verifying.
+- Verification mail is queued (`QueuedVerifyEmail` implements `ShouldQueue`; the local driver is the `database` queue). Registration and **Resend verification email** respond immediately, and the actual send happens when a queue worker processes it. Run `composer dev` (or `php artisan queue:listen`) in development — without a worker, verification emails silently accumulate in the `jobs` table and are never sent. Failed sends land in `failed_jobs`; in production the worker needs a process manager (e.g. `supervisord` running `php artisan queue:work --tries=3`).
+
+### Testing with Mailtrap (recommended for development)
+
+Mailtrap (mailtrap.io) is an email-testing sandbox: mail is captured in your Mailtrap web inbox and never reaches the real recipient. No code changes are needed — only `.env` values.
+
+1. Sign up at mailtrap.io (free) and verify your email.
+2. Create a project (any name), then open **Email Testing** (the sandbox product, not "Sending").
+3. Open your inbox (a default inbox is created for you) and find the **SMTP Settings** / credentials section — choose the generic SMTP/"Other" integration.
+4. Copy the SMTP hostname, port, username and password into your `.env`:
+    ```
+    MAIL_MAILER=smtp
+    MAIL_SCHEME=null
+    MAIL_HOST=sandbox.smtp.mailtrap.io
+    MAIL_PORT=2525
+    MAIL_USERNAME=<your mailtrap SMTP username>
+    MAIL_PASSWORD=<your mailtrap SMTP password>
+    MAIL_FROM_ADDRESS="hello@example.com"
+    MAIL_FROM_NAME="NextStep"
+    ```
+    Note: exact host/port/labels in the Mailtrap UI can change — copy them from the SMTP settings page rather than trusting this file.
+5. `php artisan config:clear`, then click **Resend verification email** on `/employer/onboarding` (or register a fresh account).
+6. Open the Mailtrap web inbox → click the **Verify Email Address** email → click the verification button/link → you are verified. Check `/employer/onboarding` — the form is unlocked.
+7. Mailtrap sandbox credentials are test credentials (they only capture mail). When you deploy, point `MAIL_*` at a transactional provider (e.g. Mailtrap "Sending", Resend, Mailgun) via the host's environment variables so strangers actually receive mail.
+
 ## Application development notes
 
 - **Real-time messaging (Feature 35):** the app uses Laravel Reverb (self-hosted WebSocket server, Pusher protocol) with Laravel Echo on the frontend. For local development run, alongside the app server:

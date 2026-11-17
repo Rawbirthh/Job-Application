@@ -44,7 +44,7 @@ class EmployerController extends Controller
         /** @var Builder<User> $query */
         $query = User::query()
             ->employerApplicants()
-            ->select(['users.id', 'users.name', 'users.email', 'users.status', 'users.suspension_reason'])
+            ->select(['users.id', 'users.name', 'users.email', 'users.status', 'users.suspension_reason', 'users.email_verified_at'])
             ->with([
                 'employerOnboardingRequest' => function ($query): void {
                     $query->select([
@@ -87,6 +87,7 @@ class EmployerController extends Controller
                 'email' => $user->email,
                 'status' => $status,
                 'status_badge' => $status ?? 'not_applied',
+                'email_verified' => $user->email_verified_at !== null,
                 'suspension_reason' => $user->status === EmployerStatus::Suspended
                     ? $user->suspension_reason
                     : null,
@@ -117,28 +118,6 @@ class EmployerController extends Controller
     {
         $this->authorize('employers.view', $user);
 
-        /** @var Builder<User> $employerQuery */
-        $employerQuery = User::query()
-            ->employerApplicants()
-            ->select(['users.id', 'users.name', 'users.email', 'users.status', 'users.suspension_reason', 'users.created_at'])
-            ->with([
-                'employerOnboardingRequest' => function ($query): void {
-                    $query->select([
-                        'id',
-                        'user_id',
-                        'company_name',
-                        'company_website',
-                        'job_title',
-                        'message',
-                        'submitted_at',
-                        'reviewed_at',
-                        'reviewed_by_id',
-                        'review_note',
-                    ])->with('reviewer:id,name');
-                },
-                'roles:id,slug,name',
-            ]);
-
         if (! User::query()->employerApplicants()->whereKey($user->id)->exists()) {
             abort(404);
         }
@@ -158,6 +137,7 @@ class EmployerController extends Controller
                 'email' => $employer->email,
                 'status' => $status,
                 'status_badge' => $status ?? 'not_applied',
+                'email_verified' => $employer->email_verified_at !== null,
                 'suspension_reason' => $employer->status === EmployerStatus::Suspended
                     ? $employer->suspension_reason
                     : null,

@@ -98,6 +98,7 @@ export type EmployerRow = {
     email: string;
     status: EmployerStatus | null;
     status_badge: EmployerStatus | 'not_applied';
+    email_verified: boolean;
     suspension_reason: string | null;
     onboarding_request: Pick<
         EmployerOnboardingRequestSummary,
@@ -123,6 +124,7 @@ export type AdminEmployerShowProps = {
         email: string;
         status: EmployerStatus | null;
         status_badge: EmployerStatus | 'not_applied';
+        email_verified: boolean;
         suspension_reason: string | null;
         onboarding_request:
             | (EmployerOnboardingRequestSummary & {
@@ -149,6 +151,9 @@ export type EmployerOnboardingPageProps = {
     status: EmployerStatus | null;
     request: EmployerOnboardingRequestSummary | null;
     suspension_reason: string | null;
+    is_verified: boolean;
+    verification_link_sent: boolean;
+    retry_after: string | null;
     can_apply: boolean;
     can_access_employer_dashboard: boolean;
 };

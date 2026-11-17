@@ -270,14 +270,25 @@ export default function AdminEmployersIndex({
                                                 '—'}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge
-                                                variant="default"
-                                                className={statusBadgeClassName(
-                                                    employer.status_badge,
-                                                )}
-                                            >
-                                                {employer.status_badge}
-                                            </Badge>
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <Badge
+                                                    variant="default"
+                                                    className={statusBadgeClassName(
+                                                        employer.status_badge,
+                                                    )}
+                                                >
+                                                    {employer.status_badge}
+                                                </Badge>
+                                                {(employer.status ===
+                                                    'pending' ||
+                                                    employer.status ===
+                                                        'suspended') &&
+                                                    !employer.email_verified && (
+                                                        <Badge variant="outline">
+                                                            Unverified
+                                                        </Badge>
+                                                    )}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-muted-foreground">
                                             {employer.onboarding_request

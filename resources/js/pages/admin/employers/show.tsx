@@ -54,7 +54,7 @@ export default function AdminEmployerShow({
     useFlashToast();
 
     const { errors } = usePage<{
-        errors: { reason?: string };
+        errors: { reason?: string; status?: string };
     }>().props;
 
     const [isProcessing, setIsProcessing] = useState(false);
@@ -116,12 +116,23 @@ export default function AdminEmployerShow({
                             {employer.email}
                         </p>
                     </div>
-                    <Badge
-                        variant="default"
-                        className={statusBadgeClassName(employer.status_badge)}
-                    >
-                        {employer.status_badge}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge
+                            variant="default"
+                            className={statusBadgeClassName(
+                                employer.status_badge,
+                            )}
+                        >
+                            {employer.status_badge}
+                        </Badge>
+                        {(employer.status === 'pending' ||
+                            employer.status === 'suspended') &&
+                            !employer.email_verified && (
+                                <Badge variant="outline">
+                                    Email not verified
+                                </Badge>
+                            )}
+                    </div>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -355,30 +366,51 @@ export default function AdminEmployerShow({
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {errors.status && (
+                                <p
+                                    role="alert"
+                                    className="rounded-md border border-red-500/30 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-500/10 dark:text-red-300"
+                                >
+                                    {errors.status}
+                                </p>
+                            )}
+
                             {employer.actions.approve && (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Button
-                                        disabled={
-                                            isProcessing ||
-                                            rejectForm.processing ||
-                                            suspendForm.processing
-                                        }
-                                        onClick={() =>
-                                            runAction(
-                                                approveEmployer.url({
-                                                    user: employer.id,
-                                                }),
-                                                'Approve this employer application?',
-                                            )
-                                        }
-                                    >
-                                        {isProcessing ? (
-                                            <Spinner className="mr-2" />
-                                        ) : (
-                                            <CheckCircle2 className="mr-2 size-4" />
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Button
+                                            disabled={
+                                                isProcessing ||
+                                                rejectForm.processing ||
+                                                suspendForm.processing ||
+                                                (employer.status ===
+                                                    'pending' &&
+                                                    !employer.email_verified)
+                                            }
+                                            onClick={() =>
+                                                runAction(
+                                                    approveEmployer.url({
+                                                        user: employer.id,
+                                                    }),
+                                                    'Approve this employer application?',
+                                                )
+                                            }
+                                        >
+                                            {isProcessing ? (
+                                                <Spinner className="mr-2" />
+                                            ) : (
+                                                <CheckCircle2 className="mr-2 size-4" />
+                                            )}
+                                            Approve
+                                        </Button>
+                                    </div>
+                                    {employer.status === 'pending' &&
+                                        !employer.email_verified && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Applicant must verify their
+                                                email first.
+                                            </p>
                                         )}
-                                        Approve
-                                    </Button>
                                 </div>
                             )}
 
@@ -485,25 +517,36 @@ export default function AdminEmployerShow({
                             )}
 
                             {employer.actions.reactivate && (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Button
-                                        disabled={isProcessing}
-                                        onClick={() =>
-                                            runAction(
-                                                reactivateEmployer.url({
-                                                    user: employer.id,
-                                                }),
-                                                'Reactivate this employer account?',
-                                            )
-                                        }
-                                    >
-                                        {isProcessing ? (
-                                            <Spinner className="mr-2" />
-                                        ) : (
-                                            <PlayCircle className="mr-2 size-4" />
-                                        )}
-                                        Reactivate
-                                    </Button>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Button
+                                            disabled={
+                                                isProcessing ||
+                                                !employer.email_verified
+                                            }
+                                            onClick={() =>
+                                                runAction(
+                                                    reactivateEmployer.url({
+                                                        user: employer.id,
+                                                    }),
+                                                    'Reactivate this employer account?',
+                                                )
+                                            }
+                                        >
+                                            {isProcessing ? (
+                                                <Spinner className="mr-2" />
+                                            ) : (
+                                                <PlayCircle className="mr-2 size-4" />
+                                            )}
+                                            Reactivate
+                                        </Button>
+                                    </div>
+                                    {!employer.email_verified && (
+                                        <p className="text-sm text-muted-foreground">
+                                            Applicant must verify their email
+                                            first.
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
