@@ -1,5 +1,7 @@
 # OpenCode Agentic Starter — Laravel + React + Inertia + TypeScript
 
+> **Setting up the app locally?** See [`docs/setup.md`](docs/setup.md) — clone → install → database → `composer dev`. The rest of this file describes the OpenCode agentic workflow, not the app's setup.
+
 A provider-neutral OpenCode setup inspired by the workflow in [jsmastery-pro/jsm-agent-skill](https://github.com/jsmastery-pro/jsm-agent-skill), adapted for Laravel, MySQL, React, Inertia, TypeScript, Tailwind, and shadcn/ui.
 
 ## What is included
