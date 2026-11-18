@@ -1,5 +1,7 @@
 # Setting Up This Project From Scratch
 
+> **Prefer containers instead of a local PHP/MySQL install?** See [`docs/docker.md`](docker.md) — a full Docker Compose stack (MariaDB + app + queue + Reverb + optional phpMyAdmin). This document covers the direct XAMPP/host path.
+
 How to go from a fresh clone to a running local development instance. Local
 development only — deployment is a separate, future task and intentionally
 not covered here.

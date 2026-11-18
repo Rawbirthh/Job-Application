@@ -1,0 +1,105 @@
+name: jobapplication
+
+# Local development stack. Your host `.env` keeps pointing at XAMPP (3309);
+# the compose services override the DB_* values to talk to the container.
+# To use your host database instead of the container, delete the `environment:`
+# block (or the DB_* keys) on the `app` service.
+
+services:
+    mysql:
+        image: mariadb:11
+        environment:
+            MARIADB_DATABASE: jobapplication
+            MARIADB_ROOT_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:-secret}
+        ports:
+            - '3310:3306'
+        volumes:
+            - mariadb-data:/var/lib/mysql
+        healthcheck:
+            test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+    app:
+        build: .
+        image: jobapplication-app
+        env_file: .env
+        environment:
+            DB_HOST: mysql
+            DB_PORT: '3306'
+            DB_DATABASE: jobapplication
+            DB_USERNAME: root
+            DB_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:-secret}
+            # App container must reach Reverb by service name;
+            # the browser connects via 127.0.0.1:8080 (port-mapped below).
+            REVERB_HOST: reverb
+        ports:
+            - '8000:8000'
+        volumes:
+            - .:/app
+        depends_on:
+            mysql:
+                condition: service_healthy
+        # --no-reload is REQUIRED in Docker: php artisan serve passes only a
+        # whitelist of env vars (APP_ENV, PATH, LARAVEL_SAIL, XDEBUG_*) to the
+        # web worker, so the compose DB_*/REVERB_HOST overrides would be
+        # stripped and the app would read the host .env (127.0.0.1:3309),
+        # which does not exist inside the container network.
+        command: php artisan serve --host=0.0.0.0 --port=8000 --no-reload
+
+    queue:
+        image: jobapplication-app
+        env_file: .env
+        environment:
+            DB_HOST: mysql
+            DB_PORT: '3306'
+            DB_DATABASE: jobapplication
+            DB_USERNAME: root
+            DB_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:-secret}
+            REVERB_HOST: reverb
+        volumes:
+            - .:/app
+        depends_on:
+            mysql:
+                condition: service_healthy
+        command: php artisan queue:listen --tries=1 --timeout=0
+
+    reverb:
+        image: jobapplication-app
+        env_file: .env
+        environment:
+            DB_HOST: mysql
+            DB_PORT: '3306'
+            DB_DATABASE: jobapplication
+            DB_USERNAME: root
+            DB_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:-secret}
+            REVERB_HOST: reverb
+        ports:
+            - '8080:8080'
+        volumes:
+            - .:/app
+        depends_on:
+            mysql:
+                condition: service_healthy
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
+
+    # Optional: browse/modify the Docker database in a phpMyAdmin-style UI,
+    # same as in XAMPP. Not started by `docker compose up` by default.
+    # Start it with:  docker compose --profile tools up
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        profiles: ['tools']
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: '3306'
+            PMA_USER: root
+            PMA_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:-secret}
+        ports:
+            - '8081:80'
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+volumes:
+    mariadb-data:

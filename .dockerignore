@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+vendor
+public/build
+storage/logs/*
+npm-debug.log
+.env
+.env.*
+!.env.example
+memory.md
+docs
+.opencode
+Dockerfile
+compose.yaml
