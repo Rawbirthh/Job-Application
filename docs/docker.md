@@ -48,7 +48,7 @@ and is intentionally not covered here.
     docker compose run --rm app php artisan migrate
     docker compose run --rm app php artisan db:seed
     or if you don't wanna store all seed and you want the app to run just command this
-    docker compose run --rm app php artisan db:seed --class=AuthorizationHeader
+    docker compose run --rm app php artisan db:seed --class=AuthorizationSeeder
     ```
 
 4. Create a platform administrator (no public route exists):
