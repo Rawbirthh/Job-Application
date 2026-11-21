@@ -16,6 +16,7 @@ This file is maintained by `/imprint`. Capture only reusable visual patterns gro
 - Page headers/actions: public sticky header is 72px, backdrop-blurred, with desktop anchor navigation and a mobile `Sheet` menu.
 - Responsive breakpoints: use existing Tailwind breakpoints; the public hero is a 7/5 grid from `lg` and stacks below it.
 - Public sections: fog `home-surface` alternates with background sections; anchor targets use scroll margin below the sticky header. The employer band uses `bg-sidebar text-sidebar-foreground` with a subtle teal glow; its CTA uses the light structural surface (`bg-sidebar-foreground text-sidebar`) so it reads as a button in both themes.
+- Error pages: self-contained Blade views under `resources/views/errors/` share `layout.blade.php` — a centered NextStep card with a gradient code, a single "Go back" action, and a reference ID on 500. Inline styles mirror the semantic tokens deliberately: no Vite/JS/Inertia dependency, so error pages still render on a broken build or fresh clone.
 
 ## Component conventions
 
@@ -33,6 +34,7 @@ This file is maintained by `/imprint`. Capture only reusable visual patterns gro
 - `resources/js/components/public/site-footer.tsx` — public footer link structure.
 - `resources/js/components/public/faq-list.tsx` — accessible native FAQ disclosure pattern.
 - `resources/js/components/public/hero-art.tsx` — decorative, CSS-only homepage art; keep it `aria-hidden` and non-interactive.
+- `resources/views/errors/layout.blade.php` — branded HTTP error shell used by 401/403/404/419/429/500/503 views.
 
 ## Known inconsistencies / follow-ups
 
