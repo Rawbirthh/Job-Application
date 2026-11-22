@@ -33,9 +33,12 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
-      # phpunit.xml forces the test env, but Laravel still needs an app key.
-      - name: Generate test app key
-        run: echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env
+      # Copy the full example env so tests that switch broadcasters (reverb)
+      # have the REVERB_* / mail credentials they need, then set a real key.
+      - name: Prepare application env
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
 
       # Wayfinder generates resources/js/routes and resources/js/actions during
       # the Vite build. They are gitignored, so tsc needs them generated first.
