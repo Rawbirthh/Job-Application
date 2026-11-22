@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Behind a proxy (Cloudflare Tunnel / ALB) Laravel must trust forwarded
+        // headers so generated URLs stay HTTPS and rate limits see the real IP.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             AssignRequestId::class,
             HandleAppearance::class,

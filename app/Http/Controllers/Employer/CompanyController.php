@@ -70,7 +70,7 @@ class CompanyController extends Controller
         $company->owner_user_id = $user->id;
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('companies/logos', 'public');
+            $path = $request->file('logo')->store('companies/logos', config('filesystems.logo_disk'));
             if ($path !== false) {
                 $company->logo_path = $path;
             }
@@ -122,16 +122,16 @@ class CompanyController extends Controller
 
         if ($request->boolean('remove_logo')) {
             if ($company->logo_path !== null) {
-                Storage::disk('public')->delete($company->logo_path);
+                Storage::disk(config('filesystems.logo_disk'))->delete($company->logo_path);
             }
             $company->logo_path = null;
         }
 
         if ($request->hasFile('logo')) {
             if ($company->logo_path !== null && ! $request->boolean('remove_logo')) {
-                Storage::disk('public')->delete($company->logo_path);
+                Storage::disk(config('filesystems.logo_disk'))->delete($company->logo_path);
             }
-            $path = $request->file('logo')->store('companies/logos', 'public');
+            $path = $request->file('logo')->store('companies/logos', config('filesystems.logo_disk'));
             if ($path !== false) {
                 $company->logo_path = $path;
             }

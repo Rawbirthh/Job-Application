@@ -367,11 +367,11 @@ class EmployerJobApplicationController extends Controller
 
         $resume = $application->candidateResume;
 
-        if (! $resume || ! Storage::disk('local')->exists($resume->path)) {
+        if (! $resume || ! Storage::disk(config('filesystems.resume_disk'))->exists($resume->path)) {
             abort(404, __('Resume file not found.'));
         }
 
-        return Storage::disk('local')->download(
+        return Storage::disk(config('filesystems.resume_disk'))->download(
             $resume->path,
             $resume->original_filename
         );

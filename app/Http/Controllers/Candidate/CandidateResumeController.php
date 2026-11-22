@@ -91,11 +91,11 @@ class CandidateResumeController extends Controller
     {
         $this->authorize('view', $resume);
 
-        if (! Storage::disk('local')->exists($resume->path)) {
+        if (! Storage::disk(config('filesystems.resume_disk'))->exists($resume->path)) {
             abort(404, 'Resume file not found.');
         }
 
-        return Storage::disk('local')->download(
+        return Storage::disk(config('filesystems.resume_disk'))->download(
             $resume->path,
             $resume->original_filename
         );

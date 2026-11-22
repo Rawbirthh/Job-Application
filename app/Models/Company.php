@@ -151,6 +151,6 @@ class Company extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->logo_path);
+        return Storage::disk(config('filesystems.logo_disk'))->url($this->logo_path);
     }
 }
