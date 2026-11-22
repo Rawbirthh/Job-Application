@@ -37,5 +37,10 @@ jobs:
       - name: Generate test app key
         run: echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env
 
+      # Wayfinder generates resources/js/routes and resources/js/actions during
+      # the Vite build. They are gitignored, so tsc needs them generated first.
+      - name: Build frontend (generates Wayfinder routes/actions)
+        run: npm run build
+
       - name: Run formatting, types and tests
         run: composer ci:check
